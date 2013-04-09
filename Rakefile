@@ -3,7 +3,7 @@ require "rspec/core/rake_task"
 
 task :default => [:test]
 
-desc "GameDice unit tests"
+desc "GamesDice unit tests"
 RSpec::Core::RakeTask.new(:test) do |t|
   t.pattern = "spec/*_spec.rb"
   t.verbose = false
