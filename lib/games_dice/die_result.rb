@@ -1,12 +1,12 @@
 # returned by any complex die roll (i.e. one that may be subject to re-rolls or adjustments to each die)
 #  dr = GamesDice::DieResult.new
 #  dr.add_roll(5)
-#  dr.add_roll(4,:explode_up)
+#  dr.add_roll(4,:reroll_add)
 #  dr.value # => 9
 #  dr.rolls # => [5,4]
-#  dr.roll_reasons # => [:basic,:explode_up]
+#  dr.roll_reasons # => [:basic,:reroll_add]
 #  dr + 5 # => 14
-# As the last example implies, GamesDice::DieResult objects coerce to #value
+# As the last example implies, GamesDice::DieResult objects coerce to the #value attribute
 class GamesDice::DieResult
   include Comparable
 
