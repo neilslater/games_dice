@@ -114,9 +114,9 @@ module GamesDice
       return n * @single_die.max
     end
 
-    # returns a hash of value (Integer) => probability (Float) pairs. For efficiency with re-rolls, the calculation may cut
-    # short based on depth of recursion or closeness to total 1.0 probability. Therefore low probabilities
-    # (less than one in a billion) in open-ended re-rolls are not always represented in the hash.
+    # returns a hash of value (Integer) => probability (Float) pairs. Warning: Some dice schemes
+    # cause this method to take a long time, and use a lot of memory. The worst-case offenders are
+    # dice schemes with a #keep_mode of :keep_best or :keep_worst.
     def probabilities
       return @probabilities if @probabilities
       @probabilities_complete = true
