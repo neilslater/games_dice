@@ -174,7 +174,7 @@ describe GamesDice::ComplexDie do
       die.max.should == 1
     end
 
-    it "should simulate a d10 that scores 'S' for success on a value of 7 or more" do
+    it "should simulate a d10 that scores 1 for success on a value of 7 or more" do
       die = GamesDice::ComplexDie.new( 10, :maps => [GamesDice::MapRule.new(7, :<=, 1, 'S')] )
       [0,0,1,0,1,1,0,1].each do |expected|
         die.roll.should == expected
@@ -277,6 +277,5 @@ describe GamesDice::ComplexDie do
         @die.explain_result.should == expected
       end
     end
-  end
-
-end
+  end # describe "with rerolls and maps"
+end # describe GamesDice::ComplexDie

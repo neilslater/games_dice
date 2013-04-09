@@ -7,17 +7,17 @@ module GamesDice
   #  d.result # => same GamesDice::DieResult as returned by d.roll
   class ComplexDie
 
-    # arbitrary limit to simplify calculations and stay in Integer range for convenience. It is
-    # much larger than anything seen in real-world tabletop games.
+    # arbitrary limit to simplify calculations and stay in Integer range for convenience. It should
+    # be much larger than anything seen in real-world tabletop games.
     MAX_REROLLS = 1000
 
     # sides is e.g. 6 for traditional cubic die, or 20 for icosahedron.
     # It can take non-traditional values, such as 7, but must be at least 1.
     #
     # options_hash may contain keys setting following attributes
-    # :rerolls => an array of rules that cause the die to roll again, see #rerolls
-    # :maps => an array of rules to convert a value into a final result for the die, see #maps
-    # :prng => any object that has a rand(x) method, which will be used instead of internal rand()
+    #  :rerolls => an array of rules that cause the die to roll again, see #rerolls
+    #  :maps => an array of rules to convert a value into a final result for the die, see #maps
+    #  :prng => any object that has a rand(x) method, which will be used instead of internal rand()
     def initialize(sides, options_hash = {})
       @basic_die = GamesDice::Die.new(sides, options_hash[:prng])
 
@@ -67,7 +67,8 @@ module GamesDice
       @min_result
     end
 
-    # maximum possible value
+    # maximum possible value. A ComplexDie with open-ended additive re-rolls will calculate roughly 1001 times the
+    # maximum of #basic_die.max (although the true value is infinite)
     def max
       return @max_result if @max_result
       @min_result, @max_result = probabilities.keys.minmax
