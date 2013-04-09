@@ -1,4 +1,4 @@
-require 'games_dice/die'
+require 'games_dice'
 
 # Test helper class, a stub of a PRNG
 class TestPRNG
