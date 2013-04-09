@@ -1,5 +1,7 @@
 # GamesDice
 
+[![Build Status](https://travis-ci.org/neilslater/games_dice.png?branch=master)](http://travis-ci.org/neilslater/games_dice)
+
 A library for simulating dice, intended for constructing a variety of dice systems as used in
 role-playing and board games.
 
