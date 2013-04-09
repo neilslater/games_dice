@@ -29,7 +29,7 @@ module GamesDice
       @trigger_value = trigger_value
       @trigger_op = trigger_op
       @type = type
-      @limit = limit ? Integer(limit) : 100
+      @limit = limit ? Integer(limit) : 1000
       @limit = 1 if @type == :reroll_subtract
     end
 
