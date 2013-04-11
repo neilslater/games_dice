@@ -10,21 +10,9 @@
 class GamesDice::DieResult
   include Comparable
 
-  # allowed reasons for making a roll, and symbol to use before number in #explain
-  REASONS = {
-    :basic => ',',
-    :reroll_add => '+',
-    :reroll_new_die => '*', # TODO: This needs to be flagged *before* value, and maybe linked to cause
-    :reroll_new_keeper => '*',
-    :reroll_subtract => '-',
-    :reroll_replace => '|',
-    :reroll_use_best => '/',
-    :reroll_use_worst => '\\',
-  }
-
   # first_roll_result is optional value of first roll of the die
   def initialize( first_roll_result=nil, first_roll_reason=:basic )
-    unless REASONS.has_key?(first_roll_reason)
+    unless GamesDice::REROLL_TYPES.has_key?(first_roll_reason)
       raise ArgumentError, "Unrecognised reason for roll #{first_roll_reason}"
     end
 
@@ -63,7 +51,7 @@ class GamesDice::DieResult
   # roll_reason is an optional symbol description of why the roll was made
   # #total and #value are calculated based on roll_reason
   def add_roll( roll_result, roll_reason=:basic )
-    unless REASONS.has_key?(roll_reason)
+    unless GamesDice::REROLL_TYPES.has_key?(roll_reason)
       raise ArgumentError, "Unrecognised reason for roll #{roll_reason}"
     end
     @rolls << Integer(roll_result)
@@ -109,7 +97,7 @@ class GamesDice::DieResult
       text = @total.to_s
     else
       text = '[' + @rolls[0].to_s
-      text = (1..@rolls.length-1).inject( text ) { |so_far,i| so_far + REASONS[@roll_reasons[i]] + @rolls[i].to_s }
+      text = (1..@rolls.length-1).inject( text ) { |so_far,i| so_far + GamesDice::REROLL_TYPES[@roll_reasons[i]] + @rolls[i].to_s }
       text += '] ' + @total.to_s
     end
     text += ' ' + @map_description if @mapped && @map_description && @map_description.length > 0
