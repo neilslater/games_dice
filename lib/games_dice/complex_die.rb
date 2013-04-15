@@ -58,7 +58,7 @@ class GamesDice::ComplexDie
   # minimum possible value
   def min
     return @min_result if @min_result
-    @min_result, @max_result = probabilities.keys.minmax
+    @min_result, @max_result = [probabilities.min, probabilities.max]
     return @min_result if @probabilities_complete
     logical_min, logical_max = logical_minmax
     @min_result, @max_result = [@min_result, @max_result, logical_min, logical_max].minmax
@@ -69,7 +69,7 @@ class GamesDice::ComplexDie
   # maximum of #basic_die.max (although the true value is infinite)
   def max
     return @max_result if @max_result
-    @min_result, @max_result = probabilities.keys.minmax
+    @min_result, @max_result = [probabilities.min, probabilities.max]
     return @max_result if @probabilities_complete
     logical_min, logical_max = logical_minmax
     @min_result, @max_result = [@min_result, @max_result, logical_min, logical_max].minmax
@@ -84,68 +84,28 @@ class GamesDice::ComplexDie
     @probabilities_complete = true
     if @rerolls && @maps
       reroll_probs = recursive_probabilities
-      @probabilities = {}
+      prob_hash = {}
       reroll_probs.each do |v,p|
         m, n = calc_maps(v)
-        @probabilities[m] ||= 0.0
-        @probabilities[m] += p
+        prob_hash[m] ||= 0.0
+        prob_hash[m] += p
       end
     elsif @rerolls
-      @probabilities = recursive_probabilities
+      prob_hash = recursive_probabilities
     elsif @maps
-      probs = @basic_die.probabilities
-      @probabilities = {}
+      probs = @basic_die.probabilities.to_h
+      prob_hash = {}
       probs.each do |v,p|
         m, n = calc_maps(v)
-        @probabilities[m] ||= 0.0
-        @probabilities[m] += p
+        prob_hash[m] ||= 0.0
+        prob_hash[m] += p
       end
     else
-      @probabilities = @basic_die.probabilities
+      prob_hash = @basic_die.probabilities.to_h
     end
-    @probabilities_min, @probabilities_max = @probabilities.keys.minmax
     @prob_ge = {}
     @prob_le = {}
-    @probabilities
-  end
-
-  # returns mean expected value as a Float
-  def expected_result
-    @expected_result ||= probabilities.inject(0.0) { |accumulate,p| accumulate + p[0] * p[1] }
-  end
-
-  # returns probability than a roll will produce a number greater than target integer
-  def probability_gt target
-    probability_ge( Integer(target) + 1 )
-  end
-
-  # returns probability than a roll will produce a number greater than or equal to target integer
-  def probability_ge target
-    target = Integer(target)
-    return @prob_ge[target] if @prob_ge && @prob_ge[target]
-
-    # Force caching if not already done
-    probabilities
-    return 1.0 if target <= @probabilities_min
-    return 0.0 if target > @probabilities_max
-    @prob_ge[target] = probabilities.select {|k,v| target <= k}.inject(0.0) {|so_far,pv| so_far + pv[1] }
-  end
-
-  # returns probability than a roll will produce a number less than or equal to target integer
-  def probability_le target
-    target = Integer(target)
-    return @prob_le[target] if @prob_le && @prob_le[target]
-
-    # Force caching of probability table if not already done
-    probabilities
-    return 1.0 if target >= @probabilities_max
-    return 0.0 if target < @probabilities_min
-    @prob_le[target] = probabilities.select {|k,v| target >= k}.inject(0.0) {|so_far,pv| so_far + pv[1] }
-  end
-
-  # returns probability than a roll will produce a number less than target integer
-  def probability_lt target
-    probability_le( Integer(target) - 1 )
+    @probabilities = GamesDice::Probabilities.new( prob_hash )
   end
 
   # generates Integer between #min and #max, using rand()

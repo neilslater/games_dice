@@ -123,7 +123,7 @@ class GamesDice::Bunch
     # Adding dice is same as multiplying probability sets for that number of dice
     # Combine(probabililities_3_dice, probabililities_single_die) == Combine(probabililities_2_dice, probabililities_2_dice)
     # It is possible to minimise the total number of multiplications, gaining about 30% efficiency, with careful choices
-    single_roll_probs = @single_die.probabilities
+    single_roll_probs = @single_die.probabilities.to_h
     if @keep_mode && @ndice > @keep_number
       preadd_probs = {}
       single_roll_probs.each { |k,v| preadd_probs[k.to_s] = v }
@@ -148,50 +148,8 @@ class GamesDice::Bunch
       end
     end
 
-    @probabilities = combined_probs
-    @probabilities_min, @probabilities_max = @probabilities.keys.minmax
-    @prob_ge = {}
-    @prob_le = {}
-    @probabilities
-  end
-
-  # returns probability than a roll will produce a number greater than target integer
-  def probability_gt target
-    probability_ge( Integer(target) + 1 )
-  end
-
-  # returns probability than a roll will produce a number greater than or equal to target integer
-  def probability_ge target
-    target = Integer(target)
-    return @prob_ge[target] if @prob_ge && @prob_ge[target]
-
-    # Force caching if not already done
-    probabilities
-    return 1.0 if target <= @probabilities_min
-    return 0.0 if target > @probabilities_max
-    @prob_ge[target] = probabilities.select {|k,v| target <= k}.inject(0.0) {|so_far,pv| so_far + pv[1] }
-  end
-
-  # returns probability than a roll will produce a number less than or equal to target integer
-  def probability_le target
-    target = Integer(target)
-    return @prob_le[target] if @prob_le && @prob_le[target]
-
-    # Force caching of probability table if not already done
-    probabilities
-    return 1.0 if target >= @probabilities_max
-    return 0.0 if target < @probabilities_min
-    @prob_le[target] = probabilities.select {|k,v| target >= k}.inject(0.0) {|so_far,pv| so_far + pv[1] }
-  end
-
-  # returns probability than a roll will produce a number less than target integer
-  def probability_lt target
-    probability_le( Integer(target) - 1 )
-  end
-
-  # returns mean expected value as a Float
-  def expected_result
-    @expected_result ||= probabilities.inject(0.0) { |accumulate,p| accumulate + p[0] * p[1] }
+    @probabilities_min, @probabilities_max = combined_probs.keys.minmax
+    @probabilities = GamesDice::Probabilities.new( combined_probs )
   end
 
   # simulate dice roll according to spec. Returns integer final total, and also stores it in #result

@@ -31,42 +31,10 @@ class GamesDice::Die
     @sides
   end
 
-  # returns a hash of value (Integer) => probability (Float) pairs
+  # returns a GamesDice::Probabilities object that models distribution of the die
   def probabilities
     return @probabilities if @probabilities
-    density = 1.0/@sides
-    @probabilities = (1..@sides).inject({}) { |h,x| h[x] = density; h }
-  end
-
-  # returns mean expected value as a Float
-  def expected_result
-    0.5 * (1 + @sides)
-  end
-
-  # returns probability than a roll will produce a number greater than target integer
-  def probability_gt target
-    probability_ge( Integer(target) + 1 )
-  end
-
-  # returns probability than a roll will produce a number greater than or equal to target integer
-  def probability_ge target
-    target = Integer(target)
-    return 1.0 if target <= 1
-    return 0.0 if target > @sides
-    return 1.0 * (1.0 + @sides - target )/@sides
-  end
-
-  # returns probability than a roll will produce a number less than or equal to target integer
-  def probability_le target
-    target = Integer(target)
-    return 1.0 if target >= @sides
-    return 0.0 if target < 1
-    return 1.0 * target/@sides
-  end
-
-  # returns probability than a roll will produce a number less than target integer
-  def probability_lt target
-    probability_le( Integer(target) - 1 )
+    @probabilities = GamesDice::Probabilities.for_fair_die( @sides )
   end
 
   # generates Integer between #min and #max, using rand()

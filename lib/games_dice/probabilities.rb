@@ -8,7 +8,8 @@ class GamesDice::Probabilities
     @ph = prob_hash
   end
 
-  # the Hash representation of probabilities
+  # the Hash representation of probabilities. TODO: Hide this from public interface, but make it available
+  # to factory methods
   attr_reader :ph
 
   # a clone of probability data (as provided to constructor), safe to pass to methods that modify in place
@@ -46,7 +47,7 @@ class GamesDice::Probabilities
   def p_ge target
     target = Integer(target)
     return @prob_ge[target] if @prob_ge && @prob_ge[target]
-    @prob_ge = [] unless @prob_ge
+    @prob_ge = {} unless @prob_ge
 
     return 1.0 if target <= min
     return 0.0 if target > max
@@ -57,7 +58,7 @@ class GamesDice::Probabilities
   def p_le target
     target = Integer(target)
     return @prob_le[target] if @prob_le && @prob_le[target]
-     @prob_le = [] unless @prob_le
+    @prob_le = {} unless @prob_le
 
     return 1.0 if target >= max
     return 0.0 if target < min
@@ -89,17 +90,6 @@ class GamesDice::Probabilities
         pc = pa * pb
         h[kc] = h[kc] ? h[kc] + pc : pc
       end
-    end
-    GamesDice::Probabilities.new( h )
-  end
-
-  # muliplies keys of probability distribution by i, and returns a new distribution, which represents
-  # what would happen if you multiplied all results of a generator by the same fixed value. Used
-  # to negate probabilities when summing them.
-  def self.mul_keys pd, i
-    h = {}
-    pd.ph.each do |ka,pa|
-      h[ka * i] = pa
     end
     GamesDice::Probabilities.new( h )
   end
