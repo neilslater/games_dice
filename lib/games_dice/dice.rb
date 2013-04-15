@@ -1,49 +1,43 @@
-# models any combination of zero or more Bunches, plus zero or more constant offsets, summing them
-# to create a total
+# models any combination of zero or more Bunches, plus a constant offset, summing them
+# to create a total result when rolled
 class GamesDice::Dice
-  # bunches is an Array of Hashes, each of which describes either a GamesDice::Bunch or a fixed offset
-  # a Hash in the Array that describes a fixed offset looks like this:
-  #  { :offset => 20 }
+  # bunches is an Array of Hashes, each of which describes either a GamesDice::Bunch
   # a Hash in the Array that describes a Bunch may contain any of the keys that can be used to initialize
   # the Bunch, plus the following optional key:
-  #  :multiplier => any Integer, but typically 1 or -1 to allow the Bunch total to be added or subtracted
+  #  :multiplier => any Integer, but typically 1 or -1 to describe whether the Bunch total is to be added or subtracted
+  # offset is an Integer which will be added to the result when rolling all the bunches
   # name can be any String, and is used to identify the dice being rolled.
-  def initialize( bunches, name = '' )
+  def initialize( bunches, offset = 0, name = '' )
     @name = name
-    @offset = 0
-    @bunches = []
+    @offset = offset
+    @bunches = bunches.map { |b| GamesDice::Bunch.new( b ) }
+    @bunch_multipliers = bunches.map { |b| b[:multiplier] || 1 }
+    @result = nil
   end
 
   # the string name as provided to the constructor, it will appear in explain_result
   attr_reader :name
 
-  # after calling #roll, this is set to the final integer value from using the dice as specified
+  # an array of GamesDice::Bunch objects that together describe all the dice and roll-altering
+  # rules that apply to the GamesDice::Dice object
+  attr_reader :bunches
+
+  # an array of Integers, used to multiply result from each bunch when total results are summed
+  attr_reader :bunch_multipliers
+
+  # the integer offset that is added to the total result from all bunches
+  attr_reader :offset
+
+  # after calling #roll, this is set to the total integer value as calculated by simulating all the
+  # defined dice and their rules
   attr_reader :result
 
-  # minimum possible integer value
-  def min
-    n = @keep_mode ? [@keep_number,@ndice].min : @ndice
-    return n * @single_die.min
-  end
-
-  # maximum possible integer value
-  def max
-    n = @keep_mode ? [@keep_number,@ndice].min : @ndice
-    return n * @single_die.max
-  end
-
-  # returns mean expected value as a Float
-  def expected_result
-    @expected_result ||= probabilities.inject(0.0) { |accumulate,p| accumulate + p[0] * p[1] }
-  end
-
-  # simulate dice roll according to spec. Returns integer final total, and also stores it in #result
+  # simulate dice roll. Returns integer final total, and also stores same value in #result
   def roll
-    @result = 0
-  end
-
-  def explain_result
-    return nil unless @result
+    @result = @offset + @bunch_multipliers.zip(@bunches).inject(0) do |total,mb|
+      m,b = mb
+      total += m * b.roll
+    end
   end
 
 end # class Dice
