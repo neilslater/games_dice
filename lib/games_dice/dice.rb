@@ -1,8 +1,8 @@
 # models any combination of zero or more Bunches, plus a constant offset, summing them
 # to create a total result when rolled
 class GamesDice::Dice
-  # bunches is an Array of Hashes, each of which describes either a GamesDice::Bunch
-  # a Hash in the Array that describes a Bunch may contain any of the keys that can be used to initialize
+  # bunches is an Array of Hashes, each of which describes a GamesDice::Bunch
+  # and may contain any of the keys that can be used to initialize
   # the Bunch, plus the following optional key:
   #  :multiplier => any Integer, but typically 1 or -1 to describe whether the Bunch total is to be added or subtracted
   # offset is an Integer which will be added to the result when rolling all the bunches
