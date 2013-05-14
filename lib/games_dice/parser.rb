@@ -4,10 +4,6 @@ require 'parslet'
 class GamesDice::Parser < Parslet::Parser
 
   # Descriptive language examples (capital letters stand in for integers)
-  #  NdX               -  a roll of N dice, with X sides each, values summed to total
-  #  NdX + C           -  a roll of N dice, with X sides each, values summed to total plus a constant C
-  #  NdX - C           -  a roll of N dice, with X sides each, values summed to total minus a constant C
-  #  NdX + MdY + C     -  any number of +C, -C, +NdX, -NdX etc sub-expressions can be combined
   #  NdXkZ             -  a roll of N dice, sides X, keep best Z results and sum them
   #  NdXk[Z,worst]     -  a roll of N dice, sides X, keep worst Z results and sum them
   #  NdXrZ             -  a roll of N dice, sides X, re-roll and replace Zs
@@ -21,10 +17,23 @@ class GamesDice::Parser < Parslet::Parser
   rule(:integer) { match('[0-9]').repeat(1) }
   rule(:dlabel) { match('[d]') }
   rule(:bunch_start) { integer.as(:ndice) >> dlabel >> integer.as(:sides) }
+
+  rule(:reroll_label) { match(['r']).as(:reroll) }
+  rule(:keep_label) { match(['k']).as(:keep) }
+  rule(:map_label) { match(['m']).as(:map) }
+  rule(:alias_label) { match(['x']).as(:alias) }
+
+  rule(:single_modifier) { alias_label }
+  rule(:modifier_label) {  reroll_label | keep_label | map_label }
+  rule(:simple_modifier) { modifier_label >> integer.as(:simple_value) }
+  rule(:complex_modifier) { modifier_label >> str('[') >> str(']') } # TODO: param extraction
+
+  rule(:bunch_modifier) { single_modifier | simple_modifier }
+  rule(:bunch) { bunch_start >> bunch_modifier.repeat.as(:mods) }
   rule(:space) { match('\s').repeat(1) }
   rule(:space?) { space.maybe }
   rule(:operator) { match('[+-]').as(:op) >> space? }
-  rule(:add_bunch) { operator >> bunch_start >> space? }
+  rule(:add_bunch) { operator >> bunch >> space? }
   rule(:add_constant) { operator >> integer.as(:constant) >> space? }
   rule(:dice_expression) { add_bunch | add_constant }
   rule(:expressions) { dice_expression.repeat.as(:bunches) }
@@ -59,6 +68,32 @@ class GamesDice::Parser < Parslet::Parser
           when '-' then -1
         end
       end
+
+      # Modifiers
+      if in_hash[:mods]
+        in_hash[:mods].each do |mod|
+          case
+          when mod[:alias]
+            alias_name = mod[:alias].to_s
+            case alias_name
+            when 'x'
+              out_hash[:rerolls] ||= []
+              out_hash[:rerolls] << GamesDice::RerollRule.new( out_hash[:sides], :==, :reroll_add )
+            end
+
+          when mod[:keep]
+            out_hash[:keep_mode] = :keep_best
+            out_hash[:keep_number] = mod[:simple_value].to_i
+          when mod[:map]
+            out_hash[:maps] ||= []
+
+          when mod[:reroll]
+            out_hash[:rerolls] ||= []
+
+          end
+        end
+      end
+
       out_hash
     end
   end
@@ -74,6 +109,22 @@ class GamesDice::Parser < Parslet::Parser
       end
       total
     end
+  end
+
+  def collect_alias_modifier in_mod
+
+  end
+
+  def collect_reroll_rule reroll_mod
+
+  end
+
+  def collect_keeper_rule reroll_mod
+
+  end
+
+  def collect_map_rule reroll_mod
+
   end
 
 end # class Parser
