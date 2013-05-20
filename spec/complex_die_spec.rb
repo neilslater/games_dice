@@ -78,9 +78,19 @@ describe GamesDice::ComplexDie do
     GamesDice::ComplexDie.new( 10, :maps => [] )
     GamesDice::ComplexDie.new( 10, :maps => [GamesDice::MapRule.new(7, :<=, 1)] )
     GamesDice::ComplexDie.new( 10, :maps => [GamesDice::MapRule.new(7, :<=, 1), GamesDice::MapRule.new(1, :>, -1) ] )
+    GamesDice::ComplexDie.new( 10, :maps => [ [7, :<=, 1] ] )
+    GamesDice::ComplexDie.new( 10, :maps => [ [7, :<=, 1], [1, :>, -1] ] )
 
     lambda do
       GamesDice::ComplexDie.new( 10, :maps => 7 )
+    end.should raise_error( TypeError )
+
+    lambda do
+      GamesDice::ComplexDie.new( 10, :maps => [7] )
+    end.should raise_error( TypeError )
+
+    lambda do
+      GamesDice::ComplexDie.new( 10, :maps => [ [7] ] )
     end.should raise_error( TypeError )
 
     lambda do
@@ -88,7 +98,7 @@ describe GamesDice::ComplexDie do
     end.should raise_error( TypeError )
 
     lambda do
-      GamesDice::ComplexDie.new( 10, :maps =>  [GamesDice::MapRule.new(7, :<=, 1),GamesDice::RerollRule.new(6, :<=, :reroll_add)] )
+      GamesDice::ComplexDie.new( 10, :maps => [GamesDice::MapRule.new(7, :<=, 1),GamesDice::RerollRule.new(6, :<=, :reroll_add)] )
     end.should raise_error( TypeError )
   end
 
@@ -194,7 +204,7 @@ describe GamesDice::ComplexDie do
     end
 
     it "should simulate a d10 that scores 1 for success on a value of 7 or more" do
-      die = GamesDice::ComplexDie.new( 10, :maps => [GamesDice::MapRule.new(7, :<=, 1, 'S')] )
+      die = GamesDice::ComplexDie.new( 10, :maps => [ [ 7, :<=, 1, 'S' ] ] )
       [0,0,1,0,1,1,0,1].each do |expected|
         die.roll.should == expected
         die.result.should == expected
@@ -202,7 +212,7 @@ describe GamesDice::ComplexDie do
     end
 
     it "should label the mappings applied with the provided names" do
-      die = GamesDice::ComplexDie.new( 10, :maps => [GamesDice::MapRule.new(7, :<=, 1, 'S'),GamesDice::MapRule.new(1, :>=, -1, 'F')] )
+      die = GamesDice::ComplexDie.new( 10, :maps => [ [7, :<=, 1, 'S'], [1, :>=, -1, 'F'] ] )
       ["5", "4", "10 S", "4", "7 S", "8 S", "1 F", "9 S"].each do |expected|
         die.roll
         die.explain_result.should == expected

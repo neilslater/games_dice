@@ -27,7 +27,7 @@ The main features of GamesDice are
 ## Special Note on Versions Prior to 1.0.0
 
 The author is using this code as an exercise in gem "best practice". As such, the gem
-will have a deliberately limited set of functionality prior to version 1.0.0, and there should be
+will have a limited set of functionality prior to version 1.0.0, and there should be
 many small release increments before then.
 
 ## Installation
@@ -84,6 +84,14 @@ Takes no parameters.
 
 Returns the integer result of the roll.
 
+#### dice.result
+
+Returns the value from the last call to roll. This will be nil if no roll has been made yet.
+
+Takes no parameters.
+
+Returns either nil, or an integer.
+
 ## String Dice Descriptions
 
 The dice descriptions are a mini-language. A simple six-sided die is described like this:
@@ -124,9 +132,12 @@ modifiers should combine as expected e.g.
 You can specify that dice rolling certain values should be re-rolled, and how that re-roll should be
 interpretted.
 
-The simple form specifies a low value that will automatically trigger a re-roll replacement:
+The simple form specifies a low value that will automatically trigger a one-time replacement:
 
     1d6r1
+
+When rolled, this die will score from 1 to 6. If it rolls a 1, it will roll again automatically
+and use that result instead.
 
 #### Maps
 
@@ -137,6 +148,8 @@ The simple form specifies a value above which the result is considered to be 1, 
 
     3d10m6
 
+When rolled, this will score from 0 to 3 - the number of the ten-sided dice that scored 6 or higher.
+
 #### Keepers
 
 You can specify that only a sub-set of highest or lowest dice values will contribute to the final
@@ -146,11 +159,20 @@ The simple form indicates the number of highest value dice to keep.
 
     5d10k2
 
+When rolled, this will score from 2 to 20 - the sum of the two highest scoring ten-sided dice, out of
+five.
+
 #### Aliases
 
 Some combinations of modifiers crop up in well-known games, and have been allocated single-character
 
+This is an alias for "exploding" dice:
+
     5d10x
+
+When rolled, this will score from 5 to theoretically any number, as results of 10 on any die mean that
+die rolls again and the result is added on.
+
 
 ## Contributing
 

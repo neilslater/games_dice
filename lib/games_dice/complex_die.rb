@@ -20,8 +20,7 @@ class GamesDice::ComplexDie
     @basic_die = GamesDice::Die.new(sides, options_hash[:prng])
 
     @rerolls = construct_rerolls( options_hash[:rerolls] )
-    @maps = options_hash[:maps]
-    validate_maps
+    @maps = construct_maps( options_hash[:maps] )
 
     @total = nil
     @result = nil
@@ -161,6 +160,19 @@ class GamesDice::ComplexDie
     end
   end
 
+  def construct_maps maps_input
+    return nil unless maps_input
+    raise TypeError, "maps should be an Array, instead got #{maps_input.inspect}" unless maps_input.is_a?(Array)
+    maps_input.map do |map_item|
+      case map_item
+      when Array then GamesDice::MapRule.new( map_item[0], map_item[1], map_item[2], map_item[3] )
+      when GamesDice::MapRule then map_item
+      else
+        raise TypeError, "items in maps should be GamesDice::MapRule or Array, instead got #{map_item.inspect}"
+      end
+    end
+  end
+
   def calc_maps x
     y, n = 0, ''
     @maps.find do |rule|
@@ -172,14 +184,6 @@ class GamesDice::ComplexDie
       maybe_y
     end
     [y, n]
-  end
-
-  def validate_maps
-    return unless @maps
-    raise TypeError, "maps should be an Array, instead got #{@maps.inspect}" unless @maps.is_a?(Array)
-    @maps.each do |rule|
-      raise TypeError, "items in maps should be GamesDice::MapRule, instead got #{rule.inspect}" unless rule.is_a?(GamesDice::MapRule)
-    end
   end
 
   def minmax_mappings possible_values

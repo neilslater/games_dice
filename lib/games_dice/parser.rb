@@ -124,7 +124,7 @@ class GamesDice::Parser < Parslet::Parser
   def collect_keeper_rule keeper_mod, out_hash
     if keeper_mod[:simple_value]
       out_hash[:keep_mode] = :keep_best
-      out_hash[:keep_number] = mod[:simple_value].to_i
+      out_hash[:keep_number] = keeper_mod[:simple_value].to_i
       return
     end
     # TODO: Handle complex descriptions
@@ -133,8 +133,8 @@ class GamesDice::Parser < Parslet::Parser
   # Called for any parsed map mode
   def collect_map_rule map_mod, out_hash
     out_hash[:maps] ||= []
-    if keeper_mod[:simple_value]
-      out_hash[:maps] << GamesDice::MapRule.new( keeper_mod[:simple_value].to_i, :<=, 1 )
+    if map_mod[:simple_value]
+      out_hash[:maps] << [ map_mod[:simple_value].to_i, :<=, 1 ]
       return
     end
     # TODO: Handle complex descriptions
