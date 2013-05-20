@@ -60,7 +60,9 @@ dice rolls, explain the results or calculate probabilties as required.
 
 ### GamesDice factory methods
 
-#### GamesDice.create dice_description, prng
+#### GamesDice.create
+
+    dice = GamesDice.create dice_description, prng
 
 Converts a string such as '3d6+6' into a GamesDice::Dice object
 
@@ -100,6 +102,55 @@ The dice mini-language allows for adding and subtracting integers and groups of 
 That is the limit of combining dice and constants though, no multiplications, or bracketed constructs
 like "(1d8)d8" - you can still use games_dice to help simulate these, but you will need to add your own
 code to do so.
+
+### Die Modifiers
+
+After the number of sides, you may add one or more modifiers, that affect all of the dice in that
+"NdX" group. A die modifier can be a single character, e.g.
+
+    1d10x
+
+A die modifier can also be a single letter plus an integer value, e.g.
+
+    1d6r1
+
+More complex die modifiers are possible, with parameters supplied in square brackets, and multiple
+modifiers should combine as expected e.g.
+
+    5d10r[10,add]k2
+
+#### Rerolls
+
+You can specify that dice rolling certain values should be re-rolled, and how that re-roll should be
+interpretted.
+
+The simple form specifies a low value that will automatically trigger a re-roll replacement:
+
+    1d6r1
+
+#### Maps
+
+You can specify that the value shown on each die is converted to some other set of values. If
+you add at least one map modifier, all unmapped values will map to 0 by default.
+
+The simple form specifies a value above which the result is considered to be 1, as in "one success":
+
+    3d10m6
+
+#### Keepers
+
+You can specify that only a sub-set of highest or lowest dice values will contribute to the final
+total.
+
+The simple form indicates the number of highest value dice to keep.
+
+    5d10k2
+
+#### Aliases
+
+Some combinations of modifiers crop up in well-known games, and have been allocated single-character
+
+    5d10x
 
 ## Contributing
 

@@ -19,8 +19,7 @@ class GamesDice::ComplexDie
   def initialize(sides, options_hash = {})
     @basic_die = GamesDice::Die.new(sides, options_hash[:prng])
 
-    @rerolls = options_hash[:rerolls]
-    validate_rerolls
+    @rerolls = construct_rerolls( options_hash[:rerolls] )
     @maps = options_hash[:maps]
     validate_maps
 
@@ -149,6 +148,19 @@ class GamesDice::ComplexDie
 
   private
 
+  def construct_rerolls rerolls_input
+    return nil unless rerolls_input
+    raise TypeError, "rerolls should be an Array, instead got #{rerolls_input.inspect}" unless rerolls_input.is_a?(Array)
+    rerolls_input.map do |reroll_item|
+      case reroll_item
+      when Array then GamesDice::RerollRule.new( reroll_item[0], reroll_item[1], reroll_item[2], reroll_item[3] )
+      when GamesDice::RerollRule then reroll_item
+      else
+        raise TypeError, "items in rerolls should be GamesDice::RerollRule or Array, instead got #{reroll_item.inspect}"
+      end
+    end
+  end
+
   def calc_maps x
     y, n = 0, ''
     @maps.find do |rule|
@@ -160,14 +172,6 @@ class GamesDice::ComplexDie
       maybe_y
     end
     [y, n]
-  end
-
-  def validate_rerolls
-    return unless @rerolls
-    raise TypeError, "rerolls should be an Array, instead got #{@rerolls.inspect}" unless @rerolls.is_a?(Array)
-    @rerolls.each do |rule|
-      raise TypeError, "items in rerolls should be GamesDice::RerollRule, instead got #{rule.inspect}" unless rule.is_a?(GamesDice::RerollRule)
-    end
   end
 
   def validate_maps

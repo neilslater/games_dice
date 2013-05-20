@@ -31,7 +31,7 @@ class GamesDice::RerollRule
   #   :reroll_add - add result of reroll to running total, and ignore :reroll_subtract for this die
   #   :reroll_subtract - subtract result of reroll from running total, and reverse sense of any further :reroll_add results
   #   :reroll_replace - use the new value in place of existing value for the die
-  #   :reroll_use_best - use the new value if it is higher than the erxisting value
+  #   :reroll_use_best - use the new value if it is higher than the existing value
   #   :reroll_use_worst - use the new value if it is higher than the existing value
   attr_reader :type
 

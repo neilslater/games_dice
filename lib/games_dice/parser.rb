@@ -4,17 +4,14 @@ require 'parslet'
 class GamesDice::Parser < Parslet::Parser
 
   # Descriptive language examples (capital letters stand in for integers)
-  #  NdXkZ             -  a roll of N dice, sides X, keep best Z results and sum them
   #  NdXk[Z,worst]     -  a roll of N dice, sides X, keep worst Z results and sum them
-  #  NdXrZ             -  a roll of N dice, sides X, re-roll and replace Zs
   #  NdXr[Z,add]       -  a roll of N dice, sides X, re-roll and add on a result of Z
   #  NdXr[Y..Z,add]    -  a roll of N dice, sides X, re-roll and add on a result of Y..Z
-  #  NdXx              -  exploding dice, synonym for NdXr[X,add]
-  #  NdXmZ             -  mapped dice, values below Z score 0, values above Z score 1
   #  NdXm[>=Z,A]       -  mapped dice, values greater than or equal to Z score A (unmapped values score 0 by default)
 
   # These are the Parslet rules that define the dice grammar
   rule(:integer) { match('[0-9]').repeat(1) }
+  rule(:range) { integer.as(:range_start) >> str('..') >> integer.as(:range_end) }
   rule(:dlabel) { match('[d]') }
   rule(:bunch_start) { integer.as(:ndice) >> dlabel >> integer.as(:sides) }
 
@@ -74,22 +71,15 @@ class GamesDice::Parser < Parslet::Parser
         in_hash[:mods].each do |mod|
           case
           when mod[:alias]
-            alias_name = mod[:alias].to_s
-            case alias_name
-            when 'x'
-              out_hash[:rerolls] ||= []
-              out_hash[:rerolls] << GamesDice::RerollRule.new( out_hash[:sides], :==, :reroll_add )
-            end
-
+            collect_alias_modifier mod, out_hash
           when mod[:keep]
-            out_hash[:keep_mode] = :keep_best
-            out_hash[:keep_number] = mod[:simple_value].to_i
+            collect_keeper_rule mod, out_hash
           when mod[:map]
             out_hash[:maps] ||= []
-
+            collect_map_rule mod, out_hash
           when mod[:reroll]
             out_hash[:rerolls] ||= []
-
+            collect_reroll_rule mod, out_hash
           end
         end
       end
@@ -111,20 +101,43 @@ class GamesDice::Parser < Parslet::Parser
     end
   end
 
-  def collect_alias_modifier in_mod
-
+  # Called when we have a single letter convenient alias for common dice adjustments
+  def collect_alias_modifier alias_mod, out_hash
+    alias_name = alias_mod[:alias].to_s
+    case alias_name
+    when 'x' # Exploding re-roll
+      out_hash[:rerolls] ||= []
+      out_hash[:rerolls] << [ out_hash[:sides], :==, :reroll_add ]
+    end
   end
 
-  def collect_reroll_rule reroll_mod
-
+  # Called for any parsed reroll rule
+  def collect_reroll_rule reroll_mod, out_hash
+    out_hash[:rerolls] ||= []
+    if reroll_mod[:simple_value]
+      out_hash[:rerolls] << [ reroll_mod[:simple_value].to_i, :>=, :reroll_replace, 1 ]
+    end
+    # TODO: Handle complex descriptions
   end
 
-  def collect_keeper_rule reroll_mod
-
+  # Called for any parsed keeper mode
+  def collect_keeper_rule keeper_mod, out_hash
+    if keeper_mod[:simple_value]
+      out_hash[:keep_mode] = :keep_best
+      out_hash[:keep_number] = mod[:simple_value].to_i
+      return
+    end
+    # TODO: Handle complex descriptions
   end
 
-  def collect_map_rule reroll_mod
-
+  # Called for any parsed map mode
+  def collect_map_rule map_mod, out_hash
+    out_hash[:maps] ||= []
+    if keeper_mod[:simple_value]
+      out_hash[:maps] << GamesDice::MapRule.new( keeper_mod[:simple_value].to_i, :<=, 1 )
+      return
+    end
+    # TODO: Handle complex descriptions
   end
 
 end # class Parser

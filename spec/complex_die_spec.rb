@@ -45,6 +45,8 @@ describe GamesDice::ComplexDie do
     GamesDice::ComplexDie.new( 10, :rerolls => [] )
     GamesDice::ComplexDie.new( 10, :rerolls => [GamesDice::RerollRule.new(6, :<=, :reroll_add)] )
     GamesDice::ComplexDie.new( 10, :rerolls => [GamesDice::RerollRule.new(6, :<=, :reroll_add),GamesDice::RerollRule.new(1, :>=, :reroll_subtract)] )
+    GamesDice::ComplexDie.new( 10, :rerolls => [[6, :<=, :reroll_add]] )
+    GamesDice::ComplexDie.new( 10, :rerolls => [[6, :<=, :reroll_add],[1, :>=, :reroll_subtract]] )
 
     lambda do
       GamesDice::ComplexDie.new( 10, :rerolls => 7 )
@@ -57,6 +59,19 @@ describe GamesDice::ComplexDie do
     lambda do
       GamesDice::ComplexDie.new( 10, :rerolls =>  [GamesDice::RerollRule.new(6, :<=, :reroll_add), :reroll_add] )
     end.should raise_error( TypeError )
+
+    lambda do
+      GamesDice::ComplexDie.new( 10, :rerolls => [7] )
+    end.should raise_error( TypeError )
+
+    lambda do
+      GamesDice::ComplexDie.new( 10, :rerolls => [['hello']] )
+    end.should raise_error( TypeError )
+
+    lambda do
+      GamesDice::ComplexDie.new( 10, :rerolls =>  [ [6, :<=, :reroll_add ], :reroll_add] )
+    end.should raise_error( TypeError )
+
   end
 
   it "should optionally accept a maps param" do
@@ -83,7 +98,7 @@ describe GamesDice::ComplexDie do
       die.min.should == 1
       die.max.should == 40
 
-      die = GamesDice::ComplexDie.new( 10, :rerolls => [GamesDice::RerollRule.new(1, :>=, :reroll_subtract)] )
+      die = GamesDice::ComplexDie.new( 10, :rerolls => [[1, :>=, :reroll_subtract]] )
       die.min.should == -9
       die.max.should == 10
 
@@ -93,7 +108,7 @@ describe GamesDice::ComplexDie do
     end
 
     it "should simulate a d10 that rerolls and adds on a result of 10" do
-      die = GamesDice::ComplexDie.new(10, :rerolls => [GamesDice::RerollRule.new(10, :<=, :reroll_add)] )
+      die = GamesDice::ComplexDie.new(10, :rerolls => [[10, :<=, :reroll_add]] )
       [5,4,14,7,8,1,9].each do |expected|
         die.roll.should == expected
         die.result.should == expected
@@ -101,7 +116,7 @@ describe GamesDice::ComplexDie do
     end
 
     it "should explain how it got results outside range 1 to 10 on a d10" do
-      die = GamesDice::ComplexDie.new(10, :rerolls => [GamesDice::RerollRule.new(10, :<=, :reroll_add),GamesDice::RerollRule.new(1, :>=, :reroll_subtract)] )
+      die = GamesDice::ComplexDie.new(10, :rerolls => [[10, :<=, :reroll_add],[1, :>=, :reroll_subtract]] )
       ["5","4","[10+4] 14","7","8","[1-9] -8"].each do |expected|
         die.roll
         die.explain_result.should == expected
@@ -109,7 +124,7 @@ describe GamesDice::ComplexDie do
     end
 
     it "should calculate an expected result" do
-      die = GamesDice::ComplexDie.new(10, :rerolls => [GamesDice::RerollRule.new(10, :<=, :reroll_add),GamesDice::RerollRule.new(1, :>=, :reroll_subtract)] )
+      die = GamesDice::ComplexDie.new(10, :rerolls => [[10, :<=, :reroll_add],[1, :>=, :reroll_subtract]] )
       die.probabilities.expected.should be_within(1e-10).of 5.5
 
       die = GamesDice::ComplexDie.new(10, :rerolls => [GamesDice::RerollRule.new(1, :<=, :reroll_use_best, 1)] )
@@ -229,10 +244,10 @@ describe GamesDice::ComplexDie do
     end
   end
 
-  describe "with rerolls and maps" do
+  describe "with rerolls and maps together" do
     before do
       @die = GamesDice::ComplexDie.new( 6,
-        :rerolls => [GamesDice::RerollRule.new(6, :<=, :reroll_add)],
+        :rerolls => [[6, :<=, :reroll_add]],
         :maps => [GamesDice::MapRule.new(9, :<=, 1, 'Success')]
         )
     end
