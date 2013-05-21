@@ -10,7 +10,8 @@ Gem::Specification.new do |gem|
   gem.email         = ["slobo777@gmail.com"]
   gem.description   = %q{A simulated-dice library, with flexible rules that allow dice systems from
                         many board and roleplay games to be built, run and reported.}
-  gem.summary       = %q{Simulates and explains dice rolls from a variety of game systems.}
+  gem.summary       = %q{Simulates and explains dice rolls from simple "1d6" to complex "roll 7 ten-sided dice, take best 3,
+                        results of 10 roll again and add on".}
   gem.homepage      = "https://github.com/neilslater/games_dice"
 
   gem.add_development_dependency "rspec", ">= 2.13.0"

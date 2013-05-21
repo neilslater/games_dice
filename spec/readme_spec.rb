@@ -1,15 +1,6 @@
 require 'games_dice'
+require 'helpers'
 # This spec demonstrates that documentation from the README.md works as intended
-
-# Test helper class, a stub of a PRNG
-class TestPRNG
-  def initialize
-    @numbers = [0.123,0.234,0.345,0.999,0.876,0.765,0.543,0.111,0.333,0.777]
-  end
-  def rand(n)
-    Integer( n * @numbers.pop )
-  end
-end
 
 describe GamesDice do
 
@@ -94,3 +85,64 @@ describe GamesDice::Dice do
   end
 
 end # describe GamesDice::Dice
+
+describe GamesDice::Probabilities do
+  let(:probs) { GamesDice.create('3d6').probabilities }
+
+  describe "#to_h" do
+    it "returns a hash representation of the probability distribution" do
+      h = probs.to_h
+      h.should be_valid_distribution
+      h[3].should be_within(1e-10).of 1.0/216
+      h[11].should be_within(1e-10).of 27.0/216
+    end
+  end
+
+  describe "#max" do
+    it "returns maximum result in the probability distribution" do
+      probs.max.should == 18
+    end
+  end
+
+  describe "#min" do
+    it "returns minimum result in the probability distribution" do
+      probs.min.should == 3
+    end
+  end
+
+  describe "#p_eql( n )" do
+    it "returns the probability of a result equal to the integer n" do
+      probs.p_eql( 3 ).should be_within(1e-10).of 1.0/216
+      probs.p_eql( 2 ).should == 0.0
+    end
+  end
+
+  describe "#p_gt( n )" do
+    it "returns the probability of a result greater than the integer n" do
+      probs.p_gt( 17 ).should be_within(1e-10).of 1.0/216
+      probs.p_gt( 2 ).should == 1.0
+    end
+  end
+
+  describe "#p_ge( n )" do
+    it "returns the probability of a result greater than the integer n" do
+      probs.p_ge( 17 ).should be_within(1e-10).of 4.0/216
+      probs.p_ge( 3 ).should == 1.0
+    end
+  end
+
+  describe "#p_le( n )" do
+    it "returns the probability of a result less than or equal to the integer n" do
+      probs.p_le( 17 ).should be_within(1e-10).of 215.0/216
+      probs.p_le( 3 ).should be_within(1e-10).of 1.0/216
+    end
+  end
+
+  describe "#p_lt( n )" do
+    it "returns the probability of a result less than the integer n" do
+      probs.p_lt( 17 ).should be_within(1e-10).of 212.0/216
+      probs.p_lt( 3 ).should == 0.0
+    end
+  end
+
+end  # describe GamesDice::Probabilities

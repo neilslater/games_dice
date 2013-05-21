@@ -1,15 +1,5 @@
 require 'games_dice'
 
-# Test helper class, a stub of a PRNG
-class TestPRNG
-  def initialize
-    @numbers = [0.123,0.234,0.345,0.999,0.876,0.765,0.543,0.111,0.333,0.777]
-  end
-  def rand(n)
-    Integer( n * @numbers.pop )
-  end
-end
-
 describe GamesDice::ComplexDie do
 
   before do

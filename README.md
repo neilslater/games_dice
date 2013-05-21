@@ -114,31 +114,78 @@ Convenience method, returns an array [ dice.min, dice.max ]
 
 #### dice.probabilities
 
-Calculates probability distribution for the dice. Note that some distributions, involving keeping
-a number best or worst results, can take significant time to calculate.
+Calculates probability distribution for the dice.
 
 Returns a GamesDice::Probabilities object that describes the probability distribution.
 
     probabilities = dice.probabilities
 
+Note that some distributions, involving keeping a number best or worst results, can take
+significant time to calculate. If the theoretical distribution would contain a large number
+of very low probabilities due to a possibility of large numbers re-rolls, then the
+calculations cut short, typically approximating to the nearest 1.0e-10.
+
 ### GamesDice::Probabilities instance methods
 
 #### probabilities.to_h
 
-Returns a hash representation of the probability distribution. Each keys is a possible result
+Returns a hash representation of the probability distribution. Each key is a possible result
 from rolling the dice (an Integer), and the associated value is the probability of a roll
-returning that value (a Float).
+returning that result (a Float, between 0.0 and 1.0 inclusive).
+
+    distribution = probabilities.to_h
+    distribution[3]           # => 0.0046296296296
 
 #### probabilities.max
 
-Returns maximum value in the probability distribution. This may not be the theoretical maximum
+Returns maximum result in the probability distribution. This may not be the theoretical maximum
 possible on the dice, if for example the dice can roll open-ended high results.
+
+    probabilities.max         # => 18
 
 #### probabilities.min
 
-Returns minimum value in the probability distribution. This may not be the theoretical minimum
+Returns minimum result in the probability distribution. This may not be the theoretical minimum
 possible on the dice, if for example the dice can roll open-ended low results.
 
+    probabilities.min         # => 3
+
+#### probabilities.p_eql( n )
+
+Returns the probability of a result equal to the integer n.
+
+    probabilities.p_eql( 3 )  # => 0.004629629629
+    probabilities.p_eql( 2 )  # => 0.0
+
+Probabilities below 1e-10 due to requiring long sequences of re-rolls will calculate as 0.0
+
+#### probabilities.p_gt( n )
+
+Returns the probability of a result greater than the integer n.
+
+    probabilities.p_gt( 17 )  # => 0.004629629629
+    probabilities.p_gt( 2 )   # => 1.0
+
+#### probabilities.p_ge( n )
+
+Returns the probability of a result greater than or equal to the integer n.
+
+    probabilities.p_ge( 17 )  # => 0.0185185185185
+    probabilities.p_ge( 3 )   # => 1.0
+
+#### probabilities.p_le( n )
+
+Returns the probability of a result less than or equal to the integer n.
+
+    probabilities.p_le( 17 )  # => 0.9953703703703
+    probabilities.p_le( 3 )   # => 0.0046296296296
+
+#### probabilities.p_lt( n )
+
+Returns the probability of a result less than the integer n.
+
+    probabilities.p_lt( 17 )  # => 0.9953703703703
+    probabilities.p_lt( 3 )   # => 0.0
 
 ## String Dice Descriptions
 
