@@ -75,22 +75,70 @@ Returns a GamesDice::Dice object.
 
 ### GamesDice::Dice instance methods
 
+Example results given for '3d6'. Unless noted, methods do not take any parameters.
+
 #### dice.roll
 
 Simulates rolling the dice as they were described in the constructor, and keeps a record of how the
 simulation result was achieved.
 
-Takes no parameters.
-
-Returns the integer result of the roll.
+    dice.roll        # => 12
 
 #### dice.result
 
 Returns the value from the last call to roll. This will be nil if no roll has been made yet.
 
-Takes no parameters.
+    dice.result      # => nil
+    dice.roll
+    dice.result      # => 12
 
-Returns either nil, or an integer.
+#### dice.max
+
+Returns the maximum possible value from a roll of the dice. Dice with the possibility of rolling
+progressively higher and higher values will return an arbitrary high value.
+
+    dice.max         # => 18
+
+#### dice.min
+
+Returns the minimum possible value from a roll of the dice. Dice with the possibility of rolling
+progressively lower and lower values will return an arbitrary low value.
+
+    dice.min         # => 3
+
+#### dice.minmax
+
+Convenience method, returns an array [ dice.min, dice.max ]
+
+    dice.minmax      # => [3,18]
+
+#### dice.probabilities
+
+Calculates probability distribution for the dice. Note that some distributions, involving keeping
+a number best or worst results, can take significant time to calculate.
+
+Returns a GamesDice::Probabilities object that describes the probability distribution.
+
+    probabilities = dice.probabilities
+
+### GamesDice::Probabilities instance methods
+
+#### probabilities.to_h
+
+Returns a hash representation of the probability distribution. Each keys is a possible result
+from rolling the dice (an Integer), and the associated value is the probability of a roll
+returning that value (a Float).
+
+#### probabilities.max
+
+Returns maximum value in the probability distribution. This may not be the theoretical maximum
+possible on the dice, if for example the dice can roll open-ended high results.
+
+#### probabilities.min
+
+Returns minimum value in the probability distribution. This may not be the theoretical minimum
+possible on the dice, if for example the dice can roll open-ended low results.
+
 
 ## String Dice Descriptions
 
@@ -165,6 +213,7 @@ five.
 #### Aliases
 
 Some combinations of modifiers crop up in well-known games, and have been allocated single-character
+short codes.
 
 This is an alias for "exploding" dice:
 
@@ -172,7 +221,6 @@ This is an alias for "exploding" dice:
 
 When rolled, this will score from 5 to theoretically any number, as results of 10 on any die mean that
 die rolls again and the result is added on.
-
 
 ## Contributing
 

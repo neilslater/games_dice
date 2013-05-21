@@ -48,7 +48,7 @@ class GamesDice::Dice
   end
 
   def max
-    @min ||= @offset + @bunch_multipliers.zip(@bunches).inject(0) do |total,mb|
+    @max ||= @offset + @bunch_multipliers.zip(@bunches).inject(0) do |total,mb|
       m,b = mb
       total += m * b.max
     end

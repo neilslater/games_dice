@@ -35,7 +35,7 @@ RSpec::Matchers.define :be_valid_distribution do
   end
 
   description do |given|
-    "a hash describing a complete discrete probability distribution of integers"
+    "a hash describing a complete probability distribution of integer results"
   end
 end
 

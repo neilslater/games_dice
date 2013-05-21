@@ -66,4 +66,31 @@ describe GamesDice::Dice do
     end
   end
 
+  describe "#max" do
+    it "returns the maximum possible value from a roll of the dice" do
+      dice.max.should == 18
+    end
+  end
+
+  describe "#min" do
+    it "returns the minimum possible value from a roll of the dice" do
+      dice.min.should == 3
+    end
+  end
+
+  describe "#minmax" do
+    it "returns an array [ dice.min, dice.max ]" do
+      dice.minmax.should == [3,18]
+    end
+  end
+
+  describe "#probabilities" do
+    it "calculates probability distribution for the dice" do
+      pd = dice.probabilities
+      pd.is_a?( GamesDice::Probabilities ).should be_true
+      pd.p_eql( 3).should be_within(1e-10).of 1.0/216
+      pd.p_eql( 11 ).should be_within(1e-10).of 27.0/216
+    end
+  end
+
 end # describe GamesDice::Dice
