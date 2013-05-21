@@ -40,4 +40,30 @@ class GamesDice::Dice
     end
   end
 
+  def min
+    @min ||= @offset + @bunch_multipliers.zip(@bunches).inject(0) do |total,mb|
+      m,b = mb
+      total += m * b.min
+    end
+  end
+
+  def max
+    @min ||= @offset + @bunch_multipliers.zip(@bunches).inject(0) do |total,mb|
+      m,b = mb
+      total += m * b.max
+    end
+  end
+
+  def minmax
+    [min,max]
+  end
+
+  def probabilities
+    return @probabilities if @probabilities
+    probs = @bunch_multipliers.zip(@bunches).inject( GamesDice::Probabilities.new( { @offset => 1.0 } ) ) do |probs, mb|
+      m,b = mb
+      GamesDice::Probabilities.add_distributions_mult( 1, probs, m, b.probabilities )
+    end
+  end
+
 end # class Dice

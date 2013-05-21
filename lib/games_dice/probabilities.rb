@@ -94,4 +94,18 @@ class GamesDice::Probabilities
     GamesDice::Probabilities.new( h )
   end
 
+  # adding two probability distributions calculates a new distribution, representing what would
+  # happen if you created a random number using the sum of numbers from both distributions
+  def self.add_distributions_mult m_a, pd_a, m_b, pd_b
+    h = {}
+    pd_a.ph.each do |ka,pa|
+      pd_b.ph.each do |kb,pb|
+        kc = m_a * ka + m_b * kb
+        pc = pa * pb
+        h[kc] = h[kc] ? h[kc] + pc : pc
+      end
+    end
+    GamesDice::Probabilities.new( h )
+  end
+
 end # class Dice
