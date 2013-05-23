@@ -146,3 +146,74 @@ describe GamesDice::Probabilities do
   end
 
 end  # describe GamesDice::Probabilities
+
+describe 'String Dice Description' do
+
+  before :each do
+    srand(35241)
+  end
+
+  describe "'1d6'" do
+    it "returns expected results from rolling" do
+      d = GamesDice.create '1d6'
+      (1..20).map { |n| d.roll }.should == [6, 3, 2, 3, 4, 6, 4, 2, 6, 3, 3, 5, 6, 6, 3, 6, 5, 2, 1, 4]
+    end
+  end
+
+  describe "'2d6 + 1d4'" do
+    it "returns expected results from rolling" do
+      d = GamesDice.create '2d6 + 1d4'
+      (1..5).map { |n| d.roll }.should == [11, 10, 12, 12, 14]
+    end
+  end
+
+  describe "'1d100 + 1d20 - 5'" do
+    it "returns expected results from rolling" do
+      d = GamesDice.create '1d100 + 1d20 - 5'
+      (1..5).map { |n| d.roll }.should == [75, 78, 24, 102, 32]
+    end
+  end
+
+  describe "'1d10x'" do
+    it "returns expected results from rolling" do
+      d = GamesDice.create '1d10x'
+      (1..20).map { |n| d.roll }.should == [2, 3, 4, 7, 6, 7, 4, 2, 6, 3, 7, 5, 6, 7, 6, 6, 5, 19, 4, 19]
+    end
+  end
+
+  describe "'1d6r1'" do
+    it "returns expected results from rolling" do
+      d = GamesDice.create '1d6r1'
+      (1..20).map { |n| d.roll }.should == [6, 3, 2, 3, 4, 6, 4, 2, 6, 3, 3, 5, 6, 6, 3, 6, 5, 2, 4, 2]
+    end
+  end
+
+  describe "'5d10r:10,add.k2'" do
+    it "returns expected results from rolling" do
+      d = GamesDice.create '5d10r:10,add.k2'
+      (1..5).map { |n| d.roll }.should == [6, 3, 2, 3, 4]
+    end
+  end
+
+  describe "'3d10m6'" do
+    it "returns expected results from rolling" do
+      d = GamesDice.create '3d10m6'
+      (1..6).map { |n| d.roll }.should == [0, 3, 1, 1, 3, 2]
+    end
+  end
+
+  describe "'5d10k2'" do
+    it "returns expected results from rolling" do
+      d = GamesDice.create '5d10k2'
+      (1..5).map { |n| d.roll }.should == [13, 13, 14, 19, 19]
+    end
+  end
+
+  describe "'5d10x'" do
+    it "returns expected results from rolling" do
+      d = GamesDice.create '5d10x'
+      (1..5).map { |n| d.roll }.should == [22, 22, 31, 53, 25]
+    end
+  end
+
+end

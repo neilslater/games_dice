@@ -13,6 +13,9 @@ class GamesDice::Parser < Parslet::Parser
   rule(:integer) { match('[0-9]').repeat(1) }
   rule(:range) { integer.as(:range_start) >> str('..') >> integer.as(:range_end) }
   rule(:dlabel) { match('[d]') }
+  rule(:space) { match('\s').repeat(1) }
+  rule(:space?) { space.maybe }
+
   rule(:bunch_start) { integer.as(:ndice) >> dlabel >> integer.as(:sides) }
 
   rule(:reroll_label) { match(['r']).as(:reroll) }
@@ -23,12 +26,19 @@ class GamesDice::Parser < Parslet::Parser
   rule(:single_modifier) { alias_label }
   rule(:modifier_label) {  reroll_label | keep_label | map_label }
   rule(:simple_modifier) { modifier_label >> integer.as(:simple_value) }
-  rule(:complex_modifier) { modifier_label >> str('[') >> str(']') } # TODO: param extraction
+  rule(:comparison_op) { str('>=') | str('<=') | str('==') | str('>') | str('<') }
+  rule(:ctl_string) { match('[a-z_]').repeat(1) }
+  rule(:opint_int_or_string) { (:comparison_op >> :integer) | :integer | :ctl_string }
+  rule(:comma) { str(',') }
+  rule(:param) { :opint_int_or_string.as(:param_value) }
 
-  rule(:bunch_modifier) { single_modifier | simple_modifier }
+  rule(:stop) { str('.') }
+
+  rule(:complex_modifier) { modifier_label >> str(':') >> stop } # TODO: param extraction
+
+  rule(:bunch_modifier) { ( single_modifier >> stop.maybe ) | ( simple_modifier >> stop.maybe ) | complex_modifier }
   rule(:bunch) { bunch_start >> bunch_modifier.repeat.as(:mods) }
-  rule(:space) { match('\s').repeat(1) }
-  rule(:space?) { space.maybe }
+
   rule(:operator) { match('[+-]').as(:op) >> space? }
   rule(:add_bunch) { operator >> bunch >> space? }
   rule(:add_constant) { operator >> integer.as(:constant) >> space? }

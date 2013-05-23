@@ -54,11 +54,10 @@ Or install it yourself as:
 ## Library API
 
 Although you can refer to the documentation for the contained classes, and use it if needed to
-build some exotic dice systems, the recommended way to use GamesDice is to create GamesDice::Dice
-objects via the factory methods from the GamesDice module, and then use those objects to simulate
-dice rolls, explain the results or calculate probabilties as required.
+build some exotic dice systems, all you need to know to access the core features is described
+here.
 
-### GamesDice factory methods
+### GamesDice factory method
 
 #### GamesDice.create
 
@@ -217,22 +216,53 @@ A die modifier can also be a single letter plus an integer value, e.g.
 
     1d6r1
 
-More complex die modifiers are possible, with parameters supplied in square brackets, and multiple
-modifiers should combine as expected e.g.
+You can add comma-seperated parameters to a modifier by using a ":" (colon) character after the
+modifier letter, and a "." (full stop) to signify the end of the parameters. What parameters are
+accepted, and what they mean, depends on the modifier:
 
-    5d10r[10,add]k2
+    5d10r:>8,add.
+
+You can use more than one modifier. Modifiers should be separated by a "." (full stop) character, although
+this is optional if you use modifiers without parameters:
+
+    5d10r:10,add.k2
+    5d10xk2
+    5d10x.k2
+
+are all equivalent.
 
 #### Rerolls
 
 You can specify that dice rolling certain values should be re-rolled, and how that re-roll should be
 interpretted.
 
-The simple form specifies a low value that will automatically trigger a one-time replacement:
+The simple form specifies a low value that will automatically trigger a re-roll and replace:
 
     1d6r1
 
 When rolled, this die will score from 1 to 6. If it rolls a 1, it will roll again automatically
 and use that result instead.
+
+The full version of this modifier, allows you to specify from 1 to 3 parameters:
+
+    1d10r:[VALUE_COMPARISON],[REROLL_TYPE],[LIMIT].
+
+Where:
+
+ * VALUE_COMPARISON is one of >, >=, == (default), <= < plus an integer to set conditions on when the reroll should occur
+ * REROLL_TYPE is one of
+  * replace (default) - use the new value in place of existing value for the die
+  * add - add result of reroll to running total, and ignore any subtract rules
+  * subtract - subtract result of reroll from running total, and reverse sense of any further add results
+  * use_best - use the new value if it is higher than the existing value
+  * use_worst - use the new value if it is higher than the existing value
+ * LIMIT is an integer that sets the maximum number of times that the rule can be triggered, the default is 1000
+
+Examples:
+
+    1d6r:1.                # Same as "1d6r1"
+    1d10r:10,replace,1.    #
+    1d20r:<=10,use_best,1. # Roll a 20-sided die, re-roll a result if 10 or lower, and use best result
 
 #### Maps
 
@@ -264,7 +294,7 @@ short codes.
 
 This is an alias for "exploding" dice:
 
-    5d10x
+    5d10x    # Same as '5d10r:10,add.'
 
 When rolled, this will score from 5 to theoretically any number, as results of 10 on any die mean that
 die rolls again and the result is added on.
