@@ -191,7 +191,7 @@ describe 'String Dice Description' do
   describe "'5d10r:10,add.k2'" do
     it "returns expected results from rolling" do
       d = GamesDice.create '5d10r:10,add.k2'
-      (1..5).map { |n| d.roll }.should == [6, 3, 2, 3, 4]
+      (1..5).map { |n| d.roll }.should == [13, 13, 14, 38, 15]
     end
   end
 

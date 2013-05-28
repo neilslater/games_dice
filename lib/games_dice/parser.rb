@@ -3,18 +3,16 @@ require 'parslet'
 # converts string dice descriptions to data usable for the GamesDice::Dice constructor
 class GamesDice::Parser < Parslet::Parser
 
-  # Descriptive language examples (capital letters stand in for integers)
-  #  NdXk[Z,worst]     -  a roll of N dice, sides X, keep worst Z results and sum them
-  #  NdXr[Z,add]       -  a roll of N dice, sides X, re-roll and add on a result of Z
-  #  NdXr[Y..Z,add]    -  a roll of N dice, sides X, re-roll and add on a result of Y..Z
-  #  NdXm[>=Z,A]       -  mapped dice, values greater than or equal to Z score A (unmapped values score 0 by default)
+  # These are the Parslet rules that define the dice grammar. It's an inefficient and over-complex
+  # use of Parslet, and could do with logical a clean-up.
 
-  # These are the Parslet rules that define the dice grammar
   rule(:integer) { match('[0-9]').repeat(1) }
   rule(:range) { integer.as(:range_start) >> str('..') >> integer.as(:range_end) }
   rule(:dlabel) { match('[d]') }
   rule(:space) { match('\s').repeat(1) }
   rule(:space?) { space.maybe }
+  rule(:underscore) { str('_').repeat(1) }
+  rule(:underscore?) { space.maybe }
 
   rule(:bunch_start) { integer.as(:ndice) >> dlabel >> integer.as(:sides) }
 
@@ -28,15 +26,29 @@ class GamesDice::Parser < Parslet::Parser
   rule(:simple_modifier) { modifier_label >> integer.as(:simple_value) }
   rule(:comparison_op) { str('>=') | str('<=') | str('==') | str('>') | str('<') }
   rule(:ctl_string) { match('[a-z_]').repeat(1) }
-  rule(:opint_int_or_string) { (:comparison_op >> :integer) | :integer | :ctl_string }
-  rule(:comma) { str(',') }
-  rule(:param) { :opint_int_or_string.as(:param_value) }
+  rule(:output_string) { match('[A-Za-z0-9_]').repeat(1) }
 
+  rule(:opint_or_int) { (comparison_op.as(:comparison) >> integer.as(:compare_num)) | integer.as(:compare_num) }
+  rule(:comma) { str(',') }
   rule(:stop) { str('.') }
 
-  rule(:complex_modifier) { modifier_label >> str(':') >> stop } # TODO: param extraction
+  rule(:condition_only) { opint_or_int.as(:condition) }
 
-  rule(:bunch_modifier) { ( single_modifier >> stop.maybe ) | ( simple_modifier >> stop.maybe ) | complex_modifier }
+  rule(:condition_and_type) { opint_or_int.as(:condition) >> comma >> ctl_string.as(:type) }
+  rule(:condition_and_num) { opint_or_int.as(:condition) >> comma >> integer.as(:num) }
+
+  rule(:condition_type_and_num) { opint_or_int.as(:condition) >> comma >> ctl_string.as(:type) >> comma >> integer.as(:num) }
+  rule(:condition_num_and_output) { opint_or_int.as(:condition) >> comma >> integer.as(:num) >> comma >> ctl_string.as(:output) }
+
+  rule(:reroll_params) { condition_type_and_num | condition_and_type | condition_only }
+  rule(:map_params) { condition_num_and_output | condition_and_num | condition_only }
+
+  rule(:full_reroll) { reroll_label >> str(':') >> reroll_params >> stop }
+  rule(:full_map) { map_label >> str(':') >> map_params >> stop }
+
+  rule(:complex_modifier) { full_reroll | full_map }
+
+  rule(:bunch_modifier) { complex_modifier | ( single_modifier >> stop.maybe ) | ( simple_modifier >> stop.maybe ) }
   rule(:bunch) { bunch_start >> bunch_modifier.repeat.as(:mods) }
 
   rule(:operator) { match('[+-]').as(:op) >> space? }
@@ -126,8 +138,18 @@ class GamesDice::Parser < Parslet::Parser
     out_hash[:rerolls] ||= []
     if reroll_mod[:simple_value]
       out_hash[:rerolls] << [ reroll_mod[:simple_value].to_i, :>=, :reroll_replace, 1 ]
+      return
     end
-    # TODO: Handle complex descriptions
+    # Typical reroll_mod: {:reroll=>"r"@5, :condition=>{:compare_num=>"10"@7}, :type=>"add"@10}
+    op = get_op_symbol( reroll_mod[:condition][:comparison] || '==' )
+    v = reroll_mod[:condition][:compare_num].to_i
+    type = ( 'reroll_' + ( reroll_mod[:type] || 'replace' ) ).to_sym
+
+    if reroll_mod[:num]
+      out_hash[:rerolls] << [ v, op, type, reroll_mod[:num].to_i ]
+    else
+      out_hash[:rerolls] << [ v, op, type ]
+    end
   end
 
   # Called for any parsed keeper mode
@@ -147,7 +169,22 @@ class GamesDice::Parser < Parslet::Parser
       out_hash[:maps] << [ map_mod[:simple_value].to_i, :<=, 1 ]
       return
     end
-    # TODO: Handle complex descriptions
+
+    # Typical
+  end
+
+  # The dice description language uses (r).op.x, whilst GamesDice::RerollRule uses x.op.(r), so
+  # as well as converting to a symbol, we must reverse sense of input to constructor
+  OP_CONVERSION = {
+    '==' => :==,
+    '>=' => :<=,
+    '>' => :<,
+    '<' => :>,
+    '<=' => :>=,
+  }
+
+  def get_op_symbol parsed_op_string
+    OP_CONVERSION[ parsed_op_string.to_s ]
   end
 
 end # class Parser
