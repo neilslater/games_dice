@@ -91,6 +91,17 @@ Returns the value from the last call to roll. This will be nil if no roll has be
     dice.roll
     dice.result      # => 12
 
+#### dice.explain_result
+
+Returns a string that attempts to show how the result from the last call to roll was composed
+from individual results. This will be nil if no roll has been made yet.
+
+    dice.explain_result    # => nil
+    dice.roll              # => 12
+    dice.explain_result    # => "3d6: 4 + 2 + 6 = 12"
+
+The exact format is the subject of refinement in future versions of the gem.
+
 #### dice.max
 
 Returns the maximum possible value from a roll of the dice. Dice with the possibility of rolling
@@ -274,6 +285,24 @@ The simple form specifies a value above which the result is considered to be 1, 
     3d10m6
 
 When rolled, this will score from 0 to 3 - the number of the ten-sided dice that scored 6 or higher.
+
+The full version of this modifier, allows you to specify from 1 to 3 parameters:
+
+    3d10m:[VALUE_COMPARISON],[MAP_VALUE],[DESCRIPTION].
+
+Where:
+
+ * VALUE_COMPARISON is one of >, >= (default), ==, <= < plus an integer to set conditions on when the map should occur
+ * MAP_VALUE is an integer that will be used in place of a result from a die, default value is 1
+  * maps are tested in order that they are declared, and first one that matches is applied
+  * when at least one map has been defined, all unmapped values default to 0
+ * DESCRIPTION is a word or character to use to denote the map in any explanation
+
+Examples:
+
+    9d6x.m:10.           # Roll 9 six-sided "exploding" dice, and count 1 for any result of 10 or more
+    9d6x.m:10,1,S.       # Same as above, but with each success marked with "S" in the explanation
+
 
 #### Keepers
 

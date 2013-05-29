@@ -57,6 +57,25 @@ describe GamesDice::Dice do
     end
   end
 
+  describe "#explain_result" do
+    it "attempts to show how the result from the last call to roll was composed" do
+      expected_results = [
+        "3d6: 3 + 6 + 2 = 11",
+        "3d6: 4 + 5 + 6 = 15",
+        "3d6: 3 + 6 + 2 = 11",
+        "3d6: 5 + 6 + 1 = 12"
+        ]
+      expected_results.each do |expected|
+        dice.roll
+        dice.explain_result.should == expected
+      end
+    end
+
+    it "will be nil if no roll has been made yet" do
+      dice.explain_result.should be_nil
+    end
+  end
+
   describe "#max" do
     it "returns the maximum possible value from a roll of the dice" do
       dice.max.should == 18
@@ -274,6 +293,40 @@ describe 'String Dice Description' do
     it "returns expected results from rolling" do
       d = GamesDice.create '5d10r:>8,add.'
       (1..5).map { |n| d.roll }.should == [22, 22, 31, 64, 26]
+    end
+  end
+
+  describe "9d6x.m:10." do
+    it "returns expected results from rolling" do
+      d = GamesDice.create '9d6x.m:10.'
+      (1..5).map { |n| d.roll }.should == [1, 2, 1, 1, 1]
+    end
+    it "can be explained as number of exploding dice scoring 10+" do
+      d = GamesDice.create '9d6x.m:10.'
+      (1..5).map { |n| d.roll; d.explain_result }.should == [
+            "9d6: [6+3] 9, 2, 3, 4, [6+4] 10, 2, [6+3] 9, 3, 5. Successes: 1",
+            "9d6: [6+6+3] 15, [6+5] 11, 2, 1, 4, 2, 1, 3, 5. Successes: 2",
+            "9d6: 1, [6+6+1] 13, 2, 1, 1, 3, [6+1] 7, 5, 4. Successes: 1",
+            "9d6: [6+4] 10, 3, 4, 5, 5, 1, [6+3] 9, 3, 5. Successes: 1",
+            "9d6: [6+3] 9, 3, [6+5] 11, 4, 2, 2, 1, 4, 5. Successes: 1"
+      ]
+    end
+  end
+
+  describe "9d6x.m:10,1,S." do
+    it "returns expected results from rolling" do
+      d = GamesDice.create '9d6x.m:10,1,S.'
+      (1..5).map { |n| d.roll }.should == [1, 2, 1, 1, 1]
+    end
+    it "includes the string 'S' next to each success" do
+      d = GamesDice.create '9d6x.m:10,1,S.'
+      (1..5).map { |n| d.roll; d.explain_result }.should == [
+            "9d6: [6+3] 9, 2, 3, 4, [6+4] 10 S, 2, [6+3] 9, 3, 5. Successes: 1",
+            "9d6: [6+6+3] 15 S, [6+5] 11 S, 2, 1, 4, 2, 1, 3, 5. Successes: 2",
+            "9d6: 1, [6+6+1] 13 S, 2, 1, 1, 3, [6+1] 7, 5, 4. Successes: 1",
+            "9d6: [6+4] 10 S, 3, 4, 5, 5, 1, [6+3] 9, 3, 5. Successes: 1",
+            "9d6: [6+3] 9, 3, [6+5] 11 S, 4, 2, 2, 1, 4, 5. Successes: 1"
+      ]
     end
   end
 

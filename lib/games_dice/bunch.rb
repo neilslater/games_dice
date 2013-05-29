@@ -83,7 +83,7 @@ class GamesDice::Bunch
 
   # Needs refinement. Returns best available string description of the bunch.
   def label
-    return name if name != ''
+    return @name if @name != ''
     return @ndice.to_s + 'd' + @sides.to_s
   end
 

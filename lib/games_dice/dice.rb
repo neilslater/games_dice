@@ -68,7 +68,7 @@ class GamesDice::Dice
 
   def explain_result
     return nil unless @result
-    explanations = @bunches.map { |bunch| bunch.label +": " + bunch.explain_result }
+    explanations = @bunches.map { |bunch| bunch.label + ": " + bunch.explain_result }
 
     if explanations.count == 0
       return @offset.to_s
