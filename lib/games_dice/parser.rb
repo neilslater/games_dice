@@ -3,9 +3,7 @@ require 'parslet'
 # converts string dice descriptions to data usable for the GamesDice::Dice constructor
 class GamesDice::Parser < Parslet::Parser
 
-  # These are the Parslet rules that define the dice grammar. It's an inefficient and over-complex
-  # use of Parslet, and could do with logical a clean-up.
-
+  # Parslet rules that define the dice string grammar.
   rule(:integer) { match('[0-9]').repeat(1) }
   rule(:range) { integer.as(:range_start) >> str('..') >> integer.as(:range_end) }
   rule(:dlabel) { match('[d]') }
@@ -38,7 +36,7 @@ class GamesDice::Parser < Parslet::Parser
   rule(:condition_and_num) { opint_or_int.as(:condition) >> comma >> integer.as(:num) }
 
   rule(:condition_type_and_num) { opint_or_int.as(:condition) >> comma >> ctl_string.as(:type) >> comma >> integer.as(:num) }
-  rule(:condition_num_and_output) { opint_or_int.as(:condition) >> comma >> integer.as(:num) >> comma >> ctl_string.as(:output) }
+  rule(:condition_num_and_output) { opint_or_int.as(:condition) >> comma >> integer.as(:num) >> comma >> output_string.as(:output) }
 
   rule(:reroll_params) { condition_type_and_num | condition_and_type | condition_only }
   rule(:map_params) { condition_num_and_output | condition_and_num | condition_only }
@@ -58,13 +56,11 @@ class GamesDice::Parser < Parslet::Parser
   rule(:expressions) { dice_expression.repeat.as(:bunches) }
   root :expressions
 
-  def parse dice_description, dice_name = nil
+  def parse dice_description
     dice_description = dice_description.to_s.strip
-    dice_name ||= dice_description
     # Force first item to start '+' for simpler parse rules
     dice_description = '+' + dice_description unless dice_description =~ /\A[+-]/
     dice_expressions = super( dice_description )
-
     { :bunches => collect_bunches( dice_expressions ), :offset => collect_offset( dice_expressions ) }
   end
 
@@ -137,9 +133,10 @@ class GamesDice::Parser < Parslet::Parser
   def collect_reroll_rule reroll_mod, out_hash
     out_hash[:rerolls] ||= []
     if reroll_mod[:simple_value]
-      out_hash[:rerolls] << [ reroll_mod[:simple_value].to_i, :>=, :reroll_replace, 1 ]
+      out_hash[:rerolls] << [ reroll_mod[:simple_value].to_i, :>=, :reroll_replace ]
       return
     end
+
     # Typical reroll_mod: {:reroll=>"r"@5, :condition=>{:compare_num=>"10"@7}, :type=>"add"@10}
     op = get_op_symbol( reroll_mod[:condition][:comparison] || '==' )
     v = reroll_mod[:condition][:compare_num].to_i
@@ -160,6 +157,8 @@ class GamesDice::Parser < Parslet::Parser
       return
     end
     # TODO: Handle complex descriptions
+    # Typical keeper_mod:
+    puts keeper_mod.inspect
   end
 
   # Called for any parsed map mode
@@ -170,7 +169,19 @@ class GamesDice::Parser < Parslet::Parser
       return
     end
 
-    # Typical
+    # Typical map_mod: {:map=>"m"@4, :condition=>{:compare_num=>"5"@6}, :num=>"2"@8, :output=>"Qwerty"@10}
+    op = get_op_symbol( map_mod[:condition][:comparison] || '>=' )
+    v = map_mod[:condition][:compare_num].to_i
+    out_val = 1
+    if map_mod[:num]
+      out_val = map_mod[:num].to_i
+    end
+
+    if map_mod[:output]
+      out_hash[:maps] << [ v, op, out_val, map_mod[:output].to_s ]
+    else
+      out_hash[:maps] << [ v, op, out_val ]
+    end
   end
 
   # The dice description language uses (r).op.x, whilst GamesDice::RerollRule uses x.op.(r), so

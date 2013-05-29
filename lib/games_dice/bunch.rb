@@ -81,6 +81,12 @@ class GamesDice::Bunch
   # after calling #roll, this is set to the final integer value from using the dice as specified
   attr_reader :result
 
+  # Needs refinement. Returns best available string description of the bunch.
+  def label
+    return name if name != ''
+    return @ndice.to_s + 'd' + @sides.to_s
+  end
+
   # either nil, or an array of GamesDice::RerollRule objects that are assessed on each roll of #single_die
   # Reroll types :reroll_new_die and :reroll_new_keeper do not affect the #single_die, but are instead
   # assessed in this container object

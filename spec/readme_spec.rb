@@ -210,9 +210,70 @@ describe 'String Dice Description' do
   end
 
   describe "'5d10x'" do
-    it "returns expected results from rolling" do
+    it "is the same as '5d10r:10,add.'" do
+      srand(235241)
       d = GamesDice.create '5d10x'
-      (1..5).map { |n| d.roll }.should == [22, 22, 31, 53, 25]
+      results1 = (1..50).map { d.roll }
+
+      srand(235241)
+      d = GamesDice.create '5d10r:10,add.'
+      results2 = (1..50).map { d.roll }
+
+      results1.should == results2
+    end
+  end
+
+  describe "'1d6r:1.'" do
+    it "should return same as '1d6r1'" do
+      srand(235241)
+      d = GamesDice.create '1d6r:1.'
+      results1 = (1..50).map { d.roll }
+
+      srand(235241)
+      d = GamesDice.create '1d6r1'
+      results2 = (1..50).map { d.roll }
+
+      results1.should == results2
+    end
+  end
+
+  describe "'1d10r:10,replace,1.'" do
+    it "should roll a 10-sided die, re-roll a result of 10 and take the value of the second roll" do
+      d = GamesDice.create '1d10r:10,replace,1.'
+      (1..27).map { d.roll }.should == [2, 3, 4, 7, 6, 7, 4, 2, 6, 3, 7, 5, 6, 7, 6, 6, 5, 9, 4, 9, 8, 3, 1, 6, 7, 1, 1]
+    end
+  end
+
+  describe "'1d20r:<=10,use_best,1.'" do
+    it "should roll a 20-sided die, re-roll a result if 10 or lower, and use best result" do
+      d = GamesDice.create '1d20r:<=10,use_best,1.'
+      (1..20).map { d.roll }.should == [ 18, 19, 20, 20, 3, 11, 7, 20, 15, 19, 6, 16, 17, 16, 15, 11, 9, 15, 20, 16 ]
+    end
+  end
+
+  describe "'5d10r:10,add.k2', '5d10xk2' and '5d10x.k2'" do
+    it "should all be equivalent" do
+      srand(135241)
+      d = GamesDice.create '5d10r:10,add.k2'
+      results1 = (1..50).map { d.roll }
+
+      srand(135241)
+      d = GamesDice.create '5d10xk2'
+      results2 = (1..50).map { d.roll }
+
+      srand(135241)
+      d = GamesDice.create '5d10x.k2'
+      results3 = (1..50).map { d.roll }
+
+      results1.should == results2
+      results2.should == results3
+    end
+  end
+
+  describe "'5d10r:>8,add.'" do
+    it "returns expected results from rolling" do
+      d = GamesDice.create '5d10r:>8,add.'
+      (1..5).map { |n| d.roll }.should == [22, 22, 31, 64, 26]
     end
   end
 

@@ -261,7 +261,7 @@ Where:
 Examples:
 
     1d6r:1.                # Same as "1d6r1"
-    1d10r:10,replace,1.    #
+    1d10r:10,replace,1.    # Roll a 10-sided die, re-roll a result of 10 and take the value of the second roll
     1d20r:<=10,use_best,1. # Roll a 20-sided die, re-roll a result if 10 or lower, and use best result
 
 #### Maps

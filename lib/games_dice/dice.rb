@@ -66,4 +66,35 @@ class GamesDice::Dice
     end
   end
 
+  def explain_result
+    return nil unless @result
+    explanations = @bunches.map { |bunch| bunch.label +": " + bunch.explain_result }
+
+    if explanations.count == 0
+      return @offset.to_s
+    end
+
+    if explanations.count == 1
+      if @offset !=0
+        return explanations[0] + '. ' + array_to_sum( [ @bunches[0].result, @offset ] )
+      else
+        return explanations[0]
+      end
+    end
+
+    bunch_values = @bunch_multipliers.zip(@bunches).map { |m,b| m * b.result }
+    bunch_values << @offset if @offset != 0
+    explanations << array_to_sum( bunch_values )
+    return explanations.join('. ')
+  end
+
+  private
+
+  def array_to_sum array
+    sum_parts = [ array.first < 0 ? '-' + array.first.abs.to_s : array.first.to_s ]
+    sum_parts += array.drop(1).map { |n| n < 0 ? '- ' + n.abs.to_s : '+ ' + n.to_s }
+    sum_parts += [ '=', array.inject(:+) ]
+    sum_parts.join(' ')
+  end
+
 end # class Dice
