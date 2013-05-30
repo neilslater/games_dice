@@ -10,9 +10,11 @@ role-playing and board games.
 GamesDice is a gem to automate or simulate a variety of dice rolling systems found in board games and
 role-playing games.
 
-GamesDice is designed for systems used to generate integer results, and that do not require the
-player to make decisions or apply other rules from the game. There are no game mechanics implemented
-in GamesDice (such as the chance to hit in a combat game).
+GamesDice is designed for systems used to generate integer results. GamesDice cannot require a
+player to make decisions or apply other rules from a game, until after an integer has been
+generated from rolling the dice.
+
+There are no game mechanics implemented in GamesDice (such as the chance to hit in a fantasy combat game).
 
 The main features of GamesDice are
 
@@ -22,13 +24,15 @@ The main features of GamesDice are
    * Counting number of "successes" from a set of dice
    * Keeping the best, or worst, results from a set of dice
  * Can explain how a result was achieved in terms of the individual die rolls
- * Can calculate probabilities and expected values (experimental feature)
+ * Can calculate probabilities and expected values (with some limitations)
 
 ## Special Note on Versions Prior to 1.0.0
 
-The author is using this code as an exercise in gem "best practice". As such, the gem
-will have a limited set of functionality prior to version 1.0.0, and there should be
-many small release increments before then.
+The author is using this code as an exercise in gem "best practice".
+
+As of version 0.2.0, the gem has a complete feature set, as planned for version
+1.0.0 - versions between 0.2.0 and 1.0.0 are being used mainly to improve
+code quality, documentation and performance.
 
 ## Installation
 
@@ -300,9 +304,9 @@ Where:
 
 Examples:
 
-    9d6x.m:10.           # Roll 9 six-sided "exploding" dice, and count 1 for any result of 10 or more
-    9d6x.m:10,1,S.       # Same as above, but with each success marked with "S" in the explanation
-
+    9d6x.m:10.                 # Roll 9 six-sided "exploding" dice, and count 1 for any result of 10 or more
+    9d6x.m:10,1,S.             # Same as above, but with each success marked with "S" in the explanation
+    5d10m:>=6,1,S.m:==1,-1,F.  # Roll 5 ten-sided dice, count 1 for any result of 6 or more, or -1 for any result of 1
 
 #### Keepers
 
@@ -316,6 +320,30 @@ The simple form indicates the number of highest value dice to keep.
 When rolled, this will score from 2 to 20 - the sum of the two highest scoring ten-sided dice, out of
 five.
 
+The full version of this modifier, allows you to specify from 1 to 2 parameters:
+
+    5d10k:[KEEP_NUM],[KEEP_TYPE].
+
+Where:
+
+ * KEEP_NUM is an integer specifying the number of dice to keep.
+ * KEEP_TYPE is one of
+  * best   - keep highest values and add them together
+  * worst  - keep lowest values and add them together
+
+Examples:
+
+    4d6k:3.r:1,replace,1.      # Roll 4 six-sided dice, re-roll any 1s, and keep best 3.
+    2d20k:1,worst.             # Roll 2 twenty-sided dice, return lowest of the two results.
+
+#### Combinations
+
+ * When there are many modifiers, they are applied in strict order:
+  * First by type: re-rolls, maps, keepers
+  * Then according to the order they were specified
+ * A maximum of one re-roll modifier, and one map modifier are applied to each individual die rolled
+ * Only one keepers modifier is applied per dice type. Specifying a second one will cause an error
+
 #### Aliases
 
 Some combinations of modifiers crop up in well-known games, and have been allocated single-character
@@ -325,8 +353,8 @@ This is an alias for "exploding" dice:
 
     5d10x    # Same as '5d10r:10,add.'
 
-When rolled, this will score from 5 to theoretically any number, as results of 10 on any die mean that
-die rolls again and the result is added on.
+When rolled, this will score from 5 to theoretically any higher number, as results of 10 on any
+die mean that die rolls again and the result is added on.
 
 ## Contributing
 
@@ -335,3 +363,6 @@ die rolls again and the result is added on.
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
+
+I am always interested to receive information about dice rolling schemes that this library could or
+should include in its repertoire.

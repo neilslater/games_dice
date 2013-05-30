@@ -296,7 +296,7 @@ describe 'String Dice Description' do
     end
   end
 
-  describe "9d6x.m:10." do
+  describe "'9d6x.m:10.'" do
     it "returns expected results from rolling" do
       d = GamesDice.create '9d6x.m:10.'
       (1..5).map { |n| d.roll }.should == [1, 2, 1, 1, 1]
@@ -313,7 +313,7 @@ describe 'String Dice Description' do
     end
   end
 
-  describe "9d6x.m:10,1,S." do
+  describe "'9d6x.m:10,1,S.'" do
     it "returns expected results from rolling" do
       d = GamesDice.create '9d6x.m:10,1,S.'
       (1..5).map { |n| d.roll }.should == [1, 2, 1, 1, 1]
@@ -326,6 +326,57 @@ describe 'String Dice Description' do
             "9d6: 1, [6+6+1] 13 S, 2, 1, 1, 3, [6+1] 7, 5, 4. Successes: 1",
             "9d6: [6+4] 10 S, 3, 4, 5, 5, 1, [6+3] 9, 3, 5. Successes: 1",
             "9d6: [6+3] 9, 3, [6+5] 11 S, 4, 2, 2, 1, 4, 5. Successes: 1"
+      ]
+    end
+  end
+
+  describe "'5d10m:>=6,1,S.m:==1,-1,F.'" do
+    it "returns expected results from rolling" do
+      d = GamesDice.create '5d10m:>=6,1,S.m:==1,-1,F.'
+      (1..10).map { |n| d.roll }.should == [2, 2, 4, 3, 2, 1, 1, 3, 3, 0]
+    end
+    it "includes the string 'S' next to each success, and 'F' next to each 'fumble'" do
+      d = GamesDice.create '5d10m:>=6,1,S.m:==1,-1,F.'
+      (1..5).map { |n| d.roll; d.explain_result }.should ==  [
+            "5d10: 2, 3, 4, 7 S, 6 S. Successes: 2",
+            "5d10: 7 S, 4, 2, 6 S, 3. Successes: 2",
+            "5d10: 7 S, 5, 6 S, 7 S, 6 S. Successes: 4",
+            "5d10: 6 S, 5, 10 S, 9 S, 4. Successes: 3",
+            "5d10: 10 S, 9 S, 8 S, 3, 1 F. Successes: 2"
+        ]
+    end
+  end
+
+  describe "'4d6k:3.r:1,replace,1.'" do
+    it "represents roll 4 six-sided dice, re-roll any 1s, and keep best 3." do
+      d = GamesDice.create '4d6k:3.r:1,replace,1.'
+      (1..10).map { |n| d.roll }.should == [12, 14, 14, 18, 11, 17, 11, 15, 14, 14]
+    end
+    it "includes re-rolls and keeper choice in explanations" do
+      d = GamesDice.create '4d6k:3.r:1,replace,1.'
+      (1..5).map { |n| d.roll; d.explain_result }.should ==  [
+          "4d6: 6, 3, 2, 3. Keep: 3 + 3 + 6 = 12",
+          "4d6: 4, 6, 4, 2. Keep: 4 + 4 + 6 = 14",
+          "4d6: 6, 3, 3, 5. Keep: 3 + 5 + 6 = 14",
+          "4d6: 6, 6, 3, 6. Keep: 6 + 6 + 6 = 18",
+          "4d6: 5, 2, [1|4] 4, 2. Keep: 2 + 4 + 5 = 11"
+      ]
+    end
+  end
+
+  describe "'2d20k:1,worst.'" do
+    it "represents roll 2 twenty-sided dice, return lowest of the two results" do
+      d = GamesDice.create '2d20k:1,worst.'
+      (1..10).map { |n| d.roll }.should == [18, 6, 2, 3, 5, 10, 15, 1, 7, 10]
+    end
+    it "includes keeper choice in explanations" do
+      d = GamesDice.create '2d20k:1,worst.'
+      (1..5).map { |n| d.roll; d.explain_result }.should ==  [
+          "2d20: 18, 19. Keep: 18",
+          "2d20: 20, 6. Keep: 6",
+          "2d20: 20, 2. Keep: 2",
+          "2d20: 3, 11. Keep: 3",
+          "2d20: 5, 7. Keep: 5"
       ]
     end
   end

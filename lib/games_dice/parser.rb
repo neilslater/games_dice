@@ -5,6 +5,7 @@ class GamesDice::Parser < Parslet::Parser
 
   # Parslet rules that define the dice string grammar.
   rule(:integer) { match('[0-9]').repeat(1) }
+  rule(:plus_minus_integer) { ( match('[+-]') >> integer ) | integer }
   rule(:range) { integer.as(:range_start) >> str('..') >> integer.as(:range_end) }
   rule(:dlabel) { match('[d]') }
   rule(:space) { match('\s').repeat(1) }
@@ -31,20 +32,25 @@ class GamesDice::Parser < Parslet::Parser
   rule(:stop) { str('.') }
 
   rule(:condition_only) { opint_or_int.as(:condition) }
+  rule(:num_only) { integer.as(:num) }
+
 
   rule(:condition_and_type) { opint_or_int.as(:condition) >> comma >> ctl_string.as(:type) }
-  rule(:condition_and_num) { opint_or_int.as(:condition) >> comma >> integer.as(:num) }
+  rule(:condition_and_num) { opint_or_int.as(:condition) >> comma >> plus_minus_integer.as(:num) }
 
   rule(:condition_type_and_num) { opint_or_int.as(:condition) >> comma >> ctl_string.as(:type) >> comma >> integer.as(:num) }
-  rule(:condition_num_and_output) { opint_or_int.as(:condition) >> comma >> integer.as(:num) >> comma >> output_string.as(:output) }
+  rule(:condition_num_and_output) { opint_or_int.as(:condition) >> comma >> plus_minus_integer.as(:num) >> comma >> output_string.as(:output) }
+  rule(:num_and_type) { integer.as(:num)  >> comma >> ctl_string.as(:type) }
 
   rule(:reroll_params) { condition_type_and_num | condition_and_type | condition_only }
   rule(:map_params) { condition_num_and_output | condition_and_num | condition_only }
+  rule(:keeper_params) { num_and_type | num_only }
 
   rule(:full_reroll) { reroll_label >> str(':') >> reroll_params >> stop }
   rule(:full_map) { map_label >> str(':') >> map_params >> stop }
+  rule(:full_keepers) { keep_label >> str(':') >> keeper_params >> stop }
 
-  rule(:complex_modifier) { full_reroll | full_map }
+  rule(:complex_modifier) { full_reroll | full_map | full_keepers }
 
   rule(:bunch_modifier) { complex_modifier | ( single_modifier >> stop.maybe ) | ( simple_modifier >> stop.maybe ) }
   rule(:bunch) { bunch_start >> bunch_modifier.repeat.as(:mods) }
@@ -151,14 +157,16 @@ class GamesDice::Parser < Parslet::Parser
 
   # Called for any parsed keeper mode
   def collect_keeper_rule keeper_mod, out_hash
+    raise "Cannot set keepers for a bunch twice" if out_hash[:keep_mode]
     if keeper_mod[:simple_value]
       out_hash[:keep_mode] = :keep_best
       out_hash[:keep_number] = keeper_mod[:simple_value].to_i
       return
     end
-    # TODO: Handle complex descriptions
-    # Typical keeper_mod:
-    puts keeper_mod.inspect
+
+    # Typical keeper_mod: {:keep=>"k"@5, :num=>"1"@7, :type=>"worst"@9}
+    out_hash[:keep_number] = keeper_mod[:num].to_i
+    out_hash[:keep_mode] = ( 'keep_' + ( keeper_mod[:type] || 'best' ) ).to_sym
   end
 
   # Called for any parsed map mode
