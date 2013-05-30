@@ -266,7 +266,7 @@ Where:
   * add - add result of reroll to running total, and ignore any subtract rules
   * subtract - subtract result of reroll from running total, and reverse sense of any further add results
   * use_best - use the new value if it is higher than the existing value
-  * use_worst - use the new value if it is higher than the existing value
+  * use_worst - use the new value if it is lower than the existing value
  * LIMIT is an integer that sets the maximum number of times that the rule can be triggered, the default is 1000
 
 Examples:
