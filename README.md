@@ -2,36 +2,32 @@
 
 [![Build Status](https://travis-ci.org/neilslater/games_dice.png?branch=master)](http://travis-ci.org/neilslater/games_dice)
 
-A library for simulating dice, intended for constructing a variety of dice systems as used in
-role-playing and board games.
+A library for simulating dice. Use it to construct dice-rolling systems used in role-playing and board games.
 
 ## Description
 
-GamesDice is a gem to automate or simulate a variety of dice rolling systems found in board games and
-role-playing games.
+GamesDice can emulate a variety of rules-driven dice systems that are used to generate integer results
+within a game.
 
-GamesDice is designed for systems used to generate integer results. GamesDice cannot require a
-player to make decisions or apply other rules from a game, until after an integer has been
-generated from rolling the dice.
-
-There are no game mechanics implemented in GamesDice (such as the chance to hit in a fantasy combat game).
-
-The main features of GamesDice are
+The main features of GamesDice are:
 
  * Uses string dice descriptions, the basics of which are familiar to many game players e.g. '2d6 + 3'
- * Supports common features of dice systems automatically:
+ * Supports some common features of dice systems:
    * Re-rolls that replace or modify the previous roll
    * Counting number of "successes" from a set of dice
    * Keeping the best, or worst, results from a set of dice
  * Can explain how a result was achieved in terms of the individual die rolls
  * Can calculate probabilities and expected values (with some limitations)
 
+There are no game mechanics implemented in GamesDice, such as the chance to hit in a fantasy combat
+game. There is no support for player interaction within a roll, such as player choice on whether or
+not to re-roll a specific die within a combined set. These things are of course possible if you use the
+gem as-is, and add them as features within your project code.
+
 ## Special Note on Versions Prior to 1.0.0
 
-The author is using this code as an exercise in gem "best practice".
-
-As of version 0.2.0, the gem has a complete feature set, as planned for version
-1.0.0 - versions between 0.2.0 and 1.0.0 are being used mainly to improve
+As of version 0.2.0, the gem has the same feature set as planned for version
+1.0.0. Versions between 0.2.0 and 1.0.0 are being used mainly to improve
 code quality, documentation and performance.
 
 ## Installation
