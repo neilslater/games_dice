@@ -46,8 +46,10 @@ describe GamesDice::Die do
   describe "#probabilities" do
     it "should return the die's probability distribution as a GamesDice::Probabilities object" do
       die = GamesDice::Die.new(6)
-      die.probabilities.is_a?( GamesDice::Probabilities ).should be_true
       probs = die.probabilities
+      probs.is_a?( GamesDice::Probabilities ).should be_true
+
+      probs.to_h.should be_valid_distribution
 
       probs.p_eql(1).should be_within(1e-10).of 1/6.0
       probs.p_eql(2).should be_within(1e-10).of 1/6.0
@@ -55,23 +57,6 @@ describe GamesDice::Die do
       probs.p_eql(4).should be_within(1e-10).of 1/6.0
       probs.p_eql(5).should be_within(1e-10).of 1/6.0
       probs.p_eql(6).should be_within(1e-10).of 1/6.0
-      probs.to_h.values.inject(:+).should be_within(1e-9).of 1.0
-
-      probs.p_gt(6).should == 0.0
-      probs.p_gt(-20).should == 1.0
-      probs.p_gt(4).should be_within(1e-10).of 2/6.0
-
-      probs.p_ge(20).should == 0.0
-      probs.p_ge(1).should == 1.0
-      probs.p_ge(4).should be_within(1e-10).of 0.5
-
-      probs.p_le(6).should == 1.0
-      probs.p_le(-3).should == 0.0
-      probs.p_le(5).should be_within(1e-10).of 5/6.0
-
-      probs.p_lt(7).should == 1.0
-      probs.p_lt(1).should == 0.0
-      probs.p_lt(3).should be_within(1e-10).of 2/6.0
 
       probs.expected.should be_within(1e-10).of 3.5
     end

@@ -1,12 +1,26 @@
-# basic die that rolls 1..N, typically with equal weighting for each value
-#  d = Die.new(6)
+# A basic die that rolls 1..#sides, with equal weighting for each value.
+#
+# @example Create a 6-sided die, and roll it
+#  d = GamesDice::Die.new( 6 )
 #  d.roll # => Integer in range 1..6
-#  d.result # => same Integer value as returned by d.roll
+#  d.result # => same Integer value as just returned by d.roll
+#
+# @example Create a 10-sided die, that rolls using a monkey-patch to SecureRandom
+#  module SecureRandom
+#    def self.rand n
+#      random_number( n )
+#    end
+#  end
+#  d = GamesDice::Die.new( 10, SecureRandom )
+#  d.roll # => (secure) Integer in range 1..10
+#  d.result # => same Integer value as just returned by d.roll
+
 class GamesDice::Die
-  # sides is e.g. 6 for traditional cubic die, or 20 for icosahedron.
-  # It can take non-traditional values, such as 7, but must be at least 1.
-  # prng is an object that has a rand(x) method. If provided, it will be called as
-  # prng.rand(sides), and is expected to return an integer in range 0...sides
+
+  # Creates new instance of GamesDice::Die
+  # @param [Integer] sides the number of sides
+  # @param [#rand] prng random number generator, GamesDice::Die will use Ruby's built-in #rand() by default
+  # @return [GamesDice::Die]
   def initialize( sides, prng=nil )
     @sides = Integer(sides)
     raise ArgumentError, "sides value #{sides} is too low, it must be 1 or greater" if @sides < 1
@@ -15,29 +29,36 @@ class GamesDice::Die
     @result = nil
   end
 
-  # number of sides as set by #new
+  # @return [Integer] number of sides on simulated die
   attr_reader :sides
 
-  # integer result of last call to #roll, nil if no call made yet
+  # @return [Integer] result of last call to #roll, nil if no call made yet
   attr_reader :result
 
-  # minimum possible value
+  # @return [Object] random number generator as supplied to constructor, may be nil
+  attr_reader :prng
+
+  # @!attribute [r] min
+  # @return [Integer] minimum possible result from a call to #roll
   def min
     1
   end
 
-  # maximum possible value
+  # @!attribute [r] max
+  # @return [Integer] maximum possible result from a call to #roll
   def max
     @sides
   end
 
-  # returns a GamesDice::Probabilities object that models distribution of the die
+  # Calculates probability distribution for this die.
+  # @return [GamesDice::Probabilities] probability distribution of the die
   def probabilities
     return @probabilities if @probabilities
     @probabilities = GamesDice::Probabilities.for_fair_die( @sides )
   end
 
-  # generates Integer between #min and #max, using rand()
+  # Simulates rolling the die
+  # @return [Integer] selected value between 1 and #sides inclusive
   def roll
     if @prng
       @result = @prng.rand(@sides) + 1
@@ -46,13 +67,17 @@ class GamesDice::Die
     end
   end
 
-  # always nil, available for compatibility with ComplexDie
+  # @!attribute [r] rerolls
+  # Rules for when to re-roll this die.
+  # @return [nil] always nil, available for interface equivalence with GamesDice::ComplexDie
   def rerolls
     nil
   end
 
-  # always nil, available for compatibility with ComplexDie
+  # @!attribute [r] maps
+  # Rules for when to map return value of this die.
+  # @return [nil] always nil, available for interface equivalence with GamesDice::ComplexDie
   def maps
     nil
   end
-end # class Die
+end # class GamesDice::Die

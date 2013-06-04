@@ -11,6 +11,7 @@ require "games_dice/dice"
 require "games_dice/parser"
 
 module GamesDice
+  # @!visibility private
   @@parser = GamesDice::Parser.new
 
   def self.create dice_description, prng = nil

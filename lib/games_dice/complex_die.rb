@@ -1,46 +1,62 @@
-# complex die that rolls 1..N, and may re-roll and adjust final value based on
-# parameters it is instantiated with
-#  d = GamesDice::DieExploding.new( 6, :explode_up => true ) # 'exploding' die
-#  d.roll # => GamesDice::DieResult of rolling die
-#  d.result # => same GamesDice::DieResult as returned by d.roll
+# A single die. It rolls 1..#sides, with equal weighting for each value. The value from a roll may
+# be used to trigger yet more rolls that combine together. After any re-rolls, the value can be
+# mapped to another Integer scheme.
+#
+# @example An open-ended percentile die from a popular RPG
+#  d = GamesDice::ComplexDie.new( 100, :rerolls => [[96, :<=, :reroll_add],[5, :>=, :reroll_subtract]] )
+#  d.roll # => #<GamesDice::DieResult:0x007ff03a2415f8 @rolls=[4, 27], ...>
+#  d.result.value # => -23
+#  d.explain_result # => "[4-27] -23"
+#
+# @example An "exploding" six-sided die with a target number
+#  d = GamesDice::ComplexDie.new( 6, :rerolls => [[6, :<=, :reroll_add]], :maps => [[8, :<=, 1, 'Success']] )
+#  d.roll # => #<GamesDice::DieResult:0x007ff03a1e8e08 @rolls=[6, 5], ...>
+#  d.result.value # => 1
+#  d.explain_result # => "[6+5] 11 Success"
+#
+
 class GamesDice::ComplexDie
 
-  # arbitrary limit to simplify calculations and stay in Integer range for convenience. It should
-  # be much larger than anything seen in real-world tabletop games.
+  # @!visibility private
+  # arbitrary limit to speed up probability calculations. It should
+  # be larger than anything seen in real-world tabletop games.
   MAX_REROLLS = 1000
 
-  # sides is e.g. 6 for traditional cubic die, or 20 for icosahedron.
-  # It can take non-traditional values, such as 7, but must be at least 1.
-  #
-  # options_hash may contain keys setting following attributes
-  #  :rerolls => an array of rules that cause the die to roll again, see #rerolls
-  #  :maps => an array of rules to convert a value into a final result for the die, see #maps
-  #  :prng => any object that has a rand(x) method, which will be used instead of internal rand()
-  def initialize(sides, options_hash = {})
-    @basic_die = GamesDice::Die.new(sides, options_hash[:prng])
+  # @param [Integer] sides Number of sides on a single die, passed to GamesDice::Die's constructor
+  # @param [Hash] options
+  # @option options [Array<GamesDice::RerollRule,Array>] :rerolls The rules that cause the die to roll again
+  # @option options [Array<GamesDice::MapRule,Array>] :maps The rules to convert a value into a final result for the die
+  # @option options [#rand] :prng An alternative source of randomness to Ruby's built-in #rand, passed to GamesDice::Die's constructor
+  # @return [GamesDice::ComplexDie]
+  def initialize( sides, options = {} )
+    @basic_die = GamesDice::Die.new(sides, options[:prng])
 
-    @rerolls = construct_rerolls( options_hash[:rerolls] )
-    @maps = construct_maps( options_hash[:maps] )
+    @rerolls = construct_rerolls( options[:rerolls] )
+    @maps = construct_maps( options[:maps] )
 
     @total = nil
     @result = nil
   end
 
-  # underlying GamesDice::Die object, used to generate all individual rolls
+  # @return [GamesDice::Die] Basic die
   attr_reader :basic_die
 
-  # may be nil, in which case no re-rolls are triggered, or an array of GamesDice::RerollRule objects
+  # @return [Array<GamesDice::RerollRule>, nil] Sequence of re-roll rules, or nil if re-rolls are not required.
   attr_reader :rerolls
 
-  # may be nil, in which case no mappings apply, or an array of GamesDice::MapRule objects
+  # @return [Array<GamesDice::MapRule>, nil] Sequence of map rules, or nil if mapping is not required.
   attr_reader :maps
 
-  # result of last call to #roll, nil if no call made yet
+  # @return [GamesDice::DieResult, nil] Result of last call to #roll, nil if no call made yet
   attr_reader :result
 
-  # true if probability calculation did not hit any limitations, so has covered all possible scenarios
-  # false if calculation was cut short and probabilities are an approximation
-  # nil if probabilities have not been calculated yet
+  # Whether or not #probabilities includes all possible outcomes.
+  # True if all possible results are represented and assigned a probability. Dice with open-ended re-rolls
+  # may have calculations cut short, and will result in a false value of this attribute.
+  # @return [true, false, nil] depending on results when generating #probabilites
+  # * true if probability calculation did not hit any limitations, so has covered all possible scenarios
+  # * false if calculation was cut short and probabilities are an approximation
+  # * nil if probabilities have not been calculated yet
   attr_reader :probabilities_complete
 
   # number of sides, same as #basic_die.sides

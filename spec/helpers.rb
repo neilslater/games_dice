@@ -1,11 +1,26 @@
 # games_dice/spec/helpers.rb
 
+# TestPRNG tests short predictable series
 class TestPRNG
   def initialize
     @numbers = [0.123,0.234,0.345,0.999,0.876,0.765,0.543,0.111,0.333,0.777]
   end
   def rand(n)
     Integer( n * @numbers.pop )
+  end
+end
+
+# TestPRNGMax checks behaviour of re-rolls
+class TestPRNGMax
+  def rand(n)
+    Integer( n ) - 1
+  end
+end
+
+# TestPRNGMax checks behaviour of re-rolls
+class TestPRNGMin
+  def rand(n)
+    1
   end
 end
 
