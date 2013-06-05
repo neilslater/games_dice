@@ -1,6 +1,10 @@
-# A single die. It rolls 1..#sides, with equal weighting for each value. The value from a roll may
-# be used to trigger yet more rolls that combine together. After any re-rolls, the value can be
-# mapped to another Integer scheme.
+# This class models a die that is built up from a simpler unit by adding rules to re-roll
+# and interpret the value shown.
+#
+# An object of this class represents a single complex die. It rolls 1..#sides, with equal weighting
+# for each value. The value from a roll may be used to trigger yet more rolls that combine together.
+# After any re-rolls, the value can be interpretted ("mapped") as another integer, which is used as
+# the final result.
 #
 # @example An open-ended percentile die from a popular RPG
 #  d = GamesDice::ComplexDie.new( 100, :rerolls => [[96, :<=, :reroll_add],[5, :>=, :reroll_subtract]] )
@@ -22,6 +26,7 @@ class GamesDice::ComplexDie
   # be larger than anything seen in real-world tabletop games.
   MAX_REROLLS = 1000
 
+  # Creates new instance of GamesDice::ComplexDie
   # @param [Integer] sides Number of sides on a single die, passed to GamesDice::Die's constructor
   # @param [Hash] options
   # @option options [Array<GamesDice::RerollRule,Array>] :rerolls The rules that cause the die to roll again
@@ -38,7 +43,8 @@ class GamesDice::ComplexDie
     @result = nil
   end
 
-  # @return [GamesDice::Die] Basic die
+  # The simple component used by this complex one
+  # @return [GamesDice::Die] Object used to make individual dice rolls for the complex die
   attr_reader :basic_die
 
   # @return [Array<GamesDice::RerollRule>, nil] Sequence of re-roll rules, or nil if re-rolls are not required.
@@ -52,24 +58,25 @@ class GamesDice::ComplexDie
 
   # Whether or not #probabilities includes all possible outcomes.
   # True if all possible results are represented and assigned a probability. Dice with open-ended re-rolls
-  # may have calculations cut short, and will result in a false value of this attribute.
-  # @return [true, false, nil] depending on results when generating #probabilites
-  # * true if probability calculation did not hit any limitations, so has covered all possible scenarios
-  # * false if calculation was cut short and probabilities are an approximation
-  # * nil if probabilities have not been calculated yet
+  # may have calculations cut short, and will result in a false value of this attribute. Even when this
+  # attribute is false, probabilities should still be accurate to nearest 1e-9.
+  # @return [Boolean, nil] Depending on completeness when generating #probabilites
   attr_reader :probabilities_complete
 
-  # number of sides, same as #basic_die.sides
+  # @!attribute [r] sides
+  # @return [Integer] Number of sides.
   def sides
     @basic_die.sides
   end
 
-  # string explanation of roll, including any re-rolls etc, same as #result.explain_value
+  # @!attribute [r] explain_result
+  # @return [String,nil] Explanation of result, or nil if no call to #roll yet.
   def explain_result
     @result.explain_value
   end
 
-  # minimum possible value
+  # @!attribute [r] min
+  # @return [Integer] Minimum possible result from a call to #roll
   def min
     return @min_result if @min_result
     @min_result, @max_result = [probabilities.min, probabilities.max]
@@ -79,8 +86,8 @@ class GamesDice::ComplexDie
     @min_result
   end
 
-  # maximum possible value. A ComplexDie with open-ended additive re-rolls will calculate roughly 1001 times the
-  # maximum of #basic_die.max (although the true value is infinite)
+  # @!attribute [r] max
+  # @return [Integer] Maximum possible result from a call to #roll
   def max
     return @max_result if @max_result
     @min_result, @max_result = [probabilities.min, probabilities.max]
@@ -90,9 +97,10 @@ class GamesDice::ComplexDie
     @max_result
   end
 
-  # returns a hash of value (Integer) => probability (Float) pairs. For efficiency with re-rolls, the calculation may cut
-  # short based on depth of recursion or closeness to total 1.0 probability. Therefore low probabilities
-  # (less than one in a billion) in open-ended re-rolls are not always represented in the hash.
+  # Calculates the probability distribution for the die. For open-ended re-roll rules, there are some
+  # arbitrary limits imposed to prevent large amounts of recursion. Probabilities should be to nearest
+  # 1e-9 at worst.
+  # @return [GamesDice::Probabilities] Probability distribution of die.
   def probabilities
     return @probabilities if @probabilities
     @probabilities_complete = true
@@ -122,8 +130,9 @@ class GamesDice::ComplexDie
     @probabilities = GamesDice::Probabilities.new( prob_hash )
   end
 
-  # generates Integer between #min and #max, using rand()
-  # first roll reason can be over-ridden, required for re-roll types that spawn new dice
+  # Simulates rolling the die
+  # @param [Symbol] reason Assign a reason for rolling the first die.
+  # @return [GamesDice::DieResult] Detailed results from rolling the die, including resolution of rules.
   def roll( reason = :basic )
     # Important bit - actually roll the die
     @result = GamesDice::DieResult.new( @basic_die.roll, reason )

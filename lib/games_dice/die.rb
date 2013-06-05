@@ -1,4 +1,6 @@
-# A basic die that rolls 1..#sides, with equal weighting for each value.
+# This class models the simplest, most-familiar kind of die.
+#
+# An object of the class represents a basic die that rolls 1..#sides, with equal weighting for each value.
 #
 # @example Create a 6-sided die, and roll it
 #  d = GamesDice::Die.new( 6 )
