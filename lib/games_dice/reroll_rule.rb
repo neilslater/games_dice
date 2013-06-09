@@ -28,7 +28,7 @@ class GamesDice::RerollRule
   # @param [Symbol] type The type of reroll
   # @param [Integer] limit Maximum number of times this rule can be applied to a single die
   # @return [GamesDice::RerollRule]
-  def initialize trigger_value, trigger_op, type, limit=1000
+  def initialize trigger_value, trigger_op, type, limit = 1000
 
     if ! trigger_value.respond_to?( trigger_op )
       raise ArgumentError, "trigger_value #{trigger_value.inspect} cannot respond to trigger_op #{trigger_value.inspect}"
@@ -41,7 +41,7 @@ class GamesDice::RerollRule
     @trigger_value = trigger_value
     @trigger_op = trigger_op
     @type = type
-    @limit = Integer(limit)
+    @limit = limit ? Integer( limit ) : 1000
     @limit = 1 if @type == :reroll_subtract
   end
 
