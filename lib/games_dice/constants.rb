@@ -1,6 +1,6 @@
 module GamesDice
 
-  # reasons for making a reroll, and text explanation symbols for them
+  # Reasons for making a reroll, and text explanation symbols for them
   REROLL_TYPES = {
     :basic => ',',
     :reroll_add => '+',
