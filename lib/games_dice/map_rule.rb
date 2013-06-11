@@ -48,11 +48,11 @@ class GamesDice::MapRule
   # @return [Integer,Range,Object] Object that receives (#trigger_op, die_result)
   attr_reader :trigger_value
 
-  # Mapped value.
+  # Value that a die will use after the value has been mapped.
   # @return [Integer]
   attr_reader :mapped_value
 
-  # Name for mapped value.
+  # Name for mapped value, used in explanations.
   # @return [String]
   attr_reader :mapped_name
 
