@@ -1,126 +1,152 @@
-# models a set of identical dice, that can be "rolled" and combined into a simple integer result. The
-# dice are identical in number of sides, and any re-roll or mapping rules that apply to them
+# This class models a number of identical dice, which may be either GamesDice::Die or GamesDice::ComplexDie.
+#
+# An object of this class represents a fixed number of indentical dice that may be rolled and their
+# values summed to make a total for the bunch.
+#
+# @example An open-ended percentile die from a popular RPG
+#  d = GamesDice::ComplexDie.new( 100, :rerolls => [[96, :<=, :reroll_add],[5, :>=, :reroll_subtract]] )
+#  d.roll # => #<GamesDice::DieResult:0x007ff03a2415f8 @rolls=[4, 27], ...>
+#  d.result.value # => -23
+#  d.explain_result # => "[4-27] -23"
+#
+# @example An "exploding" six-sided die with a target number
+#  d = GamesDice::ComplexDie.new( 6, :rerolls => [[6, :<=, :reroll_add]], :maps => [[8, :<=, 1, 'Success']] )
+#  d.roll # => #<GamesDice::DieResult:0x007ff03a1e8e08 @rolls=[6, 5], ...>
+#  d.result.value # => 1
+#  d.explain_result # => "[6+5] 11 Success"
+#
+
 class GamesDice::Bunch
-  # attributes is a hash of symbols used to set attributes of the new Bunch object. Each
-  # attribute is explained in more detail in its own section. The following hash keys and values
-  # are mandatory:
-  #  :ndice
-  #  :sides
-  # The following are optional, and modify the behaviour of the Bunch object
-  #  :name
-  #  :prng
-  #  :rerolls
-  #  :maps
-  #  :keep_mode
-  #  :keep_number
-  # Any other keys provided to the constructor are ignored
-  def initialize( attributes )
-    @name = attributes[:name].to_s
-    @ndice = Integer(attributes[:ndice])
+  # The constructor accepts parameters that are suitable for either GamesDice::Die or GamesDice::ComplexDie
+  # and decides which of those classes to instantiate.
+  # @param [Hash] options
+  # @option options [Integer] :ndice Number of dice in the bunch *(mandatory)*
+  # @option options [Integer] :sides Number of sides on a single die in the bunch *(mandatory)*
+  # @option options [String] :name Optional name for the bunch
+  # @option options [Array<GamesDice::RerollRule,Array>] :rerolls Optional rules that cause the die to roll again
+  # @option options [Array<GamesDice::MapRule,Array>] :maps Optional rules to convert a value into a final result for the die
+  # @option options [#rand] :prng Optional alternative source of randomness to Ruby's built-in #rand, passed to GamesDice::Die's constructor
+  # @option options [Symbol] :keep_mode Optional, either *:keep_best* or *:keep_worst*
+  # @option options [Integer] :keep_number Optional number of dice to keep when :keep_mode is not nil
+  # @return [GamesDice::Bunch]
+  def initialize( options )
+    @name = options[:name].to_s
+    @ndice = Integer(options[:ndice])
     raise ArgumentError, ":ndice must be 1 or more, but got #{@ndice}" unless @ndice > 0
-    @sides = Integer(attributes[:sides])
+    @sides = Integer(options[:sides])
     raise ArgumentError, ":sides must be 1 or more, but got #{@sides}" unless @sides > 0
 
-    options = Hash.new
+    attr = Hash.new
 
-    if attributes[:prng]
+    if options[:prng]
       # We deliberately do not clone this object, it will often be intended that it is shared
-      prng = attributes[:prng]
+      prng = options[:prng]
       raise ":prng does not support the rand() method" if ! prng.respond_to?(:rand)
     end
 
     needs_complex_die = false
 
-    if attributes[:rerolls]
+    if options[:rerolls]
       needs_complex_die = true
-      options[:rerolls] = attributes[:rerolls].clone
+      attr[:rerolls] = options[:rerolls].clone
     end
 
-    if attributes[:maps]
+    if options[:maps]
       needs_complex_die = true
-      options[:maps] = attributes[:maps].clone
+      attr[:maps] = options[:maps].clone
     end
 
     if needs_complex_die
-      options[:prng] = prng
-      @single_die = GamesDice::ComplexDie.new( @sides, options )
+      attr[:prng] = prng
+      @single_die = GamesDice::ComplexDie.new( @sides, attr )
     else
       @single_die = GamesDice::Die.new( @sides, prng )
     end
 
-    case attributes[:keep_mode]
+    case options[:keep_mode]
     when nil then
       @keep_mode = nil
     when :keep_best then
       @keep_mode = :keep_best
-      @keep_number = Integer(attributes[:keep_number] || 1)
+      @keep_number = Integer(options[:keep_number] || 1)
     when :keep_worst then
       @keep_mode = :keep_worst
-      @keep_number = Integer(attributes[:keep_number] || 1)
+      @keep_number = Integer(options[:keep_number] || 1)
     else
-      raise ArgumentError, ":keep_mode can be nil, :keep_best or :keep_worst. Got #{attributes[:keep_mode].inspect}"
+      raise ArgumentError, ":keep_mode can be nil, :keep_best or :keep_worst. Got #{options[:keep_mode].inspect}"
     end
   end
 
-  # the string name as provided to the constructor, it will appear in explain_result
+  # Name to help identify bunch
+  # @return [String]
   attr_reader :name
 
-  # integer number of dice to roll (initially, before re-rolls etc)
+  # Number of dice to roll
+  # @return [Integer]
   attr_reader :ndice
 
-  # individual die that will be rolled, #ndice times, an GamesDice::Die or GamesDice::ComplexDie object.
+  # Individual die from the bunch
+  # @return [GamesDice::Die,GamesDice::ComplexDie]
   attr_reader :single_die
 
-  # may be nil, :keep_best or :keep_worst
+  # Can be nil, :keep_best or :keep_worst
+  # @return [Symbol,nil]
   attr_reader :keep_mode
 
-  # number of "best" or "worst" results to select when #keep_mode is not nil. This attribute is
-  # 1 by default if :keep_mode is supplied, or nil by default otherwise.
+  # Number of "best" or "worst" results to select when #keep_mode is not nil.
+  # @return [Integer,nil]
   attr_reader :keep_number
 
-  # after calling #roll, this is set to the final integer value from using the dice as specified
+  # Result of most-recent roll, or nil if no roll made yet.
+  # @return [Integer,nil]
   attr_reader :result
 
-  # Needs refinement. Returns best available string description of the bunch.
+  # @!attribute [r] label
+  # @return [String] Description that will be used in explanations with more than one bunch
   def label
     return @name if @name != ''
     return @ndice.to_s + 'd' + @sides.to_s
   end
 
-  # either nil, or an array of GamesDice::RerollRule objects that are assessed on each roll of #single_die
-  # Reroll types :reroll_new_die and :reroll_new_keeper do not affect the #single_die, but are instead
-  # assessed in this container object
+  # @!attribute [r] rerolls
+  # @return [Array<GamesDice::RerollRule>, nil] Sequence of re-roll rules, or nil if re-rolls are not required.
   def rerolls
     @single_die.rerolls
   end
 
-  # either nil, or an array of GamesDice::MapRule objects that are assessed on each result of #single_die (after rerolls are completed)
+  # @!attribute [r] maps
+  # @return [Array<GamesDice::MapRule>, nil] Sequence of map rules, or nil if mapping is not required.
   def maps
-    @single_die.rerolls
+    @single_die.maps
   end
 
-  # after calling #roll, this is an array of GamesDice::DieResult objects, one from each #single_die rolled,
+  # @!attribute [r] result_details
+  # After calling #roll, this is an array of GamesDice::DieResult objects. There is one from each #single_die rolled,
   # allowing inspection of how the result was obtained.
+  # @return [Array<GamesDice::DieResult>, nil] Sequence of GamesDice::DieResult objects.
   def result_details
     return nil unless @raw_result_details
     @raw_result_details.map { |r| r.is_a?(Fixnum) ? GamesDice::DieResult.new(r) : r }
   end
 
-  # minimum possible integer value
+  # @!attribute [r] min
+  # @return [Integer] Minimum possible result from a call to #roll
   def min
     n = @keep_mode ? [@keep_number,@ndice].min : @ndice
     return n * @single_die.min
   end
 
-  # maximum possible integer value
+  # @!attribute [r] max
+  # @return [Integer] Maximum possible result from a call to #roll
   def max
     n = @keep_mode ? [@keep_number,@ndice].min : @ndice
     return n * @single_die.max
   end
 
-  # returns a hash of value (Integer) => probability (Float) pairs. Warning: Some dice schemes
-  # cause this method to take a long time, and use a lot of memory. The worst-case offenders are
-  # dice schemes with a #keep_mode of :keep_best or :keep_worst.
+  # Calculates the probability distribution for the bunch. When the bunch is composed of dice with
+  # open-ended re-roll rules, there are some arbitrary limits imposed to prevent large amounts of
+  # recursion.
+  # @return [GamesDice::Probabilities] Probability distribution of die.
   def probabilities
     return @probabilities if @probabilities
     @probabilities_complete = true
@@ -158,7 +184,8 @@ class GamesDice::Bunch
     @probabilities = GamesDice::Probabilities.new( combined_probs )
   end
 
-  # simulate dice roll according to spec. Returns integer final total, and also stores it in #result
+  # Simulates rolling the bunch of identical dice
+  # @return [Integer] Sum of all rolled dice, or sum of all keepers
   def roll
     @result = 0
     @raw_result_details = []
@@ -184,6 +211,8 @@ class GamesDice::Bunch
     @result = use_dice.inject(0) { |so_far, die_result| so_far + die_result }
   end
 
+  # @!attribute [r] explain_result
+  # @return [String,nil] Explanation of result, or nil if no call to #roll yet.
   def explain_result
     return nil unless @result
 

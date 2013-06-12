@@ -1,6 +1,7 @@
 # This class models the output of GamesDice::ComplexDie.
 #
-# An object of the class represents the results of a roll of a ComplexDie, including any re-rolls.
+# An object of the class represents the results of a roll of a ComplexDie, including any re-rolls and
+# value mapping.
 #
 # @example Building up a result manually
 #  dr = GamesDice::DieResult.new

@@ -1,4 +1,5 @@
 require 'games_dice'
+require 'helpers'
 
 describe GamesDice::ComplexDie do
 

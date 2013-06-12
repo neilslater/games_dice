@@ -197,6 +197,12 @@ Returns the probability of a result less than the integer n.
     probabilities.p_lt( 17 )  # => 0.9953703703703
     probabilities.p_lt( 3 )   # => 0.0
 
+#### probabilities.expected
+
+Returns the mean result, weighted by probabality of each value.
+
+    probabilities.expected  # => 10.5 (rounded to nearest 1e-9)
+
 ## String Dice Descriptions
 
 The dice descriptions are a mini-language. A simple six-sided die is described like this:

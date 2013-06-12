@@ -1,6 +1,11 @@
 require 'parslet'
 
-# converts string dice descriptions to data usable for the GamesDice::Dice constructor
+# Based on the parslet gem, this class defines the dice mini-language used by GamesDice.create
+#
+# An instance of this class is a parser for the language. There are no user-definable instance
+# variables.
+#
+
 class GamesDice::Parser < Parslet::Parser
 
   # Parslet rules that define the dice string grammar.
@@ -62,6 +67,10 @@ class GamesDice::Parser < Parslet::Parser
   rule(:expressions) { dice_expression.repeat.as(:bunches) }
   root :expressions
 
+  # Parses a string description in the dice mini-language, and returns data for feeding into
+  # GamesDice::Dice constructore.
+  # @param [String] dice_description Text to parse e.g. '1d6'
+  # @return [Hash] Analysis of dice_description
   def parse dice_description
     dice_description = dice_description.to_s.strip
     # Force first item to start '+' for simpler parse rules
