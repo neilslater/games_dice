@@ -1,12 +1,36 @@
-# models any combination of zero or more Bunches, plus a constant offset, summing them
-# to create a total result when rolled
+# This class models a combination of GamesDice::Bunch objects plus a fixed offset.
+#
+# An object of this class is a dice "recipe" that specifies the numbers and types of
+# dice that can be rolled to generate an integer value.
+#
+# @example '3d6+6' hitpoints, whatever that means in the game you are playing
+#  d = GamesDice::Dice.new( [{:ndice => 3, :sides => 6}], 6, 'Hit points' )
+#  d.roll # => 20
+#  d.result # => 20
+#  d.explain_result # => "3d6: 3 + 5 + 6 = 14. 14 + 6 = 20"
+#  d.probabilities.expected # => 16.5
+#
+# @example Roll d20 twice, take best result, and add 5.
+#  d = GamesDice::Dice.new( [{:ndice => 2, :sides => 20 , :keep_mode => :keep_best, :keep_number => 1}], 5 )
+#  d.roll # => 21
+#  d.result # => 21
+#  d.explain_result # => "2d20: 4, 16. Keep: 16. 16 + 5 = 21"
+#
 class GamesDice::Dice
-  # bunches is an Array of Hashes, each of which describes a GamesDice::Bunch
-  # and may contain any of the keys that can be used to initialize
-  # the Bunch, plus the following optional key:
-  #  :multiplier => any Integer, but typically 1 or -1 to describe whether the Bunch total is to be added or subtracted
-  # offset is an Integer which will be added to the result when rolling all the bunches
-  # name can be any String, and is used to identify the dice being rolled.
+  # The first parameter is an array of values that are passed to GamesDice::Bunch constructors.
+  # @param [Array<Hash>] bunches Array of options for creating bunches
+  # @param [Integer] offset Total offset
+  # @param [String] name Optional label for the dice
+  # @option bunches [Integer] :ndice Number of dice in the bunch, *mandatory*
+  # @option bunches [Integer] :sides Number of sides on a single die in the bunch, *mandatory*
+  # @option bunches [String] :name Optional name for the bunch
+  # @option bunches [Array<GamesDice::RerollRule,Array>] :rerolls Optional rules that cause the die to roll again
+  # @option bunches [Array<GamesDice::MapRule,Array>] :maps Optional rules to convert a value into a final result for the die
+  # @option bunches [#rand] :prng Optional alternative source of randomness to Ruby's built-in #rand, passed to GamesDice::Die's constructor
+  # @option bunches [Symbol] :keep_mode Optional, either *:keep_best* or *:keep_worst*
+  # @option bunches [Integer] :keep_number Optional number of dice to keep when :keep_mode is not nil
+  # @option bunches [Integer] :multiplier Optional, defaults to 1, and typically 1 or -1 to describe whether the Bunch total is to be added or subtracted
+  # @return [GamesDice::Dice]
   def initialize( bunches, offset = 0, name = '' )
     @name = name
     @offset = offset
@@ -15,24 +39,29 @@ class GamesDice::Dice
     @result = nil
   end
 
-  # the string name as provided to the constructor, it will appear in explain_result
+  # Name to help identify dice
+  # @return [String]
   attr_reader :name
 
-  # an array of GamesDice::Bunch objects that together describe all the dice and roll-altering
-  # rules that apply to the GamesDice::Dice object
+  # Bunches of dice that are components of the object
+  # @return [Array<GamesDice::Bunch>]
   attr_reader :bunches
 
-  # an array of Integers, used to multiply result from each bunch when total results are summed
+  # Multipliers for each bunch of identical dice. Typically 1 or -1 to represent groups of dice that
+  # are either added or subtracted from the total.
+  # @return [Array<Integer>]
   attr_reader :bunch_multipliers
 
-  # the integer offset that is added to the total result from all bunches
+  # Fixed offset added to sum of all bunches.
+  # @return [Integer]
   attr_reader :offset
 
-  # after calling #roll, this is set to the total integer value as calculated by simulating all the
-  # defined dice and their rules
+  # Result of most-recent roll, or nil if no roll made yet.
+  # @return [Integer,nil]
   attr_reader :result
 
-  # simulate dice roll. Returns integer final total, and also stores same value in #result
+  # Simulates rolling dice
+  # @return [Integer] Sum of all rolled dice
   def roll
     @result = @offset + @bunch_multipliers.zip(@bunches).inject(0) do |total,mb|
       m,b = mb
@@ -40,6 +69,9 @@ class GamesDice::Dice
     end
   end
 
+  # @!attribute [r] min
+  # Minimum possible result from a call to #roll
+  # @return [Integer]
   def min
     @min ||= @offset + @bunch_multipliers.zip(@bunches).inject(0) do |total,mb|
       m,b = mb
@@ -47,6 +79,9 @@ class GamesDice::Dice
     end
   end
 
+  # @!attribute [r] max
+  # Maximum possible result from a call to #roll
+  # @return [Integer]
   def max
     @max ||= @offset + @bunch_multipliers.zip(@bunches).inject(0) do |total,mb|
       m,b = mb
@@ -54,10 +89,17 @@ class GamesDice::Dice
     end
   end
 
+  # @!attribute [r] minmax
+  # Convenience method, same as [dice.min, dice.max]
+  # @return [Array<Integer>]
   def minmax
     [min,max]
   end
 
+  # Calculates the probability distribution for the dice. When the dice include components with
+  # open-ended re-roll rules, there are some arbitrary limits imposed to prevent large amounts of
+  # recursion.
+  # @return [GamesDice::Probabilities] Probability distribution of dice.
   def probabilities
     return @probabilities if @probabilities
     probs = @bunch_multipliers.zip(@bunches).inject( GamesDice::Probabilities.new( { @offset => 1.0 } ) ) do |probs, mb|
@@ -66,6 +108,8 @@ class GamesDice::Dice
     end
   end
 
+  # @!attribute [r] explain_result
+  # @return [String,nil] Explanation of result, or nil if no call to #roll yet.
   def explain_result
     return nil unless @result
     explanations = @bunches.map { |bunch| bunch.label + ": " + bunch.explain_result }

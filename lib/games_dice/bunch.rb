@@ -1,27 +1,29 @@
-# This class models a number of identical dice, which may be either GamesDice::Die or GamesDice::ComplexDie.
+# This class models a number of identical dice, which may be either GamesDice::Die or
+# GamesDice::ComplexDie objects.
 #
 # An object of this class represents a fixed number of indentical dice that may be rolled and their
 # values summed to make a total for the bunch.
 #
-# @example An open-ended percentile die from a popular RPG
-#  d = GamesDice::ComplexDie.new( 100, :rerolls => [[96, :<=, :reroll_add],[5, :>=, :reroll_subtract]] )
-#  d.roll # => #<GamesDice::DieResult:0x007ff03a2415f8 @rolls=[4, 27], ...>
-#  d.result.value # => -23
-#  d.explain_result # => "[4-27] -23"
+# @example The ubiquitous '3d6'
+#  d = GamesDice::Bunch.new( :ndice => 3, :sides => 6 )
+#  d.roll # => 14
+#  d.result # => 14
+#  d.explain_result # => "2 + 6 + 6 = 14"
+#  d.max # => 18
 #
-# @example An "exploding" six-sided die with a target number
-#  d = GamesDice::ComplexDie.new( 6, :rerolls => [[6, :<=, :reroll_add]], :maps => [[8, :<=, 1, 'Success']] )
-#  d.roll # => #<GamesDice::DieResult:0x007ff03a1e8e08 @rolls=[6, 5], ...>
-#  d.result.value # => 1
-#  d.explain_result # => "[6+5] 11 Success"
+# @example Roll 5d10, and keep the best 2
+#  d = GamesDice::Bunch.new( :ndice => 5, :sides => 10 , :keep_mode => :keep_best, :keep_number => 2 )
+#  d.roll # => 18
+#  d.result # => 18
+#  d.explain_result # => "4, 9, 2, 9, 1. Keep: 9 + 9 = 18"
 #
 
 class GamesDice::Bunch
   # The constructor accepts parameters that are suitable for either GamesDice::Die or GamesDice::ComplexDie
   # and decides which of those classes to instantiate.
   # @param [Hash] options
-  # @option options [Integer] :ndice Number of dice in the bunch *(mandatory)*
-  # @option options [Integer] :sides Number of sides on a single die in the bunch *(mandatory)*
+  # @option options [Integer] :ndice Number of dice in the bunch, *mandatory*
+  # @option options [Integer] :sides Number of sides on a single die in the bunch, *mandatory*
   # @option options [String] :name Optional name for the bunch
   # @option options [Array<GamesDice::RerollRule,Array>] :rerolls Optional rules that cause the die to roll again
   # @option options [Array<GamesDice::MapRule,Array>] :maps Optional rules to convert a value into a final result for the die
@@ -102,20 +104,23 @@ class GamesDice::Bunch
   attr_reader :result
 
   # @!attribute [r] label
-  # @return [String] Description that will be used in explanations with more than one bunch
+  # Description that will be used in explanations with more than one bunch
+  # @return [String]
   def label
     return @name if @name != ''
     return @ndice.to_s + 'd' + @sides.to_s
   end
 
   # @!attribute [r] rerolls
-  # @return [Array<GamesDice::RerollRule>, nil] Sequence of re-roll rules, or nil if re-rolls are not required.
+  # Sequence of re-roll rules, or nil if re-rolls are not required.
+  # @return [Array<GamesDice::RerollRule>, nil]
   def rerolls
     @single_die.rerolls
   end
 
   # @!attribute [r] maps
-  # @return [Array<GamesDice::MapRule>, nil] Sequence of map rules, or nil if mapping is not required.
+  # Sequence of map rules, or nil if mapping is not required.
+  # @return [Array<GamesDice::MapRule>, nil]
   def maps
     @single_die.maps
   end
@@ -130,14 +135,16 @@ class GamesDice::Bunch
   end
 
   # @!attribute [r] min
-  # @return [Integer] Minimum possible result from a call to #roll
+  # Minimum possible result from a call to #roll
+  # @return [Integer]
   def min
     n = @keep_mode ? [@keep_number,@ndice].min : @ndice
     return n * @single_die.min
   end
 
   # @!attribute [r] max
-  # @return [Integer] Maximum possible result from a call to #roll
+  # Maximum possible result from a call to #roll
+  # @return [Integer]
   def max
     n = @keep_mode ? [@keep_number,@ndice].min : @ndice
     return n * @single_die.max
@@ -146,7 +153,7 @@ class GamesDice::Bunch
   # Calculates the probability distribution for the bunch. When the bunch is composed of dice with
   # open-ended re-roll rules, there are some arbitrary limits imposed to prevent large amounts of
   # recursion.
-  # @return [GamesDice::Probabilities] Probability distribution of die.
+  # @return [GamesDice::Probabilities] Probability distribution of bunch.
   def probabilities
     return @probabilities if @probabilities
     @probabilities_complete = true
@@ -212,7 +219,8 @@ class GamesDice::Bunch
   end
 
   # @!attribute [r] explain_result
-  # @return [String,nil] Explanation of result, or nil if no call to #roll yet.
+  # Explanation of result, or nil if no call to #roll yet.
+  # @return [String,nil]
   def explain_result
     return nil unless @result
 
