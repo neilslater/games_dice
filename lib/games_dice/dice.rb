@@ -102,7 +102,7 @@ class GamesDice::Dice
   # @return [GamesDice::Probabilities] Probability distribution of dice.
   def probabilities
     return @probabilities if @probabilities
-    probs = @bunch_multipliers.zip(@bunches).inject( GamesDice::Probabilities.new( { @offset => 1.0 } ) ) do |probs, mb|
+    probs = @bunch_multipliers.zip(@bunches).inject( GamesDice::Probabilities.new( [1.0], @offset ) ) do |probs, mb|
       m,b = mb
       GamesDice::Probabilities.add_distributions_mult( 1, probs, m, b.probabilities )
     end

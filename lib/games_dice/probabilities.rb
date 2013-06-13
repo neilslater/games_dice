@@ -24,15 +24,10 @@ class GamesDice::Probabilities
   # @param [Hash] prob_hash A hash representation of the distribution, each key is an integer result,
   #   and the matching value is probability of getting that result
   # @return [GamesDice::Probabilities]
-  def initialize( prob_hash = { 0 => 1.0 } )
+  def initialize( probs = [1.0], offset = 0 )
     # This should *probably* be validated in future, but that would impact performance
-    @probs, @offset = prob_h_to_ao( prob_hash )
-  end
-
-  # @!visibility private
-  # the Hash representation of probabilities.
-  def ph
-    prob_ao_to_h( @probs, @offset )
+    @probs = probs
+    @offset = offset
   end
 
   # @!visibility private
@@ -46,35 +41,37 @@ class GamesDice::Probabilities
   # call to this method.
   # @return [Hash]
   def to_h
-    prob_ao_to_h( @probs, @offset )
+    GamesDice::Probabilities.prob_ao_to_h( @probs, @offset )
   end
 
   # @!attribute [r] min
   # Minimum result in the distribution
   # @return [Integer]
   def min
-    (@minmax ||= ph.keys.minmax )[0]
+    @offset
   end
 
   # @!attribute [r] max
   # Maximum result in the distribution
   # @return [Integer]
   def max
-    (@minmax ||= ph.keys.minmax )[1]
+    @offset + @probs.count() - 1
   end
 
   # @!attribute [r] expected
   # Expected value of distribution.
   # @return [Float]
   def expected
-    @expected ||= ph.inject(0.0) { |accumulate,p| accumulate + p[0] * p[1] }
+    @expected ||= calc_expected
   end
 
   # Probability of result equalling specific target
   # @param [Integer] target
   # @return [Float] in range (0.0..1.0)
   def p_eql target
-    ph[ Integer(target) ] || 0.0
+    i = Integer(target) - @offset
+    return 0.0 if i < 0 || i >= @probs.count
+    @probs[ i ]
   end
 
   # Probability of result being greater than specific target
@@ -94,7 +91,7 @@ class GamesDice::Probabilities
 
     return 1.0 if target <= min
     return 0.0 if target > max
-    @prob_ge[target] = ph.select {|k,v| target <= k}.inject(0.0) {|so_far,pv| so_far + pv[1] }
+    @prob_ge[target] = @probs[target-@offset,@probs.count-1].inject(0.0) {|so_far,p| so_far + p }
   end
 
   # Probability of result being equal to or less than specific target
@@ -107,7 +104,7 @@ class GamesDice::Probabilities
 
     return 1.0 if target >= max
     return 0.0 if target < min
-    @prob_le[target] = ph.select {|k,v| target >= k}.inject(0.0) {|so_far,pv| so_far + pv[1] }
+    @prob_le[target] = @probs[0,1+target-@offset].inject(0.0) {|so_far,p| so_far + p }
   end
 
   # Probability of result being less than specific target
@@ -117,16 +114,22 @@ class GamesDice::Probabilities
     p_le( Integer(target) - 1 )
   end
 
+  # Creates new instance of GamesDice::Probabilities.
+  # @param [Hash] prob_hash A hash representation of the distribution, each key is an integer result,
+  #   and the matching value is probability of getting that result
+  # @return [GamesDice::Probabilities]
+  def self.from_h prob_hash
+    probs, offset = prob_h_to_ao( prob_hash )
+    GamesDice::Probabilities.new( probs, offset )
+  end
+
   # Distribution for a die with equal chance of rolling 1..N
   # @param [Integer] sides Number of sides on die
   # @return [GamesDice::Probabilities]
   def self.for_fair_die sides
     sides = Integer(sides)
     raise ArgumentError, "sides must be at least 1" unless sides > 0
-    h = {}
-    p = 1.0/sides
-    (1..sides).each { |x| h[x] = p }
-    GamesDice::Probabilities.new( h )
+    GamesDice::Probabilities.new( Array.new( sides, 1.0/sides ), 1 )
   end
 
   # Combines two distributions to create a third, that represents the distribution created when adding
@@ -135,15 +138,20 @@ class GamesDice::Probabilities
   # @param [GamesDice::Probabilities] pd_b Second distribution
   # @return [GamesDice::Probabilities]
   def self.add_distributions pd_a, pd_b
-    h = {}
-    pd_a.ph.each do |ka,pa|
-      pd_b.ph.each do |kb,pb|
-        kc = ka + kb
+    combined_min = pd_a.min + pd_b.min
+    combined_max = pd_a.max + pd_b.max
+    new_probs = Array.new( 1 + combined_max - combined_min, 0.0 )
+    probs_a, offset_a = pd_a.to_ao
+    probs_b, offset_b = pd_b.to_ao
+
+    probs_a.each_with_index do |pa,i|
+      probs_b.each_with_index do |pb,j|
+        k = i + j
         pc = pa * pb
-        h[kc] = h[kc] ? h[kc] + pc : pc
+        new_probs[ k ] += pc
       end
     end
-    GamesDice::Probabilities.new( h )
+    GamesDice::Probabilities.new( new_probs, combined_min )
   end
 
   # Combines two distributions with multipliers to create a third, that represents the distribution
@@ -154,33 +162,47 @@ class GamesDice::Probabilities
   # @param [GamesDice::Probabilities] pd_b Second distribution
   # @return [GamesDice::Probabilities]
   def self.add_distributions_mult m_a, pd_a, m_b, pd_b
-    h = {}
-    pd_a.ph.each do |ka,pa|
-      pd_b.ph.each do |kb,pb|
-        kc = m_a * ka + m_b * kb
+    combined_min, combined_max = [
+      m_a * pd_a.min + m_b * pd_b.min, m_a * pd_a.max + m_b * pd_b.min,
+      m_a * pd_a.min + m_b * pd_b.max, m_a * pd_a.max + m_b * pd_b.max,
+      ].minmax
+
+    new_probs = Array.new( 1 + combined_max - combined_min, 0.0 )
+    probs_a, offset_a = pd_a.to_ao
+    probs_b, offset_b = pd_b.to_ao
+
+    probs_a.each_with_index do |pa,i|
+      probs_b.each_with_index do |pb,j|
+        k = m_a * (i + offset_a) + m_b * (j + offset_b) - combined_min
         pc = pa * pb
-        h[kc] = h[kc] ? h[kc] + pc : pc
+        new_probs[ k ] += pc
       end
     end
-    GamesDice::Probabilities.new( h )
+    GamesDice::Probabilities.new( new_probs, combined_min )
   end
 
   private
 
   # Convert hash to array,offset notation
-  def prob_h_to_ao h
+  def self.prob_h_to_ao h
     rmin,rmax = h.keys.minmax
     o = rmin
-    a = Array.new( 1 + rmax - rmin )
+    a = Array.new( 1 + rmax - rmin, 0.0 )
     h.each { |k,v| a[k-rmin] = v }
     [a,o]
   end
 
   # Convert array,offset notation to hash
-  def prob_ao_to_h a, o
+  def self.prob_ao_to_h a, o
     h = Hash.new
-    a.each_with_index { |v,i| h[i+o] = v if v }
+    a.each_with_index { |v,i| h[i+o] = v if v > 0.0 }
     h
+  end
+
+  def calc_expected
+    total = 0.0
+    @probs.each_with_index { |v,i| total += (i+@offset)*v }
+    total
   end
 
 end # class GamesDice::Probabilities

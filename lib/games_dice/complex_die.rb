@@ -127,7 +127,7 @@ class GamesDice::ComplexDie
     end
     @prob_ge = {}
     @prob_le = {}
-    @probabilities = GamesDice::Probabilities.new( prob_hash )
+    @probabilities = GamesDice::Probabilities.from_h( prob_hash )
   end
 
   # Simulates rolling the die

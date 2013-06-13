@@ -188,7 +188,7 @@ class GamesDice::Bunch
     end
 
     @probabilities_min, @probabilities_max = combined_probs.keys.minmax
-    @probabilities = GamesDice::Probabilities.new( combined_probs )
+    @probabilities = GamesDice::Probabilities.from_h( combined_probs )
   end
 
   # Simulates rolling the bunch of identical dice

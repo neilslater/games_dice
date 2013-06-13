@@ -4,8 +4,8 @@ require 'helpers'
 describe GamesDice::Probabilities do
   describe "class methods" do
     describe "#new" do
-      it "should create a new distribution from a hash" do
-        p = GamesDice::Probabilities.new( { 1 => 1.0 } )
+      it "should create a new distribution from an array and offset" do
+        p = GamesDice::Probabilities.new( [1.0], 1 )
         p.is_a?( GamesDice::Probabilities ).should be_true
         p.to_h.should be_valid_distribution
       end
@@ -29,8 +29,8 @@ describe GamesDice::Probabilities do
 
     describe "#add_distributions" do
       it "should combine two distributions to create a third one" do
-        d4a = GamesDice::Probabilities.new( { 1 => 1.0/4, 2 => 1.0/4, 3 => 1.0/4, 4 => 1.0/4 } )
-        d4b = GamesDice::Probabilities.new( { 1 => 1.0/10, 2 => 2.0/10, 3 => 3.0/10, 4 => 4.0/10 } )
+        d4a = GamesDice::Probabilities.new( [ 1.0/4, 1.0/4, 1.0/4, 1.0/4 ], 1 )
+        d4b = GamesDice::Probabilities.new( [ 1.0/10, 2.0/10, 3.0/10, 4.0/10], 1 )
         p = GamesDice::Probabilities.add_distributions( d4a, d4b )
         p.to_h.should be_valid_distribution
       end
@@ -56,8 +56,8 @@ describe GamesDice::Probabilities do
 
     describe "#add_distributions_mult" do
       it "should combine two multiplied distributions to create a third one" do
-        d4a = GamesDice::Probabilities.new( { 1 => 1.0/4, 2 => 1.0/4, 3 => 1.0/4, 4 => 1.0/4 } )
-        d4b = GamesDice::Probabilities.new( { 1 => 1.0/10, 2 => 2.0/10, 3 => 3.0/10, 4 => 4.0/10 } )
+        d4a = GamesDice::Probabilities.new( [ 1.0/4, 1.0/4, 1.0/4, 1.0/4 ], 1 )
+        d4b = GamesDice::Probabilities.new( [ 1.0/10, 2.0/10, 3.0/10, 4.0/10], 1 )
         p = GamesDice::Probabilities.add_distributions_mult( 2, d4a, -1, d4b )
         p.to_h.should be_valid_distribution
       end
@@ -88,7 +88,7 @@ describe GamesDice::Probabilities do
     let(:p4) { GamesDice::Probabilities.for_fair_die( 4 ) }
     let(:p6) { GamesDice::Probabilities.for_fair_die( 6 ) }
     let(:p10) { GamesDice::Probabilities.for_fair_die( 10 ) }
-    let(:pa) { GamesDice::Probabilities.new( { -1 => 0.4, 0 => 0.2, 1 => 0.4 } ) }
+    let(:pa) { GamesDice::Probabilities.new( [ 0.4, 0.2, 0.4 ], -1 ) }
 
     describe "#p_eql" do
       it "should return probability of getting a number inside the range" do
