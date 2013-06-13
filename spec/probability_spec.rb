@@ -40,19 +40,47 @@ describe GamesDice::Probabilities do
       it "should calculate a classic 2d6 distribution accurately" do
         d6 = GamesDice::Probabilities.for_fair_die( 6 )
         p = GamesDice::Probabilities.add_distributions( d6, d6 )
-        p.to_h.should be_valid_distribution
-        p.to_h[2].should be_within(1e-9).of 1.0/36
-        p.to_h[3].should be_within(1e-9).of 2.0/36
-        p.to_h[4].should be_within(1e-9).of 3.0/36
-        p.to_h[5].should be_within(1e-9).of 4.0/36
-        p.to_h[6].should be_within(1e-9).of 5.0/36
-        p.to_h[7].should be_within(1e-9).of 6.0/36
-        p.to_h[8].should be_within(1e-9).of 5.0/36
-        p.to_h[9].should be_within(1e-9).of 4.0/36
-        p.to_h[10].should be_within(1e-9).of 3.0/36
-        p.to_h[11].should be_within(1e-9).of 2.0/36
-        p.to_h[12].should be_within(1e-9).of 1.0/36
+        h = p.to_h
+        h.should be_valid_distribution
+        h[2].should be_within(1e-9).of 1.0/36
+        h[3].should be_within(1e-9).of 2.0/36
+        h[4].should be_within(1e-9).of 3.0/36
+        h[5].should be_within(1e-9).of 4.0/36
+        h[6].should be_within(1e-9).of 5.0/36
+        h[7].should be_within(1e-9).of 6.0/36
+        h[8].should be_within(1e-9).of 5.0/36
+        h[9].should be_within(1e-9).of 4.0/36
+        h[10].should be_within(1e-9).of 3.0/36
+        h[11].should be_within(1e-9).of 2.0/36
+        h[12].should be_within(1e-9).of 1.0/36
       end
+    end
+
+    describe "#add_distributions_mult" do
+      it "should combine two multiplied distributions to create a third one" do
+        d4a = GamesDice::Probabilities.new( { 1 => 1.0/4, 2 => 1.0/4, 3 => 1.0/4, 4 => 1.0/4 } )
+        d4b = GamesDice::Probabilities.new( { 1 => 1.0/10, 2 => 2.0/10, 3 => 3.0/10, 4 => 4.0/10 } )
+        p = GamesDice::Probabilities.add_distributions_mult( 2, d4a, -1, d4b )
+        p.to_h.should be_valid_distribution
+      end
+
+      it "should calculate a distribution for '1d6 - 1d4' accurately" do
+        d6 = GamesDice::Probabilities.for_fair_die( 6 )
+        d4 = GamesDice::Probabilities.for_fair_die( 4 )
+        p = GamesDice::Probabilities.add_distributions_mult( 1, d6, -1, d4 )
+        h = p.to_h
+        h.should be_valid_distribution
+        h[-3].should be_within(1e-9).of 1.0/24
+        h[-2].should be_within(1e-9).of 2.0/24
+        h[-1].should be_within(1e-9).of 3.0/24
+        h[0].should be_within(1e-9).of 4.0/24
+        h[1].should be_within(1e-9).of 4.0/24
+        h[2].should be_within(1e-9).of 4.0/24
+        h[3].should be_within(1e-9).of 3.0/24
+        h[4].should be_within(1e-9).of 2.0/24
+        h[5].should be_within(1e-9).of 1.0/24
+      end
+
     end
 
   end # describe "class methods"
