@@ -2,9 +2,7 @@ require 'games_dice'
 require 'helpers'
 
 describe GamesDice::Probabilities do
-
   describe "class methods" do
-
     describe "#new" do
       it "should create a new distribution from a hash" do
         p = GamesDice::Probabilities.new( { 1 => 1.0 } )
@@ -249,7 +247,5 @@ describe GamesDice::Probabilities do
         GamesDice::Probabilities.add_distributions( p6, p10 ).expected.should be_within(1.0e-9).of 9.0
       end
     end
-
   end # describe "instance methods"
-
 end

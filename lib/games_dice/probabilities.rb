@@ -26,47 +26,55 @@ class GamesDice::Probabilities
   # @return [GamesDice::Probabilities]
   def initialize( prob_hash = { 0 => 1.0 } )
     # This should *probably* be validated in future, but that would impact performance
-    @ph = prob_hash
+    @probs, @offset = prob_h_to_ao( prob_hash )
   end
 
   # @!visibility private
   # the Hash representation of probabilities.
-  attr_reader :ph
+  def ph
+    prob_ao_to_h( @probs, @offset )
+  end
+
+  # @!visibility private
+  # the Array, Offset representation of probabilities.
+  def to_ao
+    [ @probs, @offset ]
+  end
 
   # A hash representation of the distribution. Each key is an integer result,
   # and the matching value is probability of getting that result. A new hash is generated on each
   # call to this method.
   # @return [Hash]
   def to_h
-    @ph.clone
+    prob_ao_to_h( @probs, @offset )
   end
 
   # @!attribute [r] min
   # Minimum result in the distribution
   # @return [Integer]
   def min
-    (@minmax ||= @ph.keys.minmax )[0]
+    (@minmax ||= ph.keys.minmax )[0]
   end
 
   # @!attribute [r] max
   # Maximum result in the distribution
   # @return [Integer]
   def max
-    (@minmax ||= @ph.keys.minmax )[1]
+    (@minmax ||= ph.keys.minmax )[1]
   end
 
   # @!attribute [r] expected
   # Expected value of distribution.
   # @return [Float]
   def expected
-    @expected ||= @ph.inject(0.0) { |accumulate,p| accumulate + p[0] * p[1] }
+    @expected ||= ph.inject(0.0) { |accumulate,p| accumulate + p[0] * p[1] }
   end
 
   # Probability of result equalling specific target
   # @param [Integer] target
   # @return [Float] in range (0.0..1.0)
   def p_eql target
-    @ph[ Integer(target) ] || 0.0
+    ph[ Integer(target) ] || 0.0
   end
 
   # Probability of result being greater than specific target
@@ -86,7 +94,7 @@ class GamesDice::Probabilities
 
     return 1.0 if target <= min
     return 0.0 if target > max
-    @prob_ge[target] = @ph.select {|k,v| target <= k}.inject(0.0) {|so_far,pv| so_far + pv[1] }
+    @prob_ge[target] = ph.select {|k,v| target <= k}.inject(0.0) {|so_far,pv| so_far + pv[1] }
   end
 
   # Probability of result being equal to or less than specific target
@@ -99,7 +107,7 @@ class GamesDice::Probabilities
 
     return 1.0 if target >= max
     return 0.0 if target < min
-    @prob_le[target] = @ph.select {|k,v| target >= k}.inject(0.0) {|so_far,pv| so_far + pv[1] }
+    @prob_le[target] = ph.select {|k,v| target >= k}.inject(0.0) {|so_far,pv| so_far + pv[1] }
   end
 
   # Probability of result being less than specific target
@@ -155,6 +163,24 @@ class GamesDice::Probabilities
       end
     end
     GamesDice::Probabilities.new( h )
+  end
+
+  private
+
+  # Convert hash to array,offset notation
+  def prob_h_to_ao h
+    rmin,rmax = h.keys.minmax
+    o = rmin
+    a = Array.new( 1 + rmax - rmin )
+    h.each { |k,v| a[k-rmin] = v }
+    [a,o]
+  end
+
+  # Convert array,offset notation to hash
+  def prob_ao_to_h a, o
+    h = Hash.new
+    a.each_with_index { |v,i| h[i+o] = v if v }
+    h
   end
 
 end # class GamesDice::Probabilities
