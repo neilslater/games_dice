@@ -21,8 +21,8 @@
 class GamesDice::Probabilities
 
   # Creates new instance of GamesDice::Probabilities.
-  # @param [Hash] prob_hash A hash representation of the distribution, each key is an integer result,
-  #   and the matching value is probability of getting that result
+  # @param [Array<Float>] probs Each entry in the array is the probability of getting a result
+  # @param [Integer] offset The result associated with index of 0 in the array
   # @return [GamesDice::Probabilities]
   def initialize( probs = [1.0], offset = 0 )
     # This should *probably* be validated in future, but that would impact performance

@@ -123,10 +123,9 @@ class GamesDice::ComplexDie
         prob_hash[m] += p
       end
     else
-      prob_hash = @basic_die.probabilities.to_h
+      @probabilities = @basic_die.probabilities
+      return @probabilities
     end
-    @prob_ge = {}
-    @prob_le = {}
     @probabilities = GamesDice::Probabilities.from_h( prob_hash )
   end
 

@@ -55,8 +55,7 @@ class GamesDice::Die
   # Calculates probability distribution for this die.
   # @return [GamesDice::Probabilities] probability distribution of the die
   def probabilities
-    return @probabilities if @probabilities
-    @probabilities = GamesDice::Probabilities.for_fair_die( @sides )
+    @probabilities ||= GamesDice::Probabilities.for_fair_die( @sides )
   end
 
   # Simulates rolling the die
