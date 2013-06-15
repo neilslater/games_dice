@@ -75,8 +75,10 @@ class GamesDice::ComplexDie
     @result.explain_value
   end
 
+  # The minimum possible result from a call to #roll. This is not always the same as the theoretical
+  # minimum, due to limits on the maximum number of rerolls.
   # @!attribute [r] min
-  # @return [Integer] Minimum possible result from a call to #roll
+  # @return [Integer]
   def min
     return @min_result if @min_result
     @min_result, @max_result = [probabilities.min, probabilities.max]
@@ -278,7 +280,7 @@ class GamesDice::ComplexDie
       end
 
     end
-    probabilities.clone
+    probabilities
   end
 
 end # class ComplexDie

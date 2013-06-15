@@ -260,12 +260,10 @@ describe GamesDice::Bunch do
       end
 
       it "should have a mean value of roughly 18.986" do
-        pending "Too slow"
         bunch.probabilities.expected.should be_within(1e-9).of 18.9859925804
       end
 
       it "should calculate probabilities correctly" do
-        pending "Too slow"
         prob_hash = bunch.probabilities.to_h
         prob_hash[2].should be_within(1e-10).of 0.00001
         prob_hash[3].should be_within(1e-10).of 0.00005
