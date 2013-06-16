@@ -36,6 +36,15 @@ class GamesDice::Probabilities
     [ @probs, @offset ]
   end
 
+  # Iterates through value, probability pairs
+  # @yieldparam [Integer] result A result that may be possible in the dice scheme
+  # @yieldparam [Float] probability Probability of result, in range 0.0..1.0
+  # @return [GamesDice::Probabilities] this object
+  def each
+    @probs.each_with_index { |p,i| yield( i+@offset, p ) }
+    return self
+  end
+
   # A hash representation of the distribution. Each key is an integer result,
   # and the matching value is probability of getting that result. A new hash is generated on each
   # call to this method.

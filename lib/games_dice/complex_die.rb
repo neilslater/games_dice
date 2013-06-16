@@ -117,9 +117,8 @@ class GamesDice::ComplexDie
     elsif @rerolls
       prob_hash = recursive_probabilities
     elsif @maps
-      probs = @basic_die.probabilities.to_h
       prob_hash = {}
-      probs.each do |v,p|
+      @basic_die.probabilities.each do |v,p|
         m, n = calc_maps(v)
         prob_hash[m] ||= 0.0
         prob_hash[m] += p
@@ -251,9 +250,7 @@ class GamesDice::ComplexDie
 
     (1..@basic_die.sides).each do |v|
       # calculate value, recurse if there is a reroll
-      result_so_far = prior_result ? prior_result.clone : GamesDice::DieResult.new(v,roll_reason)
-      result_so_far.add_roll(v,roll_reason) if prior_result
-      rerolls_remaining = rerolls_left ? rerolls_left.clone : @rerolls.map { |rule| rule.limit }
+      result_so_far, rerolls_remaining = calc_result_so_far(prior_result, rerolls_left, v, roll_reason )
 
       # Find which rule, if any, is being triggered
       rule_idx = @rerolls.zip(rerolls_remaining).find_index do |rule,remaining|
@@ -281,6 +278,18 @@ class GamesDice::ComplexDie
 
     end
     probabilities
+  end
+
+  def calc_result_so_far prior_result, rerolls_left, v, roll_reason
+    if prior_result
+      result_so_far = prior_result.clone
+      result_so_far.add_roll(v,roll_reason)
+      rerolls_remaining = rerolls_left.clone
+    else
+      result_so_far = GamesDice::DieResult.new(v,roll_reason)
+      rerolls_remaining = @rerolls.map { |rule| rule.limit }
+    end
+    [result_so_far, rerolls_remaining]
   end
 
 end # class ComplexDie
