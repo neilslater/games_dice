@@ -274,7 +274,7 @@ class GamesDice::Bunch
       case keep_rule
       when nil then
         die_probs.each do |v2,p2|
-          new_sig = (combo + [v2]).sort.join(';')
+          new_sig = (combo + [v2]).sort!.join(';')
           p3 = p1 * p2
           accumulator[new_sig] += p3
         end
@@ -283,7 +283,7 @@ class GamesDice::Bunch
         len = combo.size
         die_probs.each do |v2,p2|
           if v2 > need_more_than
-            new_sig = (combo + [v2]).sort[1,len].join(';')
+            new_sig = (combo + [v2]).sort![1,len].join(';')
           else
             new_sig = sig
           end
@@ -295,7 +295,7 @@ class GamesDice::Bunch
         len = combo.size
         die_probs.each do |v2,p2|
           if v2 < need_less_than
-            new_sig = (combo + [v2]).sort[0,len].join(';')
+            new_sig = (combo + [v2]).sort![0,len].join(';')
           else
             new_sig = sig
           end
