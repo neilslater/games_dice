@@ -123,6 +123,34 @@ class GamesDice::Probabilities
     p_le( Integer(target) - 1 )
   end
 
+  # Probability distribution derived from this one, where we know (or are only interested in
+  # situations where) the result is greater than or equal to target.
+  # @param [Integer] target
+  # @return [GamesDice::Probabilities] new distribution.
+  def given_ge target
+    target = Integer(target)
+    target = min if min > target
+    p = p_ge(target)
+    raise "There is no valid distribution given a result >= #{target}" unless p > 0.0
+    mult = 1.0/p
+    new_probs = @probs[target-@offset,@probs.count-1].map { |x| x * mult }
+    GamesDice::Probabilities.new( new_probs, target )
+  end
+
+  # Probability distribution derived from this one, where we know (or are only interested in
+  # situations where) the result is less than or equal to target.
+  # @param [Integer] target
+  # @return [GamesDice::Probabilities] new distribution.
+  def given_le target
+    target = Integer(target)
+    target = max if max < target
+    p = p_le(target)
+    raise "There is no valid distribution given a result <= #{target}" unless p > 0.0
+    mult = 1.0/p
+    new_probs = @probs[0..target-@offset].map { |x| x * mult }
+    GamesDice::Probabilities.new( new_probs, @offset )
+  end
+
   # Creates new instance of GamesDice::Probabilities.
   # @param [Hash] prob_hash A hash representation of the distribution, each key is an integer result,
   #   and the matching value is probability of getting that result
