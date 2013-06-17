@@ -263,26 +263,10 @@ class GamesDice::Bunch
 
   private
 
-  # combines two sets of probabilities where the end result is the first set of keys plus
-  # the second set of keys, at the associated probailities of the values
-  def prob_accumulate first_probs, second_probs
-    accumulator = Hash.new
-
-    first_probs.each do |v1,p1|
-      second_probs.each do |v2,p2|
-        v3 = v1 + v2
-        p3 = p1 * p2
-        accumulator[v3] ||= 0.0
-        accumulator[v3] += p3
-      end
-    end
-
-    accumulator
-  end
-
   # combines two sets of probabilities, as above, except tracking unique permutations
   def prob_accumulate_combinations so_far, die_probs, keep_rule = nil
     accumulator = Hash.new
+    accumulator.default = 0.0
 
     so_far.each do |sig,p1|
       combo = sig.split(';').map { |s| s.to_i }
@@ -292,7 +276,6 @@ class GamesDice::Bunch
         die_probs.each do |v2,p2|
           new_sig = (combo + [v2]).sort.join(';')
           p3 = p1 * p2
-          accumulator[new_sig] ||= 0.0
           accumulator[new_sig] += p3
         end
       when :keep_best then
@@ -304,7 +287,6 @@ class GamesDice::Bunch
             new_sig = sig
           end
           p3 = p1 * p2
-          accumulator[new_sig] ||= 0.0
           accumulator[new_sig] += p3
         end
       when :keep_worst then
@@ -316,43 +298,12 @@ class GamesDice::Bunch
             new_sig = sig
           end
           p3 = p1 * p2
-          accumulator[new_sig] ||= 0.0
           accumulator[new_sig] += p3
         end
       end
     end
 
     accumulator
-  end
-
-  # Generates all sets of [throw_away,may_keep_exactly,keep_preferentially,combinations] that meet
-  # criteria for correct total number of dice and keep dice. These then need to be assessed for every
-  # die value by the caller to get a full set of probabilities
-  def generate_item_counts total_dice, keep_dice
-    # Constraints are:
-    # may_keep_exactly must be at least 1, and at most is all the dice
-    # keep_preferentially plus may_keep_exactly must be >= keep_dice, but keep_preferentially < keep dice
-    # sum of all three always == total_dice
-    item_counts = []
-    (1..total_dice).each do |may_keep_exactly|
-      min_kp = [keep_dice - may_keep_exactly, 0].max
-      max_kp = [keep_dice - 1, total_dice - may_keep_exactly].min
-      (min_kp..max_kp).each do |keep_preferentially|
-        counts = [ total_dice - may_keep_exactly - keep_preferentially, may_keep_exactly, keep_preferentially ]
-        counts << combinations(counts)
-        item_counts << counts
-      end
-    end
-    item_counts
-  end
-
-  # How many unique ways can a set of items, some of which are identical, be arranged?
-  def combinations item_counts
-    item_counts = item_counts.map { |i| Integer(i) }.select { |i| i > 0 }
-    total_items = item_counts.inject(:+)
-    numerator = 1.upto(total_items).inject(:*)
-    denominator = item_counts.map { |i| 1.upto(i).inject(:*) }.inject(:*)
-    numerator / denominator
   end
 
 end # class Bunch
