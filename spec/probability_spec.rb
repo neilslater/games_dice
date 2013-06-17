@@ -54,6 +54,40 @@ describe GamesDice::Probabilities do
       end
     end
 
+    describe "#repeat_distribution" do
+      it "should output a valid distribution if params are valid" do
+        d4a = GamesDice::Probabilities.new( [ 1.0/4, 1.0/4, 1.0/4, 1.0/4 ], 1 )
+        d4b = GamesDice::Probabilities.new( [ 1.0/10, 2.0/10, 3.0/10, 4.0/10], 1 )
+        p = GamesDice::Probabilities.repeat_distribution( d4a, 7 )
+        p.to_h.should be_valid_distribution
+        p = GamesDice::Probabilities.repeat_distribution( d4b, 12 )
+        p.to_h.should be_valid_distribution
+      end
+
+      it "should calculate a classic 3d6 distribution accurately" do
+        d6 = GamesDice::Probabilities.for_fair_die( 6 )
+        p = GamesDice::Probabilities.repeat_distribution( d6, 3 )
+        h = p.to_h
+        h.should be_valid_distribution
+        h[3].should be_within(1e-9).of 1.0/216
+        h[4].should be_within(1e-9).of 3.0/216
+        h[5].should be_within(1e-9).of 6.0/216
+        h[6].should be_within(1e-9).of 10.0/216
+        h[7].should be_within(1e-9).of 15.0/216
+        h[8].should be_within(1e-9).of 21.0/216
+        h[9].should be_within(1e-9).of 25.0/216
+        h[10].should be_within(1e-9).of 27.0/216
+        h[11].should be_within(1e-9).of 27.0/216
+        h[12].should be_within(1e-9).of 25.0/216
+        h[13].should be_within(1e-9).of 21.0/216
+        h[14].should be_within(1e-9).of 15.0/216
+        h[15].should be_within(1e-9).of 10.0/216
+        h[16].should be_within(1e-9).of 6.0/216
+        h[17].should be_within(1e-9).of 3.0/216
+        h[18].should be_within(1e-9).of 1.0/216
+      end
+    end # describe "#repeat_distribution"
+
     describe "#add_distributions_mult" do
       it "should combine two multiplied distributions to create a third one" do
         d4a = GamesDice::Probabilities.new( [ 1.0/4, 1.0/4, 1.0/4, 1.0/4 ], 1 )
@@ -78,7 +112,6 @@ describe GamesDice::Probabilities do
         h[4].should be_within(1e-9).of 2.0/24
         h[5].should be_within(1e-9).of 1.0/24
       end
-
     end
 
   end # describe "class methods"
