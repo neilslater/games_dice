@@ -158,12 +158,8 @@ class GamesDice::Bunch
     return @probabilities if @probabilities
     @probabilities_complete = true
 
-    # TODO: It is possible to optimise this slightly by combining already-calculated values
-    # Adding dice is same as multiplying probability sets for that number of dice
-    # Combine(probabililities_3_dice, probabililities_single_die) == Combine(probabililities_2_dice, probabililities_2_dice)
-    # It is possible to minimise the total number of multiplications, gaining about 30% efficiency, with careful choices
-    single_roll_probs = @single_die.probabilities.to_h
     if @keep_mode && @ndice > @keep_number
+      single_roll_probs = @single_die.probabilities.to_h
       preadd_probs = {}
       single_roll_probs.each { |k,v| preadd_probs[k.to_s] = v }
 
@@ -180,15 +176,12 @@ class GamesDice::Bunch
         combined_probs[total] ||= 0.0
         combined_probs[total] += v
       end
+      @probabilities = GamesDice::Probabilities.from_h( combined_probs )
     else
-      combined_probs = single_roll_probs.clone
-      (@ndice-1).times do
-        combined_probs = prob_accumulate combined_probs, single_roll_probs
-      end
+      @probabilities = GamesDice::Probabilities.repeat_distribution( @single_die.probabilities, @ndice )
     end
 
-    @probabilities_min, @probabilities_max = combined_probs.keys.minmax
-    @probabilities = GamesDice::Probabilities.from_h( combined_probs )
+    return @probabilities
   end
 
   # Simulates rolling the bunch of identical dice

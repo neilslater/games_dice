@@ -190,6 +190,33 @@ class GamesDice::Probabilities
     GamesDice::Probabilities.new( new_probs, combined_min )
   end
 
+
+  # Adds a distribution to itself repeatedly, to simulate a number of dice
+  # results being summed.
+  # @param [GamesDice::Probabilities] pd Distribution to repeat
+  # @param [Integer] n Number of repetitions, must be at least 1
+  # @return [GamesDice::Probabilities]
+  def self.repeat_distribution pd, n
+    n = Integer( n )
+    raise "Cannot combine probabilities less than once" if n < 1
+    revbin = n.to_s(2).reverse.each_char.to_a.map { |c| c == '1' }
+    pd_power = pd
+    pd_result = nil
+    max_power = revbin.count - 1
+
+    revbin.each_with_index do |use_power, i|
+      if use_power
+        if pd_result
+          pd_result = add_distributions( pd_result, pd_power )
+        else
+          pd_result = pd_power
+        end
+      end
+      pd_power = add_distributions( pd_power, pd_power ) unless i == max_power
+    end
+    pd_result
+  end
+
   private
 
   # Convert hash to array,offset notation
