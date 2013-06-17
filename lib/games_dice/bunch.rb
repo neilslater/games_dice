@@ -280,9 +280,10 @@ class GamesDice::Bunch
         end
       when :keep_best then
         need_more_than = combo.min
+        len = combo.size
         die_probs.each do |v2,p2|
           if v2 > need_more_than
-            new_sig = (combo + [v2]).sort[1..combo.size].join(';')
+            new_sig = (combo + [v2]).sort[1,len].join(';')
           else
             new_sig = sig
           end
@@ -291,9 +292,10 @@ class GamesDice::Bunch
         end
       when :keep_worst then
         need_less_than = combo.max
+        len = combo.size
         die_probs.each do |v2,p2|
           if v2 < need_less_than
-            new_sig = (combo + [v2]).sort[0..(combo.size-1)].join(';')
+            new_sig = (combo + [v2]).sort[0,len].join(';')
           else
             new_sig = sig
           end
