@@ -178,7 +178,7 @@ class GamesDice::Bunch
       end
       @probabilities = GamesDice::Probabilities.from_h( combined_probs )
     else
-      @probabilities = GamesDice::Probabilities.repeat_distribution( @single_die.probabilities, @ndice )
+      @probabilities = @single_die.probabilities.repeat_sum( @ndice )
     end
 
     return @probabilities

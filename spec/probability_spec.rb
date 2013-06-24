@@ -54,40 +54,6 @@ describe GamesDice::Probabilities do
       end
     end
 
-    describe "#repeat_distribution" do
-      it "should output a valid distribution if params are valid" do
-        d4a = GamesDice::Probabilities.new( [ 1.0/4, 1.0/4, 1.0/4, 1.0/4 ], 1 )
-        d4b = GamesDice::Probabilities.new( [ 1.0/10, 2.0/10, 3.0/10, 4.0/10], 1 )
-        p = GamesDice::Probabilities.repeat_distribution( d4a, 7 )
-        p.to_h.should be_valid_distribution
-        p = GamesDice::Probabilities.repeat_distribution( d4b, 12 )
-        p.to_h.should be_valid_distribution
-      end
-
-      it "should calculate a classic 3d6 distribution accurately" do
-        d6 = GamesDice::Probabilities.for_fair_die( 6 )
-        p = GamesDice::Probabilities.repeat_distribution( d6, 3 )
-        h = p.to_h
-        h.should be_valid_distribution
-        h[3].should be_within(1e-9).of 1.0/216
-        h[4].should be_within(1e-9).of 3.0/216
-        h[5].should be_within(1e-9).of 6.0/216
-        h[6].should be_within(1e-9).of 10.0/216
-        h[7].should be_within(1e-9).of 15.0/216
-        h[8].should be_within(1e-9).of 21.0/216
-        h[9].should be_within(1e-9).of 25.0/216
-        h[10].should be_within(1e-9).of 27.0/216
-        h[11].should be_within(1e-9).of 27.0/216
-        h[12].should be_within(1e-9).of 25.0/216
-        h[13].should be_within(1e-9).of 21.0/216
-        h[14].should be_within(1e-9).of 15.0/216
-        h[15].should be_within(1e-9).of 10.0/216
-        h[16].should be_within(1e-9).of 6.0/216
-        h[17].should be_within(1e-9).of 3.0/216
-        h[18].should be_within(1e-9).of 1.0/216
-      end
-    end # describe "#repeat_distribution"
-
     describe "#add_distributions_mult" do
       it "should combine two multiplied distributions to create a third one" do
         d4a = GamesDice::Probabilities.new( [ 1.0/4, 1.0/4, 1.0/4, 1.0/4 ], 1 )
@@ -302,5 +268,101 @@ describe GamesDice::Probabilities do
         pd.p_eql( 10 ).should == 0.0
       end
     end
+
+    describe "#repeat_sum" do
+      it "should output a valid distribution if params are valid" do
+        d4a = GamesDice::Probabilities.new( [ 1.0/4, 1.0/4, 1.0/4, 1.0/4 ], 1 )
+        d4b = GamesDice::Probabilities.new( [ 1.0/10, 2.0/10, 3.0/10, 4.0/10], 1 )
+        p = d4a.repeat_sum( 7 )
+        p.to_h.should be_valid_distribution
+        p = d4b.repeat_sum( 12 )
+        p.to_h.should be_valid_distribution
+      end
+
+      it "should calculate a '3d6' distribution accurately" do
+        d6 = GamesDice::Probabilities.for_fair_die( 6 )
+        p = d6.repeat_sum( 3 )
+        h = p.to_h
+        h.should be_valid_distribution
+        h[3].should be_within(1e-9).of 1.0/216
+        h[4].should be_within(1e-9).of 3.0/216
+        h[5].should be_within(1e-9).of 6.0/216
+        h[6].should be_within(1e-9).of 10.0/216
+        h[7].should be_within(1e-9).of 15.0/216
+        h[8].should be_within(1e-9).of 21.0/216
+        h[9].should be_within(1e-9).of 25.0/216
+        h[10].should be_within(1e-9).of 27.0/216
+        h[11].should be_within(1e-9).of 27.0/216
+        h[12].should be_within(1e-9).of 25.0/216
+        h[13].should be_within(1e-9).of 21.0/216
+        h[14].should be_within(1e-9).of 15.0/216
+        h[15].should be_within(1e-9).of 10.0/216
+        h[16].should be_within(1e-9).of 6.0/216
+        h[17].should be_within(1e-9).of 3.0/216
+        h[18].should be_within(1e-9).of 1.0/216
+      end
+    end # describe "#repeat_sum"
+
+    describe "#repeat_n_sum_k" do
+      it "should output a valid distribution if params are valid" do
+        d4a = GamesDice::Probabilities.new( [ 1.0/4, 1.0/4, 1.0/4, 1.0/4 ], 1 )
+        d4b = GamesDice::Probabilities.new( [ 1.0/10, 2.0/10, 3.0/10, 4.0/10], 1 )
+        p = d4a.repeat_n_sum_k( 3, 2 )
+        p.to_h.should be_valid_distribution
+        p = d4b.repeat_n_sum_k( 12, 4 )
+        p.to_h.should be_valid_distribution
+      end
+
+      it "should calculate a '4d6 keep best 3' distribution accurately" do
+        d6 = GamesDice::Probabilities.for_fair_die( 6 )
+        p = d6.repeat_n_sum_k( 4, 3 )
+        h = p.to_h
+        h.should be_valid_distribution
+        h[3].should be_within(1e-10).of 1/1296.0
+        h[4].should be_within(1e-10).of 4/1296.0
+        h[5].should be_within(1e-10).of 10/1296.0
+        h[6].should be_within(1e-10).of 21/1296.0
+        h[7].should be_within(1e-10).of 38/1296.0
+        h[8].should be_within(1e-10).of 62/1296.0
+        h[9].should be_within(1e-10).of 91/1296.0
+        h[10].should be_within(1e-10).of 122/1296.0
+        h[11].should be_within(1e-10).of 148/1296.0
+        h[12].should be_within(1e-10).of 167/1296.0
+        h[13].should be_within(1e-10).of 172/1296.0
+        h[14].should be_within(1e-10).of 160/1296.0
+        h[15].should be_within(1e-10).of 131/1296.0
+        h[16].should be_within(1e-10).of 94/1296.0
+        h[17].should be_within(1e-10).of 54/1296.0
+        h[18].should be_within(1e-10).of 21/1296.0
+      end
+
+      it "should calculate a '2d20 keep worst result' distribution accurately" do
+        d20 = GamesDice::Probabilities.for_fair_die( 20 )
+        p = d20.repeat_n_sum_k( 2, 1, :keep_worst )
+        h = p.to_h
+        h.should be_valid_distribution
+        h[1].should be_within(1e-10).of 39/400.0
+        h[2].should be_within(1e-10).of 37/400.0
+        h[3].should be_within(1e-10).of 35/400.0
+        h[4].should be_within(1e-10).of 33/400.0
+        h[5].should be_within(1e-10).of 31/400.0
+        h[6].should be_within(1e-10).of 29/400.0
+        h[7].should be_within(1e-10).of 27/400.0
+        h[8].should be_within(1e-10).of 25/400.0
+        h[9].should be_within(1e-10).of 23/400.0
+        h[10].should be_within(1e-10).of 21/400.0
+        h[11].should be_within(1e-10).of 19/400.0
+        h[12].should be_within(1e-10).of 17/400.0
+        h[13].should be_within(1e-10).of 15/400.0
+        h[14].should be_within(1e-10).of 13/400.0
+        h[15].should be_within(1e-10).of 11/400.0
+        h[16].should be_within(1e-10).of 9/400.0
+        h[17].should be_within(1e-10).of 7/400.0
+        h[18].should be_within(1e-10).of 5/400.0
+        h[19].should be_within(1e-10).of 3/400.0
+        h[20].should be_within(1e-10).of 1/400.0
+      end
+    end # describe "#repeat_n_sum_k"
+
   end # describe "instance methods"
 end
