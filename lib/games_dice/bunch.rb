@@ -156,27 +156,9 @@ class GamesDice::Bunch
   # @return [GamesDice::Probabilities] Probability distribution of bunch.
   def probabilities
     return @probabilities if @probabilities
-    @probabilities_complete = true
 
     if @keep_mode && @ndice > @keep_number
-      single_roll_probs = @single_die.probabilities.to_h
-      preadd_probs = {}
-      single_roll_probs.each { |k,v| preadd_probs[k.to_s] = v }
-
-      (@keep_number-1).times do
-        preadd_probs = prob_accumulate_combinations preadd_probs, single_roll_probs
-      end
-      extra_dice = @ndice - @keep_number
-      extra_dice.times do
-        preadd_probs = prob_accumulate_combinations preadd_probs, single_roll_probs, @keep_mode
-      end
-      combined_probs = {}
-      preadd_probs.each do |k,v|
-        total = k.split(';').map { |s| s.to_i }.inject(:+)
-        combined_probs[total] ||= 0.0
-        combined_probs[total] += v
-      end
-      @probabilities = GamesDice::Probabilities.from_h( combined_probs )
+      @probabilities = @single_die.probabilities.repeat_n_sum_k( @ndice, @keep_number, @keep_mode )
     else
       @probabilities = @single_die.probabilities.repeat_sum( @ndice )
     end
@@ -259,53 +241,6 @@ class GamesDice::Bunch
     end
 
     explanation
-  end
-
-  private
-
-  # combines two sets of probabilities, as above, except tracking unique permutations
-  def prob_accumulate_combinations so_far, die_probs, keep_rule = nil
-    accumulator = Hash.new
-    accumulator.default = 0.0
-
-    so_far.each do |sig,p1|
-      combo = sig.split(';').map { |s| s.to_i }
-
-      case keep_rule
-      when nil then
-        die_probs.each do |v2,p2|
-          new_sig = (combo + [v2]).sort!.join(';')
-          p3 = p1 * p2
-          accumulator[new_sig] += p3
-        end
-      when :keep_best then
-        need_more_than = combo.min
-        len = combo.size
-        die_probs.each do |v2,p2|
-          if v2 > need_more_than
-            new_sig = (combo + [v2]).sort![1,len].join(';')
-          else
-            new_sig = sig
-          end
-          p3 = p1 * p2
-          accumulator[new_sig] += p3
-        end
-      when :keep_worst then
-        need_less_than = combo.max
-        len = combo.size
-        die_probs.each do |v2,p2|
-          if v2 < need_less_than
-            new_sig = (combo + [v2]).sort![0,len].join(';')
-          else
-            new_sig = sig
-          end
-          p3 = p1 * p2
-          accumulator[new_sig] += p3
-        end
-      end
-    end
-
-    accumulator
   end
 
 end # class Bunch
