@@ -1,3 +1,4 @@
+require "games_dice/games_dice"
 require "games_dice/version"
 require "games_dice/constants"
 require "games_dice/probabilities"
