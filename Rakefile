@@ -16,6 +16,7 @@ end
 gemspec = Gem::Specification.load('games_dice.gemspec')
 Rake::ExtensionTask.new do |ext|
   ext.name = 'games_dice'
+  ext.source_pattern = "*.{c,h}"
   ext.ext_dir = 'ext/games_dice'
   ext.lib_dir = 'lib/games_dice'
   ext.gem_spec = gemspec

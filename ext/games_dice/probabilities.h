@@ -9,4 +9,9 @@
 
 void init_probabilities_class( VALUE ParentModule );
 
+typedef struct _pd {
+    int offset;
+    double *probs;
+  } ProbabilityList;
+
 #endif
