@@ -5,6 +5,11 @@
 
 VALUE NewProbabilities = Qnil;
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//  General utils
+//
+
 static inline int max( int *a, int n ) {
   int m = -1000000000;
   int i;
@@ -22,6 +27,11 @@ static inline int min( int *a, int n ) {
   }
   return m;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//  Probability List basic functions
+//
 
 static ProbabilityList *create_probability_list() {
   ProbabilityList *pl;
@@ -67,6 +77,11 @@ static double *alloc_probs_iv( ProbabilityList *pl, int slots, double iv ) {
   return pr;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//  Probability List core "native" methods
+//
+
 static inline int pl_min( ProbabilityList *pl ) {
   return pl->offset;
 }
@@ -74,6 +89,11 @@ static inline int pl_min( ProbabilityList *pl ) {
 static inline int pl_max( ProbabilityList *pl ) {
   return pl->offset + pl->slots - 1;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//  Ruby bindings
+//
 
 static inline VALUE pl_as_ruby_class( ProbabilityList *pl, VALUE klass ) {
   VALUE obj;
@@ -119,6 +139,16 @@ VALUE probabilities_to_h( VALUE self ) {
     }
   }
   return h;
+}
+
+VALUE probabilities_min( VALUE self ) {
+  ProbabilityList *pl = get_probability_list( self );
+  return INT2NUM( pl_min(pl) );
+}
+
+VALUE probabilities_max( VALUE self ) {
+  ProbabilityList *pl = get_probability_list( self );
+  return INT2NUM( pl_max(pl) );
 }
 
 VALUE probabilities_for_fair_die( VALUE self, VALUE sides ) {
@@ -185,6 +215,8 @@ void init_probabilities_class( VALUE ParentModule ) {
   rb_define_alloc_func( NewProbabilities, pl_alloc );
   rb_define_method( NewProbabilities, "initialize", probabilities_initialize, 2 );
   rb_define_method( NewProbabilities, "to_h", probabilities_to_h, 0 );
+  rb_define_method( NewProbabilities, "min", probabilities_min, 0 );
+  rb_define_method( NewProbabilities, "max", probabilities_max, 0 );
   rb_define_singleton_method( NewProbabilities, "for_fair_die", probabilities_for_fair_die, 1 );
   rb_define_singleton_method( NewProbabilities, "add_distributions", probabilities_add_distributions, 2 );
   rb_define_singleton_method( NewProbabilities, "add_distributions_mult", probabilities_add_distributions_mult, 4 );
