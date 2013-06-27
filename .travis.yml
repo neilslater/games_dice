@@ -7,8 +7,3 @@ rvm:
   - rbx-19mode
   - ruby-head
   - ree
-  - jruby-18mode
-  - jruby-19mode
-env:
-  global:
-    - "JRUBY_OPTS=-Xcext.enabled=true"

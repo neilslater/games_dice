@@ -90,7 +90,6 @@ VALUE probabilities_to_h( VALUE self ) {
   return h;
 }
 
-// Initialise whole class
 void init_probabilities_class( VALUE ParentModule ) {
   NewProbabilities = rb_define_class_under( ParentModule, "NewProbabilities", rb_cObject );
   rb_define_alloc_func( NewProbabilities, pl_alloc );
