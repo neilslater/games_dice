@@ -90,10 +90,23 @@ VALUE probabilities_to_h( VALUE self ) {
   return h;
 }
 
+VALUE probabilities_for_fair_die( VALUE self, VALUE sides ) {
+  int s = NUM2INT( sides );
+  if ( s < 1 ) {
+    rb_raise( rb_eArgError, "Number of sides should be 1 or more" );
+  }
+  VALUE obj = pl_alloc( NewProbabilities );
+  ProbabilityList *pl = get_probability_list( obj );
+  pl->offset = 1;
+  init_probs_iv( pl, s, 1.0/s );
+  return obj;
+}
+
 void init_probabilities_class( VALUE ParentModule ) {
   NewProbabilities = rb_define_class_under( ParentModule, "NewProbabilities", rb_cObject );
   rb_define_alloc_func( NewProbabilities, pl_alloc );
   rb_define_method( NewProbabilities, "initialize", probabilities_initialize, 2 );
   rb_define_method( NewProbabilities, "to_h", probabilities_to_h, 0 );
+  rb_define_singleton_method( NewProbabilities, "for_fair_die", probabilities_for_fair_die, 1 );
   return;
 }
