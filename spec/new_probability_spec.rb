@@ -27,5 +27,32 @@ describe GamesDice::NewProbabilities do
       end
     end
 
+    describe "#add_distributions" do
+      it "should combine two distributions to create a third one" do
+        d4a = GamesDice::NewProbabilities.new( [ 1.0/4, 1.0/4, 1.0/4, 1.0/4 ], 1 )
+        d4b = GamesDice::NewProbabilities.new( [ 1.0/10, 2.0/10, 3.0/10, 4.0/10], 1 )
+        p = GamesDice::NewProbabilities.add_distributions( d4a, d4b )
+        p.to_h.should be_valid_distribution
+      end
+
+      it "should calculate a classic 2d6 distribution accurately" do
+        d6 = GamesDice::NewProbabilities.for_fair_die( 6 )
+        p = GamesDice::NewProbabilities.add_distributions( d6, d6 )
+        h = p.to_h
+        h.should be_valid_distribution
+        h[2].should be_within(1e-9).of 1.0/36
+        h[3].should be_within(1e-9).of 2.0/36
+        h[4].should be_within(1e-9).of 3.0/36
+        h[5].should be_within(1e-9).of 4.0/36
+        h[6].should be_within(1e-9).of 5.0/36
+        h[7].should be_within(1e-9).of 6.0/36
+        h[8].should be_within(1e-9).of 5.0/36
+        h[9].should be_within(1e-9).of 4.0/36
+        h[10].should be_within(1e-9).of 3.0/36
+        h[11].should be_within(1e-9).of 2.0/36
+        h[12].should be_within(1e-9).of 1.0/36
+      end
+    end
+
   end
 end

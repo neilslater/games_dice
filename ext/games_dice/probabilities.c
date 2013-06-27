@@ -102,11 +102,32 @@ VALUE probabilities_for_fair_die( VALUE self, VALUE sides ) {
   return obj;
 }
 
+VALUE probabilities_add_distributions( VALUE self, VALUE gdpa, VALUE gdpb ) {
+  // TODO: Confirm types before progressing, factor into "native" and "bound" parts
+  ProbabilityList *pl_a = get_probability_list( gdpa );
+  ProbabilityList *pl_b = get_probability_list( gdpb );
+  int s = pl_a->slots + pl_b->slots;
+  int o = pl_a->offset + pl_b->offset;
+  int i,j;
+
+  VALUE obj = pl_alloc( NewProbabilities );
+  ProbabilityList *pl = get_probability_list( obj );
+  pl->offset = o;
+  init_probs_iv( pl, s, 0.0 );
+
+  double *pr = pl->probs;
+  for ( i=0; i < pl_a->slots; i++ ) { for ( j=0; j < pl_b->slots; j++ ) {
+    pr[ i + j ] += (pl_a->probs)[i] * (pl_b->probs)[j];
+  } }
+  return obj;
+}
+
 void init_probabilities_class( VALUE ParentModule ) {
   NewProbabilities = rb_define_class_under( ParentModule, "NewProbabilities", rb_cObject );
   rb_define_alloc_func( NewProbabilities, pl_alloc );
   rb_define_method( NewProbabilities, "initialize", probabilities_initialize, 2 );
   rb_define_method( NewProbabilities, "to_h", probabilities_to_h, 0 );
   rb_define_singleton_method( NewProbabilities, "for_fair_die", probabilities_for_fair_die, 1 );
+  rb_define_singleton_method( NewProbabilities, "add_distributions", probabilities_add_distributions, 2 );
   return;
 }
