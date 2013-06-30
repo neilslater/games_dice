@@ -79,6 +79,32 @@ describe GamesDice::NewProbabilities do
         h[5].should be_within(1e-9).of 1.0/24
       end
     end
-
   end
+
+  describe "instance methods" do
+    let(:p2) { GamesDice::NewProbabilities.for_fair_die( 2 ) }
+    let(:p4) { GamesDice::NewProbabilities.for_fair_die( 4 ) }
+    let(:p6) { GamesDice::NewProbabilities.for_fair_die( 6 ) }
+    let(:p10) { GamesDice::NewProbabilities.for_fair_die( 10 ) }
+    let(:pa) { GamesDice::NewProbabilities.new( [ 0.4, 0.2, 0.4 ], -1 ) }
+
+    describe "#p_eql" do
+      it "should return probability of getting a number inside the range" do
+        p2.p_eql(2).should be_within(1.0e-9).of 0.5
+        p4.p_eql(1).should be_within(1.0e-9).of 0.25
+        p6.p_eql(6).should be_within(1.0e-9).of 1.0/6
+        p10.p_eql(3).should be_within(1.0e-9).of 0.1
+        pa.p_eql(-1).should be_within(1.0e-9).of 0.4
+      end
+
+      it "should return 0.0 for values not covered by distribution" do
+        p2.p_eql(3).should == 0.0
+        p4.p_eql(-1).should == 0.0
+        p6.p_eql(8).should == 0.0
+        p10.p_eql(11).should == 0.0
+        pa.p_eql(2).should == 0.0
+      end
+    end # describe "#p_eql"
+  end # describe "instance methods"
+
 end
