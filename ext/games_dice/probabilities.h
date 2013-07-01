@@ -25,4 +25,12 @@ static ProbabilityList *pl_add_distributions_mult( int mul_a, ProbabilityList *p
 
 static inline double pl_p_eql( ProbabilityList *pl, int target );
 
+static inline double pl_p_gt( ProbabilityList *pl, int target );
+
+static inline double pl_p_lt( ProbabilityList *pl, int target );
+
+static inline double pl_p_le( ProbabilityList *pl, int target );
+
+static inline double pl_p_ge( ProbabilityList *pl, int target );
+
 #endif

@@ -105,6 +105,137 @@ describe GamesDice::NewProbabilities do
         pa.p_eql(2).should == 0.0
       end
     end # describe "#p_eql"
+
+    describe "#p_gt" do
+      it "should return probability of getting a number greater than target" do
+        p2.p_gt(1).should be_within(1.0e-9).of 0.5
+        p4.p_gt(3).should be_within(1.0e-9).of 0.25
+        p6.p_gt(2).should be_within(1.0e-9).of 4.0/6
+        p10.p_gt(6).should be_within(1.0e-9).of 0.4
+
+        # Trying more than one, due to unusual error seen in complex_die_spec when calculating probabilities
+        pa.p_gt(-2).should be_within(1.0e-9).of 1.0
+        pa.p_gt(-1).should be_within(1.0e-9).of 0.6
+        pa.p_gt(0).should be_within(1.0e-9).of 0.4
+        pa.p_gt(1).should be_within(1.0e-9).of 0.0
+      end
+
+      it "should return 0.0 when the target number is equal or higher than maximum possible" do
+        p2.p_gt(2).should == 0.0
+        p4.p_gt(5).should == 0.0
+        p6.p_gt(6).should == 0.0
+        p10.p_gt(20).should == 0.0
+        pa.p_gt(3).should == 0.0
+      end
+
+      it "should return 1.0 when the target number is lower than minimum" do
+        p2.p_gt(0).should == 1.0
+        p4.p_gt(-5).should == 1.0
+        p6.p_gt(0).should == 1.0
+        p10.p_gt(-200).should == 1.0
+        pa.p_gt(-2).should == 1.0
+      end
+    end # describe "#p_gt"
+
+    describe "#p_ge" do
+      it "should return probability of getting a number greater than or equal to target" do
+        p2.p_ge(2).should be_within(1.0e-9).of 0.5
+        p4.p_ge(3).should be_within(1.0e-9).of 0.5
+        p6.p_ge(2).should be_within(1.0e-9).of 5.0/6
+        p10.p_ge(6).should be_within(1.0e-9).of 0.5
+      end
+
+      it "should return 0.0 when the target number is higher than maximum possible" do
+        p2.p_ge(6).should == 0.0
+        p4.p_ge(5).should == 0.0
+        p6.p_ge(7).should == 0.0
+        p10.p_ge(20).should == 0.0
+      end
+
+      it "should return 1.0 when the target number is lower than or equal to minimum possible" do
+        p2.p_ge(1).should == 1.0
+        p4.p_ge(-5).should == 1.0
+        p6.p_ge(1).should == 1.0
+        p10.p_ge(-200).should == 1.0
+      end
+    end # describe "#p_ge"
+
+    describe "#p_le" do
+      it "should return probability of getting a number less than or equal to target" do
+        p2.p_le(1).should be_within(1.0e-9).of 0.5
+        p4.p_le(2).should be_within(1.0e-9).of 0.5
+        p6.p_le(2).should be_within(1.0e-9).of 2.0/6
+        p10.p_le(6).should be_within(1.0e-9).of 0.6
+      end
+
+      it "should return 1.0 when the target number is higher than or equal to maximum possible" do
+        p2.p_le(6).should == 1.0
+        p4.p_le(4).should == 1.0
+        p6.p_le(7).should == 1.0
+        p10.p_le(10).should == 1.0
+      end
+
+      it "should return 0.0 when the target number is lower than minimum possible" do
+        p2.p_le(0).should == 0.0
+        p4.p_le(-5).should == 0.0
+        p6.p_le(0).should == 0.0
+        p10.p_le(-200).should == 0.0
+      end
+    end # describe "#p_le"
+
+    describe "#p_lt" do
+      it "should return probability of getting a number less than target" do
+        p2.p_lt(2).should be_within(1.0e-9).of 0.5
+        p4.p_lt(3).should be_within(1.0e-9).of 0.5
+        p6.p_lt(2).should be_within(1.0e-9).of 1/6.0
+        p10.p_lt(6).should be_within(1.0e-9).of 0.5
+      end
+
+      it "should return 1.0 when the target number is higher than maximum possible" do
+        p2.p_lt(6).should == 1.0
+        p4.p_lt(5).should == 1.0
+        p6.p_lt(7).should == 1.0
+        p10.p_lt(20).should == 1.0
+      end
+
+      it "should return 0.0 when the target number is lower than or equal to minimum possible" do
+        p2.p_lt(1).should == 0.0
+        p4.p_lt(-5).should == 0.0
+        p6.p_lt(1).should == 0.0
+        p10.p_lt(-200).should == 0.0
+      end
+    end # describe "#p_lt"
+
+    describe "#to_h" do
+      # This is used loads in other tests
+      it "should represent a valid distribution with each integer result associated with its probability" do
+        p2.to_h.should be_valid_distribution
+        p4.to_h.should be_valid_distribution
+        p6.to_h.should be_valid_distribution
+        p10.to_h.should be_valid_distribution
+      end
+    end
+
+    describe "#min" do
+     it "should return lowest possible result allowed by distribution" do
+        p2.min.should == 1
+        p4.min.should == 1
+        p6.min.should == 1
+        p10.min.should == 1
+        GamesDice::NewProbabilities.add_distributions( p6, p10 ).min.should == 2
+      end
+    end
+
+    describe "#max" do
+     it "should return highest possible result allowed by distribution" do
+        p2.max.should == 2
+        p4.max.should == 4
+        p6.max.should == 6
+        p10.max.should == 10
+        GamesDice::NewProbabilities.add_distributions( p6, p10 ).max.should == 16
+      end
+    end
+
   end # describe "instance methods"
 
 end

@@ -99,7 +99,7 @@ static inline int pl_max( ProbabilityList *pl ) {
 }
 
 static ProbabilityList *pl_add_distributions( ProbabilityList *pl_a, ProbabilityList *pl_b ) {
-  int s = pl_a->slots + pl_b->slots;
+  int s = pl_a->slots + pl_b->slots - 1;
   int o = pl_a->offset + pl_b->offset;
   int i,j;
 
@@ -140,6 +140,35 @@ static inline double pl_p_eql( ProbabilityList *pl, int target ) {
     return 0.0;
   }
   return (pl->probs)[idx];
+}
+
+static inline double pl_p_gt( ProbabilityList *pl, int target ) {
+  return pl_p_ge( pl, target + 1 );
+}
+
+static inline double pl_p_lt( ProbabilityList *pl, int target ) {
+  return 1.0 - pl_p_ge( pl, target );
+}
+
+static inline double pl_p_le( ProbabilityList *pl, int target ) {
+  return 1.0 - pl_p_ge( pl, target + 1 );
+}
+
+static inline double pl_p_ge( ProbabilityList *pl, int target ) {
+  int idx = target - pl->offset;
+  if ( idx <= 0 ) {
+    return 1.0;
+  }
+  if ( idx >= pl->slots ) {
+    return 0.0;
+  }
+  int i;
+  double t = 0.0;
+  // TODO: Cache all sums?
+  for ( i=idx; i< pl->slots; i++ ) {
+    t += (pl->probs)[i];
+  }
+  return t;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -207,6 +236,22 @@ VALUE probabilites_p_eql( VALUE self, VALUE target ) {
   return DBL2NUM( pl_p_eql( get_probability_list( self ), NUM2INT(target) ) );
 }
 
+VALUE probabilites_p_gt( VALUE self, VALUE target ) {
+  return DBL2NUM( pl_p_gt( get_probability_list( self ), NUM2INT(target) ) );
+}
+
+VALUE probabilites_p_ge( VALUE self, VALUE target ) {
+  return DBL2NUM( pl_p_ge( get_probability_list( self ), NUM2INT(target) ) );
+}
+
+VALUE probabilites_p_le( VALUE self, VALUE target ) {
+  return DBL2NUM( pl_p_le( get_probability_list( self ), NUM2INT(target) ) );
+}
+
+VALUE probabilites_p_lt( VALUE self, VALUE target ) {
+  return DBL2NUM( pl_p_lt( get_probability_list( self ), NUM2INT(target) ) );
+}
+
 VALUE probabilities_for_fair_die( VALUE self, VALUE sides ) {
   int s = NUM2INT( sides );
   if ( s < 1 ) {
@@ -248,6 +293,10 @@ void init_probabilities_class( VALUE ParentModule ) {
   rb_define_method( NewProbabilities, "min", probabilities_min, 0 );
   rb_define_method( NewProbabilities, "max", probabilities_max, 0 );
   rb_define_method( NewProbabilities, "p_eql", probabilites_p_eql, 1 );
+  rb_define_method( NewProbabilities, "p_gt", probabilites_p_gt, 1 );
+  rb_define_method( NewProbabilities, "p_ge", probabilites_p_ge, 1 );
+  rb_define_method( NewProbabilities, "p_le", probabilites_p_le, 1 );
+  rb_define_method( NewProbabilities, "p_lt", probabilites_p_lt, 1 );
   rb_define_singleton_method( NewProbabilities, "for_fair_die", probabilities_for_fair_die, 1 );
   rb_define_singleton_method( NewProbabilities, "add_distributions", probabilities_add_distributions, 2 );
   rb_define_singleton_method( NewProbabilities, "add_distributions_mult", probabilities_add_distributions_mult, 4 );
