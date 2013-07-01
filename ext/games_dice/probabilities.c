@@ -191,6 +191,67 @@ static inline double pl_p_ge( ProbabilityList *pl, int target ) {
   return 1.0 - pl_p_le( pl, target - 1 );
 }
 
+static inline double pl_expected( ProbabilityList *pl ) {
+  double t = 0.0;
+  int o = pl->offset;
+  int s = pl->slots;
+  double *pr = pl->probs;
+  int i;
+  for ( i = 0; i < s ; i++ ) {
+    t += ( i + o ) * pr[i];
+  }
+  return t;
+}
+
+static ProbabilityList *pl_given_ge( ProbabilityList *pl, int target ) {
+  int m = pl_min( pl );
+  if ( m > target ) {
+    target = m;
+  }
+  double p = pl_p_ge( pl, target );
+  if ( p <= 0.0 ) {
+    rb_raise( rb_eRuntimeError, "Cannot calculate given probabilities, divide by zero" );
+  }
+  double mult = 1.0/p;
+  int s = pl->slots + pl->offset - target;
+  double *pr = pl->probs;
+
+  ProbabilityList *new_pl = create_probability_list();
+  new_pl->offset = target;
+  double *new_pr = alloc_probs( new_pl, s );
+  int o = target - pl->offset;
+  int i;
+  for ( i = 0; i < s; i++ ) {
+    new_pr[i] = pr[o + i] * mult;
+  }
+  calc_cumulative( new_pl );
+  return new_pl;
+}
+
+static ProbabilityList *pl_given_le( ProbabilityList *pl, int target ) {
+  int m = pl_max( pl );
+  if ( m < target ) {
+    target = m;
+  }
+  double p = pl_p_le( pl, target );
+  if ( p <= 0.0 ) {
+    rb_raise( rb_eRuntimeError, "Cannot calculate given probabilities, divide by zero" );
+  }
+  double mult = 1.0/p;
+  int s = target - pl->offset + 1;
+  double *pr = pl->probs;
+
+  ProbabilityList *new_pl = create_probability_list();
+  new_pl->offset = pl->offset;
+  double *new_pr = alloc_probs( new_pl, s );
+  int i;
+  for ( i = 0; i < s; i++ ) {
+    new_pr[i] = pr[i] * mult;
+  }
+  calc_cumulative( new_pl );
+  return new_pl;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //  Ruby integration
@@ -273,6 +334,24 @@ VALUE probabilites_p_lt( VALUE self, VALUE target ) {
   return DBL2NUM( pl_p_lt( get_probability_list( self ), NUM2INT(target) ) );
 }
 
+VALUE probabilites_expected( VALUE self ) {
+  return DBL2NUM( pl_expected( get_probability_list( self ) ) );
+}
+
+VALUE probabilities_given_ge( VALUE self, VALUE target ) {
+  // TODO: Confirm types before progressing
+  ProbabilityList *pl = get_probability_list( self );
+  int t = NUM2INT(target);
+  return pl_as_ruby_class( pl_given_ge( pl, t ), NewProbabilities );
+}
+
+VALUE probabilities_given_le( VALUE self, VALUE target ) {
+  // TODO: Confirm types before progressing
+  ProbabilityList *pl = get_probability_list( self );
+  int t = NUM2INT(target);
+  return pl_as_ruby_class( pl_given_le( pl, t ), NewProbabilities );
+}
+
 VALUE probabilities_for_fair_die( VALUE self, VALUE sides ) {
   int s = NUM2INT( sides );
   if ( s < 1 ) {
@@ -303,7 +382,7 @@ VALUE probabilities_add_distributions_mult( VALUE self, VALUE m_a, VALUE gdpa, V
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Setup NewProbabilities
+//  Setup NewProbabilities for Ruby interpretter
 //
 
 void init_probabilities_class( VALUE ParentModule ) {
@@ -318,6 +397,9 @@ void init_probabilities_class( VALUE ParentModule ) {
   rb_define_method( NewProbabilities, "p_ge", probabilites_p_ge, 1 );
   rb_define_method( NewProbabilities, "p_le", probabilites_p_le, 1 );
   rb_define_method( NewProbabilities, "p_lt", probabilites_p_lt, 1 );
+  rb_define_method( NewProbabilities, "expected", probabilites_expected, 0 );
+  rb_define_method( NewProbabilities, "given_ge", probabilities_given_ge, 1 );
+  rb_define_method( NewProbabilities, "given_le", probabilities_given_le, 1 );
   rb_define_singleton_method( NewProbabilities, "for_fair_die", probabilities_for_fair_die, 1 );
   rb_define_singleton_method( NewProbabilities, "add_distributions", probabilities_add_distributions, 2 );
   rb_define_singleton_method( NewProbabilities, "add_distributions_mult", probabilities_add_distributions_mult, 4 );

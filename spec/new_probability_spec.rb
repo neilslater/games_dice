@@ -236,6 +236,38 @@ describe GamesDice::NewProbabilities do
       end
     end
 
+    describe "#expected" do
+     it "should return the weighted mean value" do
+        p2.expected.should be_within(1.0e-9).of 1.5
+        p4.expected.should be_within(1.0e-9).of 2.5
+        p6.expected.should be_within(1.0e-9).of 3.5
+        p10.expected.should be_within(1.0e-9).of 5.5
+        GamesDice::NewProbabilities.add_distributions( p6, p10 ).expected.should be_within(1.0e-9).of 9.0
+      end
+    end
+
+    describe "#given_ge" do
+     it "should return a new distribution with probabilities calculated assuming value is >= target" do
+        pd = p2.given_ge(2)
+        pd.to_h.should == { 2 => 1.0 }
+        pd = p10.given_ge(4)
+        pd.to_h.should be_valid_distribution
+        pd.p_eql( 3 ).should == 0.0
+        pd.p_eql( 10 ).should be_within(1.0e-9).of 0.1/0.7
+      end
+    end
+
+    describe "#given_le" do
+     it "should return a new distribution with probabilities calculated assuming value is <= target" do
+        pd = p2.given_le(2)
+        pd.to_h.should == { 1 => 0.5, 2 => 0.5 }
+        pd = p10.given_le(4)
+        pd.to_h.should be_valid_distribution
+        pd.p_eql( 3 ).should be_within(1.0e-9).of 0.1/0.4
+        pd.p_eql( 10 ).should == 0.0
+      end
+    end
+
   end # describe "instance methods"
 
 end
