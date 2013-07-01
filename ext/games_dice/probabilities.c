@@ -143,32 +143,32 @@ static inline double pl_p_eql( ProbabilityList *pl, int target ) {
 }
 
 static inline double pl_p_gt( ProbabilityList *pl, int target ) {
-  return pl_p_ge( pl, target + 1 );
+  return 1.0 - pl_p_le( pl, target );
 }
 
 static inline double pl_p_lt( ProbabilityList *pl, int target ) {
-  return 1.0 - pl_p_ge( pl, target );
+  return pl_p_le( pl, target - 1 );
 }
 
 static inline double pl_p_le( ProbabilityList *pl, int target ) {
-  return 1.0 - pl_p_ge( pl, target + 1 );
-}
-
-static inline double pl_p_ge( ProbabilityList *pl, int target ) {
   int idx = target - pl->offset;
-  if ( idx <= 0 ) {
-    return 1.0;
-  }
-  if ( idx >= pl->slots ) {
+  if ( idx < 0 ) {
     return 0.0;
+  }
+  if ( idx >= pl->slots - 1 ) {
+    return 1.0;
   }
   int i;
   double t = 0.0;
   // TODO: Cache all sums?
-  for ( i=idx; i< pl->slots; i++ ) {
+  for ( i=0; i<= idx; i++ ) {
     t += (pl->probs)[i];
   }
   return t;
+}
+
+static inline double pl_p_ge( ProbabilityList *pl, int target ) {
+  return 1.0 - pl_p_le( pl, target - 1 );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
