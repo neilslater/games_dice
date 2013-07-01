@@ -13,6 +13,7 @@ typedef struct _pd {
     int offset;
     int slots;
     double *probs;
+    double *cumulative;
   } ProbabilityList;
 
 static inline int pl_min( ProbabilityList *pl );

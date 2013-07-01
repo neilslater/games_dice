@@ -40,12 +40,14 @@ static ProbabilityList *create_probability_list() {
     rb_raise(rb_eRuntimeError, "Could not allocate memory for NewProbabilities");
   }
   pl->probs = NULL;
+  pl->cumulative = NULL;
   pl->slots = 0;
   pl->offset = 0;
   return pl;
 }
 
 static void destroy_probability_list( ProbabilityList *pl ) {
+  free( pl->cumulative );
   free( pl->probs );
   free( pl );
   return;
@@ -56,13 +58,33 @@ static double *alloc_probs( ProbabilityList *pl, int slots ) {
     rb_raise(rb_eArgError, "Bad number of probability slots");
   }
   pl->slots = slots;
+
   // TODO: Should this be a NALLOC?
   double *pr = malloc( slots * sizeof(double));
   if (pr == NULL) {
     rb_raise(rb_eRuntimeError, "Could not allocate memory for NewProbabilities");
   }
   pl->probs = pr;
+
+  double *cumulat = malloc( slots * sizeof(double));
+  if (cumulat == NULL) {
+    rb_raise(rb_eRuntimeError, "Could not allocate memory for NewProbabilities");
+  }
+  pl->cumulative = cumulat;
+
   return pr;
+}
+
+static void calc_cumulative( ProbabilityList *pl ) {
+  double *c = pl->cumulative;
+  double *pr = pl->probs;
+  int i;
+  double t = 0.0;
+  for(i=0; i < pl->slots; i++) {
+    t += pr[i];
+    c[i] = t;
+  }
+  return;
 }
 
 static double *alloc_probs_iv( ProbabilityList *pl, int slots, double iv ) {
@@ -74,6 +96,7 @@ static double *alloc_probs_iv( ProbabilityList *pl, int slots, double iv ) {
   for(i=0; i<slots; i++) {
     pr[i] = iv;
   }
+  calc_cumulative( pl );
   return pr;
 }
 
@@ -82,6 +105,7 @@ static ProbabilityList *copy_probability_list( ProbabilityList *orig ) {
   double *pr = alloc_probs( pl, orig->slots );
   pl->offset = orig->offset;
   memcpy( pr, orig->probs, orig->slots * sizeof(double) );
+  memcpy( pl->cumulative, orig->cumulative, orig->slots * sizeof(double) );
   return pl;
 }
 
@@ -109,6 +133,7 @@ static ProbabilityList *pl_add_distributions( ProbabilityList *pl_a, Probability
   for ( i=0; i < pl_a->slots; i++ ) { for ( j=0; j < pl_b->slots; j++ ) {
     pr[ i + j ] += (pl_a->probs)[i] * (pl_b->probs)[j];
   } }
+  calc_cumulative( pl );
   return pl;
 }
 
@@ -131,6 +156,7 @@ static ProbabilityList *pl_add_distributions_mult( int mul_a, ProbabilityList *p
     int k = mul_a * (i + pl_a->offset) + mul_b * (j + pl_b->offset) - combined_min;
     pr[ i + j ] += (pl_a->probs)[i] * (pl_b->probs)[j];
   } }
+  calc_cumulative( pl );
   return pl;
 }
 
@@ -158,13 +184,7 @@ static inline double pl_p_le( ProbabilityList *pl, int target ) {
   if ( idx >= pl->slots - 1 ) {
     return 1.0;
   }
-  int i;
-  double t = 0.0;
-  // TODO: Cache all sums?
-  for ( i=0; i<= idx; i++ ) {
-    t += (pl->probs)[i];
-  }
-  return t;
+  return (pl->cumulative)[idx];
 }
 
 static inline double pl_p_ge( ProbabilityList *pl, int target ) {
@@ -206,6 +226,7 @@ static VALUE probabilities_initialize( VALUE self, VALUE arr, VALUE offset ) {
   for(i=0; i<s; i++) {
     pr[i] = NUM2DBL( rb_ary_entry( arr, i ) );
   }
+  calc_cumulative( pl );
   return self;
 }
 
