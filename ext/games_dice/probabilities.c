@@ -296,6 +296,13 @@ inline static ProbabilityList *get_probability_list( VALUE obj ) {
   return pl;
 }
 
+static void assert_value_wraps_pl( VALUE obj ) {
+  if ( TYPE(obj) != T_DATA ||
+      RDATA(obj)->dfree != (RUBY_DATA_FUNC)destroy_probability_list) {
+    rb_raise( rb_eTypeError, "Expected a NewProbabilities object, but got something else" );
+  }
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //  Ruby class and instance methods for NewProbabilities
@@ -378,23 +385,20 @@ VALUE probabilites_expected( VALUE self ) {
 }
 
 VALUE probabilities_given_ge( VALUE self, VALUE target ) {
-  // TODO: Confirm types before progressing
-  ProbabilityList *pl = get_probability_list( self );
   int t = NUM2INT(target);
+  ProbabilityList *pl = get_probability_list( self );
   return pl_as_ruby_class( pl_given_ge( pl, t ), NewProbabilities );
 }
 
 VALUE probabilities_given_le( VALUE self, VALUE target ) {
-  // TODO: Confirm types before progressing
-  ProbabilityList *pl = get_probability_list( self );
   int t = NUM2INT(target);
+  ProbabilityList *pl = get_probability_list( self );
   return pl_as_ruby_class( pl_given_le( pl, t ), NewProbabilities );
 }
 
 VALUE probabilities_repeat_sum( VALUE self, VALUE nsum ) {
-  // TODO: Confirm types before progressing
-  ProbabilityList *pl = get_probability_list( self );
   int n = NUM2INT(nsum);
+  ProbabilityList *pl = get_probability_list( self );
   return pl_as_ruby_class( pl_repeat_sum( pl, n ), NewProbabilities );
 }
 
@@ -402,6 +406,9 @@ VALUE probabilities_for_fair_die( VALUE self, VALUE sides ) {
   int s = NUM2INT( sides );
   if ( s < 1 ) {
     rb_raise( rb_eArgError, "Number of sides should be 1 or more" );
+  }
+  if ( s > 100000 ) {
+    rb_raise( rb_eArgError, "Number of sides should be less than 100001" );
   }
   VALUE obj = pl_alloc( NewProbabilities );
   ProbabilityList *pl = get_probability_list( obj );
@@ -411,14 +418,16 @@ VALUE probabilities_for_fair_die( VALUE self, VALUE sides ) {
 }
 
 VALUE probabilities_add_distributions( VALUE self, VALUE gdpa, VALUE gdpb ) {
-  // TODO: Confirm types before progressing
+  assert_value_wraps_pl( gdpa );
+  assert_value_wraps_pl( gdpb );
   ProbabilityList *pl_a = get_probability_list( gdpa );
   ProbabilityList *pl_b = get_probability_list( gdpb );
   return pl_as_ruby_class( pl_add_distributions( pl_a, pl_b ), NewProbabilities );
 }
 
 VALUE probabilities_add_distributions_mult( VALUE self, VALUE m_a, VALUE gdpa, VALUE m_b, VALUE gdpb ) {
-  // TODO: Confirm types before progressing
+  assert_value_wraps_pl( gdpa );
+  assert_value_wraps_pl( gdpb );
   int mul_a = NUM2INT( m_a );
   ProbabilityList *pl_a = get_probability_list( gdpa );
   int mul_b = NUM2INT( m_b );
