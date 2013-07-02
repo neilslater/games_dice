@@ -34,4 +34,12 @@ static inline double pl_p_le( ProbabilityList *pl, int target );
 
 static inline double pl_p_ge( ProbabilityList *pl, int target );
 
+static inline double pl_expected( ProbabilityList *pl );
+
+static ProbabilityList *pl_given_ge( ProbabilityList *pl, int target );
+
+static ProbabilityList *pl_given_le( ProbabilityList *pl, int target );
+
+static ProbabilityList *pl_repeat_sum( ProbabilityList *pl, int n );
+
 #endif

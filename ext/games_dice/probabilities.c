@@ -59,18 +59,10 @@ static double *alloc_probs( ProbabilityList *pl, int slots ) {
   }
   pl->slots = slots;
 
-  // TODO: Should this be a NALLOC?
-  double *pr = malloc( slots * sizeof(double));
-  if (pr == NULL) {
-    rb_raise(rb_eRuntimeError, "Could not allocate memory for NewProbabilities");
-  }
+  double *pr = ALLOC_N( double, slots );
   pl->probs = pr;
 
-  double *cumulat = malloc( slots * sizeof(double));
-  if (cumulat == NULL) {
-    rb_raise(rb_eRuntimeError, "Could not allocate memory for NewProbabilities");
-  }
-  pl->cumulative = cumulat;
+  pl->cumulative = ALLOC_N( double, slots );
 
   return pr;
 }
@@ -256,7 +248,9 @@ static ProbabilityList *pl_repeat_sum( ProbabilityList *pl, int n ) {
   if ( n < 1 ) {
     rb_raise( rb_eRuntimeError, "Cannot calculate repeat_sum when n < 1" );
   }
-  // TODO: Block creation of giant probabilities before we start allocating memory
+  if ( n * pl->slots - n >  1000000 ) {
+    rb_raise( rb_eRuntimeError, "Too many probability slots" );
+  }
 
   ProbabilityList *pd_power = copy_probability_list( pl );
   ProbabilityList *pd_result = NULL;
@@ -320,6 +314,20 @@ static VALUE probabilities_initialize( VALUE self, VALUE arr, VALUE offset ) {
   }
   calc_cumulative( pl );
   return self;
+}
+
+
+static VALUE probabilities_initialize_copy( VALUE copy, VALUE orig ) {
+  if (copy == orig) return copy;
+  ProbabilityList *pl_copy = get_probability_list( copy );
+  ProbabilityList *pl_orig = get_probability_list( orig );
+
+  double *pr = alloc_probs( pl_copy, pl_orig->slots );
+  pl_copy->offset = pl_orig->offset;
+  memcpy( pr, pl_orig->probs, pl_orig->slots * sizeof(double) );
+  memcpy( pl_copy->cumulative, pl_orig->cumulative, pl_orig->slots * sizeof(double) );;
+
+  return copy;
 }
 
 VALUE probabilities_to_h( VALUE self ) {
@@ -427,6 +435,7 @@ void init_probabilities_class( VALUE ParentModule ) {
   NewProbabilities = rb_define_class_under( ParentModule, "NewProbabilities", rb_cObject );
   rb_define_alloc_func( NewProbabilities, pl_alloc );
   rb_define_method( NewProbabilities, "initialize", probabilities_initialize, 2 );
+  rb_define_method( NewProbabilities, "initialize_copy", probabilities_initialize_copy, 1 );
   rb_define_method( NewProbabilities, "to_h", probabilities_to_h, 0 );
   rb_define_method( NewProbabilities, "min", probabilities_min, 0 );
   rb_define_method( NewProbabilities, "max", probabilities_max, 0 );
