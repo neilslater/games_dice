@@ -252,6 +252,37 @@ static ProbabilityList *pl_given_le( ProbabilityList *pl, int target ) {
   return new_pl;
 }
 
+static ProbabilityList *pl_repeat_sum( ProbabilityList *pl, int n ) {
+  if ( n < 1 ) {
+    rb_raise( rb_eRuntimeError, "Cannot calculate repeat_sum when n < 1" );
+  }
+  // TODO: Block creation of giant probabilities before we start allocating memory
+
+  ProbabilityList *pd_power = copy_probability_list( pl );
+  ProbabilityList *pd_result = NULL;
+  ProbabilityList *pd_next = NULL;
+  int power = 1;
+  while ( 1 ) {
+    if ( power & n ) {
+      if ( pd_result ) {
+        pd_next = pl_add_distributions( pd_result, pd_power );
+        destroy_probability_list( pd_result );
+        pd_result = pd_next;
+      } else {
+        pd_result = copy_probability_list( pd_power );
+      }
+    }
+    power = power << 1;
+    if ( power > n ) break;
+    pd_next = pl_add_distributions( pd_power, pd_power );
+    destroy_probability_list( pd_power );
+    pd_power = pd_next;
+  }
+  destroy_probability_list( pd_power );
+
+  return pd_result;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //  Ruby integration
@@ -352,6 +383,13 @@ VALUE probabilities_given_le( VALUE self, VALUE target ) {
   return pl_as_ruby_class( pl_given_le( pl, t ), NewProbabilities );
 }
 
+VALUE probabilities_repeat_sum( VALUE self, VALUE nsum ) {
+  // TODO: Confirm types before progressing
+  ProbabilityList *pl = get_probability_list( self );
+  int n = NUM2INT(nsum);
+  return pl_as_ruby_class( pl_repeat_sum( pl, n ), NewProbabilities );
+}
+
 VALUE probabilities_for_fair_die( VALUE self, VALUE sides ) {
   int s = NUM2INT( sides );
   if ( s < 1 ) {
@@ -400,6 +438,7 @@ void init_probabilities_class( VALUE ParentModule ) {
   rb_define_method( NewProbabilities, "expected", probabilites_expected, 0 );
   rb_define_method( NewProbabilities, "given_ge", probabilities_given_ge, 1 );
   rb_define_method( NewProbabilities, "given_le", probabilities_given_le, 1 );
+  rb_define_method( NewProbabilities, "repeat_sum", probabilities_repeat_sum, 1 );
   rb_define_singleton_method( NewProbabilities, "for_fair_die", probabilities_for_fair_die, 1 );
   rb_define_singleton_method( NewProbabilities, "add_distributions", probabilities_add_distributions, 2 );
   rb_define_singleton_method( NewProbabilities, "add_distributions_mult", probabilities_add_distributions_mult, 4 );
