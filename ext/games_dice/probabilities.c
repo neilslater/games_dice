@@ -47,9 +47,9 @@ static ProbabilityList *create_probability_list() {
 }
 
 static void destroy_probability_list( ProbabilityList *pl ) {
-  free( pl->cumulative );
-  free( pl->probs );
-  free( pl );
+  xfree( pl->cumulative );
+  xfree( pl->probs );
+  xfree( pl );
   return;
 }
 
