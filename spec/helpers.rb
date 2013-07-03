@@ -38,10 +38,10 @@ RSpec::Matchers.define :be_valid_distribution do
       bad_key = given.keys.first { |k| ! k.is_a?(Fixnum) }
       @error = "all keys should be Fixnums, but found '#{bad_key.inspect}' which is a #{bad_key.class}"
     elsif given.values.any? { |v| ! v.is_a?(Float) }
-      bad_value = given.values.first { |v| ! v.is_a?(Float) }
+      bad_value = given.values.find { |v| ! v.is_a?(Float) }
       @error = "all values should be Floats, but found '#{bad_value.inspect}' which is a #{bad_value.class}"
     elsif given.values.any? { |v| v < 0.0 || v > 1.0 }
-      bad_value = given.values.first { |v| v < 0.0 || v > 1.0 }
+      bad_value = given.values.find { |v| v < 0.0 || v > 1.0 }
       @error = "all values should be in range (0.0..1.0), but found #{bad_value}"
     elsif (1.0 - given.values.inject(:+)).abs > 1e-6
       total_probs = given.values.inject(:+)
