@@ -303,7 +303,10 @@ describe GamesDice::NewProbabilities do
     end # describe "#repeat_sum"
 
     describe "#repeat_n_sum_k" do
+
       it "should output a valid distribution if params are valid" do
+        pending "Not implemented in C yet"
+
         d4a = GamesDice::NewProbabilities.new( [ 1.0/4, 1.0/4, 1.0/4, 1.0/4 ], 1 )
         d4b = GamesDice::NewProbabilities.new( [ 1.0/10, 2.0/10, 3.0/10, 4.0/10], 1 )
         p = d4a.repeat_n_sum_k( 3, 2 )
@@ -313,6 +316,8 @@ describe GamesDice::NewProbabilities do
       end
 
       it "should calculate a '4d6 keep best 3' distribution accurately" do
+        pending "Not implemented in C yet"
+
         d6 = GamesDice::NewProbabilities.for_fair_die( 6 )
         p = d6.repeat_n_sum_k( 4, 3 )
         h = p.to_h
@@ -336,6 +341,8 @@ describe GamesDice::NewProbabilities do
       end
 
       it "should calculate a '2d20 keep worst result' distribution accurately" do
+        pending "Not implemented in C yet"
+
         d20 = GamesDice::NewProbabilities.for_fair_die( 20 )
         p = d20.repeat_n_sum_k( 2, 1, :keep_worst )
         h = p.to_h
