@@ -262,7 +262,7 @@ class GamesDice::Probabilities
     each do | q, p_maybe |
       next unless p_maybe > 0.0
 
-      # keep_distributions is indexed by number of keepers > q, which is in 0...k
+      # keep_distributions is array of Probabilities, indexed by number of keepers > q, which is in 0...k
       keep_distributions = calc_keep_distributions( k, q, kmode )
       p_table = calc_p_table( q, p_maybe, kmode )
 
