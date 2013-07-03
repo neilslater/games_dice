@@ -258,44 +258,13 @@ class GamesDice::Probabilities
     new_probs = Array.new( @probs.count * k, 0.0 )
     new_offset = @offset * k
     d = n - k
-    # Work through each 'pivot point' q in turn. For each value:
-    # There must be d times r <= q
-    # There must be k-1 times r >= q
-    # There must be at least one r == q
-    # Note [ < q, == q, > q ] as [ 0, 1, 2 ]
-    each do |q,p_maybe|
-      next unless p_maybe > 0.0
-      if kmode == :keep_best
-        p_kept = p_gt(q)
-        # keep_distributions is indexed by number of keepers > q, which is in 0...k
-        keep_distributions = [ GamesDice::Probabilities.new( [1.0], q * k ) ]
-        if p_kept > 0.0 && k > 1
-          kd_probabilities = given_ge( q + 1 )
-          (1...k).each do |n|
-            extra_o = GamesDice::Probabilities.new( [1.0], q * ( k - n ) )
-            n_probs = kd_probabilities.repeat_sum( n )
-            keep_distributions[n] = GamesDice::Probabilities.add_distributions( extra_o, n_probs )
-          end
-        end
-        p_rejected = p_lt(q)
-      elsif kmode == :keep_worst
-        p_kept = p_gt(q)
-        # keep_distributions is indexed by number of keepers > q, which is in 0...k
-        keep_distributions = [ GamesDice::Probabilities.new( [1.0], q * k ) ]
-        if p_kept > 0.0 && k > 1
-          kd_probabilities = given_le( q - 1 )
-          (1...k).each do |n|
-            extra_o = GamesDice::Probabilities.new( [1.0], q * ( k - n ) )
-            n_probs = kd_probabilities.repeat_sum( n )
-            keep_distributions[n] = GamesDice::Probabilities.add_distributions( extra_o, n_probs )
-          end
-        end
-        p_rejected = p_gt(q)
-      else
-        raise "Keep mode #{kmode.inspect} not recognised"
-      end
 
-      p_table = [ p_rejected, p_maybe, p_kept ]
+    each do | q, p_maybe |
+      next unless p_maybe > 0.0
+
+      # keep_distributions is indexed by number of keepers > q, which is in 0...k
+      keep_distributions = calc_keep_distributions( k, q, kmode )
+      p_table = calc_p_table( q, p_maybe, kmode )
 
       (0...k).each do |n|
         keepers = [2] * n + [1] * (k-n)
@@ -316,6 +285,46 @@ class GamesDice::Probabilities
   end
 
   private
+
+  def calc_keep_distributions k, q, kmode
+    if kmode == :keep_best
+      keep_distributions = [ GamesDice::Probabilities.new( [1.0], q * k ) ]
+      if p_gt(q) > 0.0 && k > 1
+        kd_probabilities = given_ge( q + 1 )
+        (1...k).each do |n|
+          extra_o = GamesDice::Probabilities.new( [1.0], q * ( k - n ) )
+          n_probs = kd_probabilities.repeat_sum( n )
+          keep_distributions[n] = GamesDice::Probabilities.add_distributions( extra_o, n_probs )
+        end
+      end
+    elsif kmode == :keep_worst
+      keep_distributions = [ GamesDice::Probabilities.new( [1.0], q * k ) ]
+      if p_lt(q) > 0.0 && k > 1
+        kd_probabilities = given_le( q - 1 )
+        (1...k).each do |n|
+          extra_o = GamesDice::Probabilities.new( [1.0], q * ( k - n ) )
+          n_probs = kd_probabilities.repeat_sum( n )
+          keep_distributions[n] = GamesDice::Probabilities.add_distributions( extra_o, n_probs )
+        end
+      end
+    else
+      raise "Keep mode #{kmode.inspect} not recognised"
+    end
+    keep_distributions
+  end
+
+  def calc_p_table q, p_maybe, kmode
+    if kmode == :keep_best
+      p_kept = p_gt(q)
+      p_rejected = p_lt(q)
+    elsif kmode == :keep_worst
+      p_kept = p_lt(q)
+      p_rejected = p_gt(q)
+    else
+      raise "Keep mode #{kmode.inspect} not recognised"
+    end
+    [ p_rejected, p_maybe, p_kept ]
+  end
 
   # Convert hash to array,offset notation
   def self.prob_h_to_ao h
@@ -348,7 +357,7 @@ end # class GamesDice::Probabilities
 #  GamesDice::Combinations.count_variations( [3,3,6] )
 #  => 3
 #
-# @example When prob( Array ) and result( Array ) are same for any arrangement
+# @example When prob( a ) and result( a ) are same for any arrangement of Array a
 #  items = [1,2,3,4,5,6]
 #  items.repeated_combination(5).each do |a|
 #    this_result = result( a )
