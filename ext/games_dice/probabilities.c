@@ -1,7 +1,5 @@
 // ext/games_dice/probabilities.c
 
-#include <stdio.h>
-#include <ruby.h>
 #include "probabilities.h"
 
 // Ruby 1.8.7 compatibility patch
@@ -73,7 +71,7 @@ static double *alloc_probs( ProbabilityList *pl, int slots ) {
   return pr;
 }
 
-static void calc_cumulative( ProbabilityList *pl ) {
+static double calc_cumulative( ProbabilityList *pl ) {
   double *c = pl->cumulative;
   double *pr = pl->probs;
   int i;
@@ -82,7 +80,7 @@ static void calc_cumulative( ProbabilityList *pl ) {
     t += pr[i];
     c[i] = t;
   }
-  return;
+  return t;
 }
 
 static double *alloc_probs_iv( ProbabilityList *pl, int slots, double iv ) {
@@ -283,6 +281,49 @@ static ProbabilityList *pl_repeat_sum( ProbabilityList *pl, int n ) {
   return pd_result;
 }
 
+static ProbabilityList *pl_repeat_n_sum_k( ProbabilityList *pl, int n, int k ) {
+  if ( n < 1 ) {
+    rb_raise( rb_eRuntimeError, "Cannot calculate repeat_n_sum_k when n < 1" );
+  }
+  if ( k < 1 ) {
+    rb_raise( rb_eRuntimeError, "Cannot calculate repeat_sum_k when k < 1" );
+  }
+  if ( k >= n ) {
+    return pl_repeat_sum( pl, n );
+  }
+  if ( k * pl->slots - k >  1000000 ) {
+    rb_raise( rb_eRuntimeError, "Too many probability slots" );
+  }
+
+  // TODO: The rest of this is wrong
+
+  ProbabilityList *pd_power = copy_probability_list( pl );
+  ProbabilityList *pd_result = NULL;
+  ProbabilityList *pd_next = NULL;
+  int power = 1;
+  while ( 1 ) {
+    if ( power & n ) {
+      if ( pd_result ) {
+        pd_next = pl_add_distributions( pd_result, pd_power );
+        destroy_probability_list( pd_result );
+        pd_result = pd_next;
+      } else {
+        pd_result = copy_probability_list( pd_power );
+      }
+    }
+    power = power << 1;
+    if ( power > n ) break;
+    pd_next = pl_add_distributions( pd_power, pd_power );
+    destroy_probability_list( pd_power );
+    pd_power = pd_next;
+  }
+  destroy_probability_list( pd_power );
+
+  return pd_result;
+}
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //  Ruby integration
@@ -323,9 +364,20 @@ static VALUE probabilities_initialize( VALUE self, VALUE arr, VALUE offset ) {
   int i;
   double *pr = alloc_probs( pl, s );
   for(i=0; i<s; i++) {
-    pr[i] = NUM2DBL( rb_ary_entry( arr, i ) );
+    double p_item = NUM2DBL( rb_ary_entry( arr, i ) );
+    if ( p_item < 0.0 ) {
+      rb_raise( rb_eArgError, "Negative probability not allowed" );
+    } else if ( p_item > 1.0 ) {
+      rb_raise( rb_eArgError, "Probability must be in range 0.0..1.0" );
+    }
+    pr[i] = p_item;
   }
-  calc_cumulative( pl );
+  double error = calc_cumulative( pl ) - 1.0;
+  if ( error < -1.0e-8 ) {
+    rb_raise( rb_eArgError, "Total probabilities are less than 1.0" );
+  } else if ( error > 1.0e-8 ) {
+    rb_raise( rb_eArgError, "Total probabilities are greater than 1.0" );
+  }
   return self;
 }
 
@@ -408,6 +460,28 @@ VALUE probabilities_repeat_sum( VALUE self, VALUE nsum ) {
   return pl_as_ruby_class( pl_repeat_sum( pl, n ), NewProbabilities );
 }
 
+VALUE probabilities_repeat_n_sum_k( VALUE self, VALUE nsum, VALUE nkeepers ) {
+  // TODO: Accept optional keep_mode param
+  int n = NUM2INT(nsum);
+  int k = NUM2INT(nkeepers);
+  ProbabilityList *pl = get_probability_list( self );
+  return pl_as_ruby_class( pl_repeat_n_sum_k( pl, n, k ), NewProbabilities );
+}
+
+VALUE probabilities_each( VALUE self ) {
+  ProbabilityList *pl = get_probability_list( self );
+  int i;
+  double *pr = pl->probs;
+  int o = pl->offset;
+  for ( i = 0; i < pl->slots; i++ ) {
+    VALUE a = rb_ary_new2( 2 );
+    rb_ary_store( a, 0, INT2NUM( i + o ));
+    rb_ary_store( a, 1, DBL2NUM( pr[i] ));
+    rb_yield( a );
+  }
+  return self;
+}
+
 VALUE probabilities_for_fair_die( VALUE self, VALUE sides ) {
   int s = NUM2INT( sides );
   if ( s < 1 ) {
@@ -463,6 +537,7 @@ void init_probabilities_class( VALUE ParentModule ) {
   rb_define_method( NewProbabilities, "given_ge", probabilities_given_ge, 1 );
   rb_define_method( NewProbabilities, "given_le", probabilities_given_le, 1 );
   rb_define_method( NewProbabilities, "repeat_sum", probabilities_repeat_sum, 1 );
+  rb_define_method( NewProbabilities, "repeat_n_sum_k", probabilities_repeat_n_sum_k, 2 );
   rb_define_singleton_method( NewProbabilities, "for_fair_die", probabilities_for_fair_die, 1 );
   rb_define_singleton_method( NewProbabilities, "add_distributions", probabilities_add_distributions, 2 );
   rb_define_singleton_method( NewProbabilities, "add_distributions_mult", probabilities_add_distributions_mult, 4 );
