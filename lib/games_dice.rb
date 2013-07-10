@@ -1,7 +1,10 @@
-require "games_dice/games_dice"
 require "games_dice/version"
+begin
+  require "games_dice/games_dice"
+rescue
+  require "games_dice/probabilities"
+end
 require "games_dice/constants"
-require "games_dice/probabilities"
 require "games_dice/die"
 require "games_dice/die_result"
 require "games_dice/reroll_rule"

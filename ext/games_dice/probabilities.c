@@ -7,7 +7,7 @@
 #define DBL2NUM( dbl_val ) rb_float_new( dbl_val )
 #endif
 
-VALUE NewProbabilities = Qnil;
+VALUE Probabilities = Qnil;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -107,7 +107,7 @@ static ProbabilityList *create_probability_list() {
   ProbabilityList *pl;
   pl = malloc (sizeof(ProbabilityList));
   if ( pl == NULL ) {
-    rb_raise(rb_eRuntimeError, "Could not allocate memory for NewProbabilities");
+    rb_raise(rb_eRuntimeError, "Could not allocate memory for Probabilities");
   }
   pl->probs = NULL;
   pl->cumulative = NULL;
@@ -501,13 +501,13 @@ inline static ProbabilityList *get_probability_list( VALUE obj ) {
 static void assert_value_wraps_pl( VALUE obj ) {
   if ( TYPE(obj) != T_DATA ||
       RDATA(obj)->dfree != (RUBY_DATA_FUNC)destroy_probability_list) {
-    rb_raise( rb_eTypeError, "Expected a NewProbabilities object, but got something else" );
+    rb_raise( rb_eTypeError, "Expected a Probabilities object, but got something else" );
   }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Ruby class and instance methods for NewProbabilities
+//  Ruby class and instance methods for Probabilities
 //
 
 static VALUE probabilities_initialize( VALUE self, VALUE arr, VALUE offset ) {
@@ -600,19 +600,19 @@ VALUE probabilites_expected( VALUE self ) {
 VALUE probabilities_given_ge( VALUE self, VALUE target ) {
   int t = NUM2INT(target);
   ProbabilityList *pl = get_probability_list( self );
-  return pl_as_ruby_class( pl_given_ge( pl, t ), NewProbabilities );
+  return pl_as_ruby_class( pl_given_ge( pl, t ), Probabilities );
 }
 
 VALUE probabilities_given_le( VALUE self, VALUE target ) {
   int t = NUM2INT(target);
   ProbabilityList *pl = get_probability_list( self );
-  return pl_as_ruby_class( pl_given_le( pl, t ), NewProbabilities );
+  return pl_as_ruby_class( pl_given_le( pl, t ), Probabilities );
 }
 
 VALUE probabilities_repeat_sum( VALUE self, VALUE nsum ) {
   int n = NUM2INT(nsum);
   ProbabilityList *pl = get_probability_list( self );
-  return pl_as_ruby_class( pl_repeat_sum( pl, n ), NewProbabilities );
+  return pl_as_ruby_class( pl_repeat_sum( pl, n ), Probabilities );
 }
 
 static VALUE probabilities_repeat_n_sum_k( int argc, VALUE* argv, VALUE self ) {
@@ -630,7 +630,7 @@ static VALUE probabilities_repeat_n_sum_k( int argc, VALUE* argv, VALUE self ) {
   int n = NUM2INT(nsum);
   int k = NUM2INT(nkeepers);
   ProbabilityList *pl = get_probability_list( self );
-  return pl_as_ruby_class( pl_repeat_n_sum_k( pl, n, k, keep_best ), NewProbabilities );
+  return pl_as_ruby_class( pl_repeat_n_sum_k( pl, n, k, keep_best ), Probabilities );
 }
 
 VALUE probabilities_each( VALUE self ) {
@@ -657,7 +657,7 @@ VALUE probabilities_for_fair_die( VALUE self, VALUE sides ) {
   if ( s > 100000 ) {
     rb_raise( rb_eArgError, "Number of sides should be less than 100001" );
   }
-  VALUE obj = pl_alloc( NewProbabilities );
+  VALUE obj = pl_alloc( Probabilities );
   ProbabilityList *pl = get_probability_list( obj );
   pl->offset = 1;
   alloc_probs_iv( pl, s, 1.0/s );
@@ -669,7 +669,7 @@ VALUE probabilities_add_distributions( VALUE self, VALUE gdpa, VALUE gdpb ) {
   assert_value_wraps_pl( gdpb );
   ProbabilityList *pl_a = get_probability_list( gdpa );
   ProbabilityList *pl_b = get_probability_list( gdpb );
-  return pl_as_ruby_class( pl_add_distributions( pl_a, pl_b ), NewProbabilities );
+  return pl_as_ruby_class( pl_add_distributions( pl_a, pl_b ), Probabilities );
 }
 
 VALUE probabilities_add_distributions_mult( VALUE self, VALUE m_a, VALUE gdpa, VALUE m_b, VALUE gdpb ) {
@@ -679,35 +679,35 @@ VALUE probabilities_add_distributions_mult( VALUE self, VALUE m_a, VALUE gdpa, V
   ProbabilityList *pl_a = get_probability_list( gdpa );
   int mul_b = NUM2INT( m_b );
   ProbabilityList *pl_b = get_probability_list( gdpb );
-  return pl_as_ruby_class( pl_add_distributions_mult( mul_a, pl_a, mul_b, pl_b ), NewProbabilities );
+  return pl_as_ruby_class( pl_add_distributions_mult( mul_a, pl_a, mul_b, pl_b ), Probabilities );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Setup NewProbabilities for Ruby interpretter
+//  Setup Probabilities for Ruby interpretter
 //
 
 void init_probabilities_class( VALUE ParentModule ) {
-  NewProbabilities = rb_define_class_under( ParentModule, "NewProbabilities", rb_cObject );
-  rb_define_alloc_func( NewProbabilities, pl_alloc );
-  rb_define_method( NewProbabilities, "initialize", probabilities_initialize, 2 );
-  rb_define_method( NewProbabilities, "initialize_copy", probabilities_initialize_copy, 1 );
-  rb_define_method( NewProbabilities, "to_h", probabilities_to_h, 0 );
-  rb_define_method( NewProbabilities, "min", probabilities_min, 0 );
-  rb_define_method( NewProbabilities, "max", probabilities_max, 0 );
-  rb_define_method( NewProbabilities, "p_eql", probabilites_p_eql, 1 );
-  rb_define_method( NewProbabilities, "p_gt", probabilites_p_gt, 1 );
-  rb_define_method( NewProbabilities, "p_ge", probabilites_p_ge, 1 );
-  rb_define_method( NewProbabilities, "p_le", probabilites_p_le, 1 );
-  rb_define_method( NewProbabilities, "p_lt", probabilites_p_lt, 1 );
-  rb_define_method( NewProbabilities, "expected", probabilites_expected, 0 );
-  rb_define_method( NewProbabilities, "each", probabilities_each, 0 );
-  rb_define_method( NewProbabilities, "given_ge", probabilities_given_ge, 1 );
-  rb_define_method( NewProbabilities, "given_le", probabilities_given_le, 1 );
-  rb_define_method( NewProbabilities, "repeat_sum", probabilities_repeat_sum, 1 );
-  rb_define_method( NewProbabilities, "repeat_n_sum_k", probabilities_repeat_n_sum_k, -1 );
-  rb_define_singleton_method( NewProbabilities, "for_fair_die", probabilities_for_fair_die, 1 );
-  rb_define_singleton_method( NewProbabilities, "add_distributions", probabilities_add_distributions, 2 );
-  rb_define_singleton_method( NewProbabilities, "add_distributions_mult", probabilities_add_distributions_mult, 4 );
+  Probabilities = rb_define_class_under( ParentModule, "Probabilities", rb_cObject );
+  rb_define_alloc_func( Probabilities, pl_alloc );
+  rb_define_method( Probabilities, "initialize", probabilities_initialize, 2 );
+  rb_define_method( Probabilities, "initialize_copy", probabilities_initialize_copy, 1 );
+  rb_define_method( Probabilities, "to_h", probabilities_to_h, 0 );
+  rb_define_method( Probabilities, "min", probabilities_min, 0 );
+  rb_define_method( Probabilities, "max", probabilities_max, 0 );
+  rb_define_method( Probabilities, "p_eql", probabilites_p_eql, 1 );
+  rb_define_method( Probabilities, "p_gt", probabilites_p_gt, 1 );
+  rb_define_method( Probabilities, "p_ge", probabilites_p_ge, 1 );
+  rb_define_method( Probabilities, "p_le", probabilites_p_le, 1 );
+  rb_define_method( Probabilities, "p_lt", probabilites_p_lt, 1 );
+  rb_define_method( Probabilities, "expected", probabilites_expected, 0 );
+  rb_define_method( Probabilities, "each", probabilities_each, 0 );
+  rb_define_method( Probabilities, "given_ge", probabilities_given_ge, 1 );
+  rb_define_method( Probabilities, "given_le", probabilities_given_le, 1 );
+  rb_define_method( Probabilities, "repeat_sum", probabilities_repeat_sum, 1 );
+  rb_define_method( Probabilities, "repeat_n_sum_k", probabilities_repeat_n_sum_k, -1 );
+  rb_define_singleton_method( Probabilities, "for_fair_die", probabilities_for_fair_die, 1 );
+  rb_define_singleton_method( Probabilities, "add_distributions", probabilities_add_distributions, 2 );
+  rb_define_singleton_method( Probabilities, "add_distributions_mult", probabilities_add_distributions_mult, 4 );
   return;
 }

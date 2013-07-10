@@ -1,24 +1,24 @@
 require 'games_dice'
 require 'helpers'
 
-describe GamesDice::NewProbabilities do
+describe GamesDice::Probabilities do
   describe "class methods" do
     describe "#new" do
       it "should create a new distribution from an array and offset" do
-        p = GamesDice::NewProbabilities.new( [1.0], 1 )
-        p.is_a?( GamesDice::NewProbabilities ).should be_true
+        p = GamesDice::Probabilities.new( [1.0], 1 )
+        p.is_a?( GamesDice::Probabilities ).should be_true
         p.to_h.should be_valid_distribution
       end
     end
 
     describe "#for_fair_die" do
       it "should create a new distribution based on number of sides" do
-        p2 = GamesDice::NewProbabilities.for_fair_die( 2 )
-        p2.is_a?( GamesDice::NewProbabilities ).should be_true
+        p2 = GamesDice::Probabilities.for_fair_die( 2 )
+        p2.is_a?( GamesDice::Probabilities ).should be_true
         p2.to_h.should == { 1 => 0.5, 2 => 0.5 }
         (1..20).each do |sides|
-          p = GamesDice::NewProbabilities.for_fair_die( sides )
-          p.is_a?( GamesDice::NewProbabilities ).should be_true
+          p = GamesDice::Probabilities.for_fair_die( sides )
+          p.is_a?( GamesDice::Probabilities ).should be_true
           h = p.to_h
           h.should be_valid_distribution
           h.keys.count.should == sides
@@ -29,15 +29,15 @@ describe GamesDice::NewProbabilities do
 
     describe "#add_distributions" do
       it "should combine two distributions to create a third one" do
-        d4a = GamesDice::NewProbabilities.new( [ 1.0/4, 1.0/4, 1.0/4, 1.0/4 ], 1 )
-        d4b = GamesDice::NewProbabilities.new( [ 1.0/10, 2.0/10, 3.0/10, 4.0/10], 1 )
-        p = GamesDice::NewProbabilities.add_distributions( d4a, d4b )
+        d4a = GamesDice::Probabilities.new( [ 1.0/4, 1.0/4, 1.0/4, 1.0/4 ], 1 )
+        d4b = GamesDice::Probabilities.new( [ 1.0/10, 2.0/10, 3.0/10, 4.0/10], 1 )
+        p = GamesDice::Probabilities.add_distributions( d4a, d4b )
         p.to_h.should be_valid_distribution
       end
 
       it "should calculate a classic 2d6 distribution accurately" do
-        d6 = GamesDice::NewProbabilities.for_fair_die( 6 )
-        p = GamesDice::NewProbabilities.add_distributions( d6, d6 )
+        d6 = GamesDice::Probabilities.for_fair_die( 6 )
+        p = GamesDice::Probabilities.add_distributions( d6, d6 )
         h = p.to_h
         h.should be_valid_distribution
         h[2].should be_within(1e-9).of 1.0/36
@@ -56,16 +56,16 @@ describe GamesDice::NewProbabilities do
 
     describe "#add_distributions_mult" do
       it "should combine two multiplied distributions to create a third one" do
-        d4a = GamesDice::NewProbabilities.new( [ 1.0/4, 1.0/4, 1.0/4, 1.0/4 ], 1 )
-        d4b = GamesDice::NewProbabilities.new( [ 1.0/10, 2.0/10, 3.0/10, 4.0/10], 1 )
-        p = GamesDice::NewProbabilities.add_distributions_mult( 2, d4a, -1, d4b )
+        d4a = GamesDice::Probabilities.new( [ 1.0/4, 1.0/4, 1.0/4, 1.0/4 ], 1 )
+        d4b = GamesDice::Probabilities.new( [ 1.0/10, 2.0/10, 3.0/10, 4.0/10], 1 )
+        p = GamesDice::Probabilities.add_distributions_mult( 2, d4a, -1, d4b )
         p.to_h.should be_valid_distribution
       end
 
       it "should calculate a distribution for '1d6 - 1d4' accurately" do
-        d6 = GamesDice::NewProbabilities.for_fair_die( 6 )
-        d4 = GamesDice::NewProbabilities.for_fair_die( 4 )
-        p = GamesDice::NewProbabilities.add_distributions_mult( 1, d6, -1, d4 )
+        d6 = GamesDice::Probabilities.for_fair_die( 6 )
+        d4 = GamesDice::Probabilities.for_fair_die( 4 )
+        p = GamesDice::Probabilities.add_distributions_mult( 1, d6, -1, d4 )
         h = p.to_h
         h.should be_valid_distribution
         h[-3].should be_within(1e-9).of 1.0/24
@@ -82,11 +82,11 @@ describe GamesDice::NewProbabilities do
   end
 
   describe "instance methods" do
-    let(:p2) { GamesDice::NewProbabilities.for_fair_die( 2 ) }
-    let(:p4) { GamesDice::NewProbabilities.for_fair_die( 4 ) }
-    let(:p6) { GamesDice::NewProbabilities.for_fair_die( 6 ) }
-    let(:p10) { GamesDice::NewProbabilities.for_fair_die( 10 ) }
-    let(:pa) { GamesDice::NewProbabilities.new( [ 0.4, 0.2, 0.4 ], -1 ) }
+    let(:p2) { GamesDice::Probabilities.for_fair_die( 2 ) }
+    let(:p4) { GamesDice::Probabilities.for_fair_die( 4 ) }
+    let(:p6) { GamesDice::Probabilities.for_fair_die( 6 ) }
+    let(:p10) { GamesDice::Probabilities.for_fair_die( 10 ) }
+    let(:pa) { GamesDice::Probabilities.new( [ 0.4, 0.2, 0.4 ], -1 ) }
 
     describe "#p_eql" do
       it "should return probability of getting a number inside the range" do
@@ -222,7 +222,7 @@ describe GamesDice::NewProbabilities do
         p4.min.should == 1
         p6.min.should == 1
         p10.min.should == 1
-        GamesDice::NewProbabilities.add_distributions( p6, p10 ).min.should == 2
+        GamesDice::Probabilities.add_distributions( p6, p10 ).min.should == 2
       end
     end
 
@@ -232,7 +232,7 @@ describe GamesDice::NewProbabilities do
         p4.max.should == 4
         p6.max.should == 6
         p10.max.should == 10
-        GamesDice::NewProbabilities.add_distributions( p6, p10 ).max.should == 16
+        GamesDice::Probabilities.add_distributions( p6, p10 ).max.should == 16
       end
     end
 
@@ -242,7 +242,7 @@ describe GamesDice::NewProbabilities do
         p4.expected.should be_within(1.0e-9).of 2.5
         p6.expected.should be_within(1.0e-9).of 3.5
         p10.expected.should be_within(1.0e-9).of 5.5
-        GamesDice::NewProbabilities.add_distributions( p6, p10 ).expected.should be_within(1.0e-9).of 9.0
+        GamesDice::Probabilities.add_distributions( p6, p10 ).expected.should be_within(1.0e-9).of 9.0
       end
     end
 
@@ -270,8 +270,8 @@ describe GamesDice::NewProbabilities do
 
     describe "#repeat_sum" do
       it "should output a valid distribution if params are valid" do
-        d4a = GamesDice::NewProbabilities.new( [ 1.0/4, 1.0/4, 1.0/4, 1.0/4 ], 1 )
-        d4b = GamesDice::NewProbabilities.new( [ 1.0/10, 2.0/10, 3.0/10, 4.0/10 ], 1 )
+        d4a = GamesDice::Probabilities.new( [ 1.0/4, 1.0/4, 1.0/4, 1.0/4 ], 1 )
+        d4b = GamesDice::Probabilities.new( [ 1.0/10, 2.0/10, 3.0/10, 4.0/10 ], 1 )
         p = d4a.repeat_sum( 7 )
         p.to_h.should be_valid_distribution
         p = d4b.repeat_sum( 12 )
@@ -279,7 +279,7 @@ describe GamesDice::NewProbabilities do
       end
 
       it "should calculate a '3d6' distribution accurately" do
-        d6 = GamesDice::NewProbabilities.for_fair_die( 6 )
+        d6 = GamesDice::Probabilities.for_fair_die( 6 )
         p = d6.repeat_sum( 3 )
         h = p.to_h
         h.should be_valid_distribution
@@ -305,8 +305,8 @@ describe GamesDice::NewProbabilities do
     describe "#repeat_n_sum_k" do
 
       it "should output a valid distribution if params are valid" do
-        d4a = GamesDice::NewProbabilities.new( [ 1.0/4, 1.0/4, 1.0/4, 1.0/4 ], 1 )
-        d4b = GamesDice::NewProbabilities.new( [ 1.0/10, 2.0/10, 3.0/10, 4.0/10], 1 )
+        d4a = GamesDice::Probabilities.new( [ 1.0/4, 1.0/4, 1.0/4, 1.0/4 ], 1 )
+        d4b = GamesDice::Probabilities.new( [ 1.0/10, 2.0/10, 3.0/10, 4.0/10], 1 )
         p = d4a.repeat_n_sum_k( 3, 2 )
         p.to_h.should be_valid_distribution
         p = d4b.repeat_n_sum_k( 12, 4 )
@@ -314,7 +314,7 @@ describe GamesDice::NewProbabilities do
       end
 
       it "should calculate a '4d6 keep best 3' distribution accurately" do
-        d6 = GamesDice::NewProbabilities.for_fair_die( 6 )
+        d6 = GamesDice::Probabilities.for_fair_die( 6 )
         p = d6.repeat_n_sum_k( 4, 3 )
         h = p.to_h
         h.should be_valid_distribution
@@ -337,7 +337,7 @@ describe GamesDice::NewProbabilities do
       end
 
       it "should calculate a '2d20 keep worst result' distribution accurately" do
-        d20 = GamesDice::NewProbabilities.for_fair_die( 20 )
+        d20 = GamesDice::Probabilities.for_fair_die( 20 )
         p = d20.repeat_n_sum_k( 2, 1, :keep_worst )
         h = p.to_h
         h.should be_valid_distribution
