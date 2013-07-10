@@ -42,4 +42,6 @@ static ProbabilityList *pl_given_le( ProbabilityList *pl, int target );
 
 static ProbabilityList *pl_repeat_sum( ProbabilityList *pl, int n );
 
+static ProbabilityList *pl_repeat_n_sum_k( ProbabilityList *pl, int n, int k, int kbest );
+
 #endif
