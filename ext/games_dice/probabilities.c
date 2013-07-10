@@ -8,10 +8,10 @@
 #endif
 
 // Force inclusion of hash declarations (only MRI includes by default)
-#if RJB_RUBY_VERSION_CODE < 190
-#include "st.h"
-#else
+#ifdef HAVE_RUBY_ST_H
 #include "ruby/st.h"
+#else
+#include "st.h"
 #endif
 
 VALUE Probabilities = Qnil;
