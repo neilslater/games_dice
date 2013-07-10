@@ -505,6 +505,33 @@ static void assert_value_wraps_pl( VALUE obj ) {
   }
 }
 
+// Validate key/value from hash, and adjust object properties as required
+int validate_key_value( VALUE key, VALUE val, VALUE obj ) {
+  int k = NUM2INT( key );
+  double v = NUM2DBL( val );
+  ProbabilityList *pl = get_probability_list( obj );
+  if ( k < pl->offset ) {
+    if ( pl->slots < 1 ) {
+      pl->slots = 1;
+    } else {
+      pl->slots = pl->slots - k + pl->offset;
+    }
+    pl->offset = k;
+  } else if ( k - pl->offset >= pl->slots ) {
+    pl->slots = 1 + k - pl->offset;
+  }
+  return ST_CONTINUE;
+}
+
+// Copy key/value from hash
+int copy_key_value( VALUE key, VALUE val, VALUE obj ) {
+  int k = NUM2INT( key );
+  double v = NUM2DBL( val );
+  ProbabilityList *pl = get_probability_list( obj );
+  pl->probs[ k - pl->offset ] = v;
+  return ST_CONTINUE;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //  Ruby class and instance methods for Probabilities
@@ -664,6 +691,30 @@ VALUE probabilities_for_fair_die( VALUE self, VALUE sides ) {
   return obj;
 }
 
+VALUE probabilities_from_h( VALUE self, VALUE hash ) {
+  rb_check_hash_type( hash );
+
+  VALUE obj = pl_alloc( Probabilities );
+  ProbabilityList *pl = get_probability_list( obj );
+  // Set these up so that they get adjusted during hash iteration
+  pl->offset = 2000000000;
+  pl->slots = 0;
+  // First iteration establish min/max and validate all key/values
+  rb_hash_foreach( hash, validate_key_value, obj );
+
+  double *pr = alloc_probs_iv( pl, pl->slots, 0.0 );
+  // Second iteration copy key/value pairs into structure
+  rb_hash_foreach( hash, copy_key_value, obj );
+
+  double error = calc_cumulative( pl ) - 1.0;
+  if ( error < -1.0e-8 ) {
+    rb_raise( rb_eArgError, "Total probabilities are less than 1.0" );
+  } else if ( error > 1.0e-8 ) {
+    rb_raise( rb_eArgError, "Total probabilities are greater than 1.0" );
+  }
+  return obj;
+}
+
 VALUE probabilities_add_distributions( VALUE self, VALUE gdpa, VALUE gdpb ) {
   assert_value_wraps_pl( gdpa );
   assert_value_wraps_pl( gdpb );
@@ -684,7 +735,7 @@ VALUE probabilities_add_distributions_mult( VALUE self, VALUE m_a, VALUE gdpa, V
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Setup Probabilities for Ruby interpretter
+//  Setup Probabilities class for Ruby interpretter
 //
 
 void init_probabilities_class( VALUE ParentModule ) {
@@ -709,5 +760,6 @@ void init_probabilities_class( VALUE ParentModule ) {
   rb_define_singleton_method( Probabilities, "for_fair_die", probabilities_for_fair_die, 1 );
   rb_define_singleton_method( Probabilities, "add_distributions", probabilities_add_distributions, 2 );
   rb_define_singleton_method( Probabilities, "add_distributions_mult", probabilities_add_distributions_mult, 4 );
+  rb_define_singleton_method( Probabilities, "from_h", probabilities_from_h, 1 );
   return;
 }

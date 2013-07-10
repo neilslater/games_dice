@@ -6,7 +6,7 @@ describe GamesDice::Probabilities do
     describe "#new" do
       it "should create a new distribution from an array and offset" do
         p = GamesDice::Probabilities.new( [1.0], 1 )
-        p.is_a?( GamesDice::Probabilities ).should be_true
+        p.should be_a GamesDice::Probabilities
         p.to_h.should be_valid_distribution
       end
     end
@@ -14,11 +14,11 @@ describe GamesDice::Probabilities do
     describe "#for_fair_die" do
       it "should create a new distribution based on number of sides" do
         p2 = GamesDice::Probabilities.for_fair_die( 2 )
-        p2.is_a?( GamesDice::Probabilities ).should be_true
+        p2.should be_a GamesDice::Probabilities
         p2.to_h.should == { 1 => 0.5, 2 => 0.5 }
         (1..20).each do |sides|
           p = GamesDice::Probabilities.for_fair_die( sides )
-          p.is_a?( GamesDice::Probabilities ).should be_true
+          p.should be_a GamesDice::Probabilities
           h = p.to_h
           h.should be_valid_distribution
           h.keys.count.should == sides
@@ -80,6 +80,18 @@ describe GamesDice::Probabilities do
       end
     end
 
+    describe "#from_h" do
+      it "should create a Probabilities object from a valid hash" do
+        p = GamesDice::Probabilities.from_h( { 7 => 0.5, 9 => 0.5 } )
+        p.should be_a GamesDice::Probabilities
+      end
+
+      it "should raise an ArgumentError when called with a non-valid hash" do
+        # lambda { GamesDice::Probabilities.from_h( :foo ) }.should raise_error ArgumentError
+        lambda { GamesDice::Probabilities.from_h( { 7 => 0.5, 9 => 0.6 } ) }.should raise_error ArgumentError
+      end
+    end
+
   end # describe "class methods"
 
   describe "instance methods" do
@@ -88,6 +100,8 @@ describe GamesDice::Probabilities do
     let(:p6) { GamesDice::Probabilities.for_fair_die( 6 ) }
     let(:p10) { GamesDice::Probabilities.for_fair_die( 10 ) }
     let(:pa) { GamesDice::Probabilities.new( [ 0.4, 0.2, 0.4 ], -1 ) }
+
+    # TODO: each
 
     describe "#p_eql" do
       it "should return probability of getting a number inside the range" do
