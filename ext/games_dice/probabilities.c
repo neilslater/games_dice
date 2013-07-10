@@ -5,7 +5,13 @@
 // Ruby 1.8.7 compatibility patch
 #ifndef DBL2NUM
 #define DBL2NUM( dbl_val ) rb_float_new( dbl_val )
-enum st_retval {ST_CONTINUE, ST_STOP, ST_DELETE, ST_CHECK};
+#endif
+
+// Force inclusion of hash declarations (only MRI includes by default)
+#if RJB_RUBY_VERSION_CODE < 190
+#include "st.h"
+#else
+#include "ruby/st.h"
 #endif
 
 VALUE Probabilities = Qnil;
