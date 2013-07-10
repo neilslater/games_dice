@@ -5,9 +5,8 @@
 // Ruby 1.8.7 compatibility patch
 #ifndef DBL2NUM
 #define DBL2NUM( dbl_val ) rb_float_new( dbl_val )
+enum st_retval {ST_CONTINUE, ST_STOP, ST_DELETE, ST_CHECK};
 #endif
-
-#include "ruby/st.h"
 
 VALUE Probabilities = Qnil;
 
@@ -694,8 +693,6 @@ VALUE probabilities_for_fair_die( VALUE self, VALUE sides ) {
 }
 
 VALUE probabilities_from_h( VALUE self, VALUE hash ) {
-  rb_check_hash_type( hash );
-
   VALUE obj = pl_alloc( Probabilities );
   ProbabilityList *pl = get_probability_list( obj );
   // Set these up so that they get adjusted during hash iteration
