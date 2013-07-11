@@ -12,6 +12,7 @@ Gem::Specification.new do |gem|
   gem.summary       = %q{Simulates and explains dice rolls from simple "1d6" to complex "roll 7 ten-sided dice, take best 3,
                         results of 10 roll again and add on".}
   gem.homepage      = "https://github.com/neilslater/games_dice"
+  gem.license       = "MIT"
 
   gem.add_development_dependency "rspec", ">= 2.13.0"
   gem.add_development_dependency "rake", ">= 1.9.1"
