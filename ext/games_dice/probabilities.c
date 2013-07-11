@@ -543,6 +543,10 @@ int validate_key_value( VALUE key, VALUE val, VALUE obj ) {
   // Not assigned (to avoid "unused" warning), but this throws execption if val cannot be coerced to double
   NUM2DBL( val );
 
+  if ( k > 0x7fffffff ) {
+    rb_raise( rb_eArgError, "Result too large" );
+  }
+
   if ( k < pl->offset ) {
     if ( pl->slots < 1 ) {
       pl->slots = 1;
@@ -742,16 +746,15 @@ VALUE probabilities_for_fair_die( VALUE self, VALUE sides ) {
 VALUE probabilities_from_h( VALUE self, VALUE hash ) {
   VALUE obj = pl_alloc( Probabilities );
   ProbabilityList *pl = get_probability_list( obj );
-  double *pr;
   double error;
 
   // Set these up so that they get adjusted during hash iteration
-  pl->offset = 2000000000;
+  pl->offset = 0x7fffffff;
   pl->slots = 0;
   // First iteration establish min/max and validate all key/values
   rb_hash_foreach( hash, validate_key_value, obj );
 
-  pr = alloc_probs_iv( pl, pl->slots, 0.0 );
+  alloc_probs_iv( pl, pl->slots, 0.0 );
   // Second iteration copy key/value pairs into structure
   rb_hash_foreach( hash, copy_key_value, obj );
 
