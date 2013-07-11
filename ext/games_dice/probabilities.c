@@ -21,7 +21,7 @@ VALUE Probabilities = Qnil;
 //  General utils
 //
 
-static inline int max( int *a, int n ) {
+inline int max( int *a, int n ) {
   int m = -1000000000;
   int i;
   for ( i=0; i < n; i++ ) {
@@ -30,7 +30,7 @@ static inline int max( int *a, int n ) {
   return m;
 }
 
-static inline int min( int *a, int n ) {
+inline int min( int *a, int n ) {
   int m = 1000000000;
   int i;
   for ( i=0; i < n; i++ ) {
@@ -46,7 +46,7 @@ static inline int min( int *a, int n ) {
 //
 
 // There is no point calculating these, a cache of them is just fine.
-static double nfact[171] = {
+double nfact[171] = {
   1.0, 1.0, 2.0, 6.0,
   24.0, 120.0, 720.0, 5040.0,
   40320.0, 362880.0, 3628800.0, 39916800.0,
@@ -91,7 +91,7 @@ static double nfact[171] = {
   3.287218585534296e+293, 5.423910666131589e+295, 9.003691705778438e+297, 1.503616514864999e+300,
   2.5260757449731984e+302, 4.269068009004705e+304, 7.257415615307999e+306 };
 
-static double num_arrangements( int *args, int nargs ) {
+double num_arrangements( int *args, int nargs ) {
   int sum = 0;
   double div_by = 1.0;
   int i;
@@ -110,7 +110,7 @@ static double num_arrangements( int *args, int nargs ) {
 //  Probability List basics - create, delete, copy
 //
 
-static ProbabilityList *create_probability_list() {
+ProbabilityList *create_probability_list() {
   ProbabilityList *pl;
   pl = malloc (sizeof(ProbabilityList));
   if ( pl == NULL ) {
@@ -123,20 +123,22 @@ static ProbabilityList *create_probability_list() {
   return pl;
 }
 
-static void destroy_probability_list( ProbabilityList *pl ) {
+void destroy_probability_list( ProbabilityList *pl ) {
   xfree( pl->cumulative );
   xfree( pl->probs );
   xfree( pl );
   return;
 }
 
-static double *alloc_probs( ProbabilityList *pl, int slots ) {
+double *alloc_probs( ProbabilityList *pl, int slots ) {
+  double *pr;
+
   if ( slots < 1 || slots > 1000000 ) {
     rb_raise(rb_eArgError, "Bad number of probability slots");
   }
   pl->slots = slots;
 
-  double *pr = ALLOC_N( double, slots );
+  pr = ALLOC_N( double, slots );
   pl->probs = pr;
 
   pl->cumulative = ALLOC_N( double, slots );
@@ -144,7 +146,7 @@ static double *alloc_probs( ProbabilityList *pl, int slots ) {
   return pr;
 }
 
-static double calc_cumulative( ProbabilityList *pl ) {
+double calc_cumulative( ProbabilityList *pl ) {
   double *c = pl->cumulative;
   double *pr = pl->probs;
   int i;
@@ -156,12 +158,14 @@ static double calc_cumulative( ProbabilityList *pl ) {
   return t;
 }
 
-static double *alloc_probs_iv( ProbabilityList *pl, int slots, double iv ) {
+double *alloc_probs_iv( ProbabilityList *pl, int slots, double iv ) {
+  double *pr;
+  int i;
+
   if ( iv < 0.0 || iv > 1.0 ) {
     rb_raise(rb_eArgError, "Bad single probability value");
   }
-  double *pr = alloc_probs( pl, slots );
-  int i;
+  pr= alloc_probs( pl, slots );
   for(i=0; i<slots; i++) {
     pr[i] = iv;
   }
@@ -169,16 +173,17 @@ static double *alloc_probs_iv( ProbabilityList *pl, int slots, double iv ) {
   return pr;
 }
 
-static ProbabilityList *copy_probability_list( ProbabilityList *orig ) {
+ProbabilityList *copy_probability_list( ProbabilityList *orig ) {
   ProbabilityList *pl = create_probability_list();
-  double *pr = alloc_probs( pl, orig->slots );
+  double *pr;
+  pr = alloc_probs( pl, orig->slots );
   pl->offset = orig->offset;
   memcpy( pr, orig->probs, orig->slots * sizeof(double) );
   memcpy( pl->cumulative, orig->cumulative, orig->slots * sizeof(double) );
   return pl;
 }
 
-static inline ProbabilityList *new_basic_pl( int nslots, double iv, int o ) {
+inline ProbabilityList *new_basic_pl( int nslots, double iv, int o ) {
   ProbabilityList *pl = create_probability_list();
   alloc_probs_iv( pl, nslots, iv );
   pl->offset = o;
@@ -190,22 +195,23 @@ static inline ProbabilityList *new_basic_pl( int nslots, double iv, int o ) {
 //  Probability List core "native" methods
 //
 
-static inline int pl_min( ProbabilityList *pl ) {
+inline int pl_min( ProbabilityList *pl ) {
   return pl->offset;
 }
 
-static inline int pl_max( ProbabilityList *pl ) {
+inline int pl_max( ProbabilityList *pl ) {
   return pl->offset + pl->slots - 1;
 }
 
-static ProbabilityList *pl_add_distributions( ProbabilityList *pl_a, ProbabilityList *pl_b ) {
+ProbabilityList *pl_add_distributions( ProbabilityList *pl_a, ProbabilityList *pl_b ) {
+  double *pr;
   int s = pl_a->slots + pl_b->slots - 1;
   int o = pl_a->offset + pl_b->offset;
   int i,j;
 
   ProbabilityList *pl = create_probability_list();
   pl->offset = o;
-  double *pr = alloc_probs_iv( pl, s, 0.0 );
+  pr = alloc_probs_iv( pl, s, 0.0 );
   for ( i=0; i < pl_a->slots; i++ ) { for ( j=0; j < pl_b->slots; j++ ) {
     pr[ i + j ] += (pl_a->probs)[i] * (pl_b->probs)[j];
   } }
@@ -213,21 +219,22 @@ static ProbabilityList *pl_add_distributions( ProbabilityList *pl_a, Probability
   return pl;
 }
 
-static ProbabilityList *pl_add_distributions_mult( int mul_a, ProbabilityList *pl_a, int mul_b, ProbabilityList *pl_b ) {
+ProbabilityList *pl_add_distributions_mult( int mul_a, ProbabilityList *pl_a, int mul_b, ProbabilityList *pl_b ) {
   int pts[4] = {
     mul_a * pl_min( pl_a ) + mul_b * pl_min( pl_b ),
     mul_a * pl_max( pl_a ) + mul_b * pl_min( pl_b ),
     mul_a * pl_min( pl_a ) + mul_b * pl_max( pl_b ),
     mul_a * pl_max( pl_a ) + mul_b * pl_max( pl_b ) };
 
+  double *pr;
   int combined_min = min( pts, 4 );
   int combined_max = max( pts, 4 );
   int s =  1 + combined_max - combined_min;
+  int i,j;
 
   ProbabilityList *pl = create_probability_list();
   pl->offset = combined_min;
-  double *pr = alloc_probs_iv( pl, s, 0.0 );
-  int i,j;
+  pr = alloc_probs_iv( pl, s, 0.0 );
   for ( i=0; i < pl_a->slots; i++ ) { for ( j=0; j < pl_b->slots; j++ ) {
     int k = mul_a * (i + pl_a->offset) + mul_b * (j + pl_b->offset) - combined_min;
     pr[ k ] += (pl_a->probs)[i] * (pl_b->probs)[j];
@@ -236,7 +243,7 @@ static ProbabilityList *pl_add_distributions_mult( int mul_a, ProbabilityList *p
   return pl;
 }
 
-static inline double pl_p_eql( ProbabilityList *pl, int target ) {
+inline double pl_p_eql( ProbabilityList *pl, int target ) {
   int idx = target - pl->offset;
   if ( idx < 0 || idx >= pl->slots ) {
     return 0.0;
@@ -244,15 +251,15 @@ static inline double pl_p_eql( ProbabilityList *pl, int target ) {
   return (pl->probs)[idx];
 }
 
-static inline double pl_p_gt( ProbabilityList *pl, int target ) {
+inline double pl_p_gt( ProbabilityList *pl, int target ) {
   return 1.0 - pl_p_le( pl, target );
 }
 
-static inline double pl_p_lt( ProbabilityList *pl, int target ) {
+inline double pl_p_lt( ProbabilityList *pl, int target ) {
   return pl_p_le( pl, target - 1 );
 }
 
-static inline double pl_p_le( ProbabilityList *pl, int target ) {
+inline double pl_p_le( ProbabilityList *pl, int target ) {
   int idx = target - pl->offset;
   if ( idx < 0 ) {
     return 0.0;
@@ -263,11 +270,11 @@ static inline double pl_p_le( ProbabilityList *pl, int target ) {
   return (pl->cumulative)[idx];
 }
 
-static inline double pl_p_ge( ProbabilityList *pl, int target ) {
+inline double pl_p_ge( ProbabilityList *pl, int target ) {
   return 1.0 - pl_p_le( pl, target - 1 );
 }
 
-static inline double pl_expected( ProbabilityList *pl ) {
+inline double pl_expected( ProbabilityList *pl ) {
   double t = 0.0;
   int o = pl->offset;
   int s = pl->slots;
@@ -279,24 +286,30 @@ static inline double pl_expected( ProbabilityList *pl ) {
   return t;
 }
 
-static ProbabilityList *pl_given_ge( ProbabilityList *pl, int target ) {
+ProbabilityList *pl_given_ge( ProbabilityList *pl, int target ) {
   int m = pl_min( pl );
+  double p, mult;
+  double *pr;
+  double *new_pr;
+  int o,i,s;
+  ProbabilityList *new_pl;
+
   if ( m > target ) {
     target = m;
   }
-  double p = pl_p_ge( pl, target );
+  p = pl_p_ge( pl, target );
   if ( p <= 0.0 ) {
     rb_raise( rb_eRuntimeError, "Cannot calculate given probabilities, divide by zero" );
   }
-  double mult = 1.0/p;
-  int s = pl->slots + pl->offset - target;
-  double *pr = pl->probs;
+  mult = 1.0/p;
+  s = pl->slots + pl->offset - target;
+  pr = pl->probs;
 
-  ProbabilityList *new_pl = create_probability_list();
+  new_pl = create_probability_list();
   new_pl->offset = target;
-  double *new_pr = alloc_probs( new_pl, s );
-  int o = target - pl->offset;
-  int i;
+  new_pr = alloc_probs( new_pl, s );
+  o = target - pl->offset;
+
   for ( i = 0; i < s; i++ ) {
     new_pr[i] = pr[o + i] * mult;
   }
@@ -304,23 +317,29 @@ static ProbabilityList *pl_given_ge( ProbabilityList *pl, int target ) {
   return new_pl;
 }
 
-static ProbabilityList *pl_given_le( ProbabilityList *pl, int target ) {
+ProbabilityList *pl_given_le( ProbabilityList *pl, int target ) {
   int m = pl_max( pl );
+  double p, mult;
+  double *pr;
+  double *new_pr;
+  int i,s;
+  ProbabilityList *new_pl;
+
   if ( m < target ) {
     target = m;
   }
-  double p = pl_p_le( pl, target );
+  p = pl_p_le( pl, target );
   if ( p <= 0.0 ) {
     rb_raise( rb_eRuntimeError, "Cannot calculate given probabilities, divide by zero" );
   }
-  double mult = 1.0/p;
-  int s = target - pl->offset + 1;
-  double *pr = pl->probs;
+  mult = 1.0/p;
+  s = target - pl->offset + 1;
+  pr = pl->probs;
 
-  ProbabilityList *new_pl = create_probability_list();
+  new_pl = create_probability_list();
   new_pl->offset = pl->offset;
-  double *new_pr = alloc_probs( new_pl, s );
-  int i;
+  new_pr = alloc_probs( new_pl, s );
+
   for ( i = 0; i < s; i++ ) {
     new_pr[i] = pr[i] * mult;
   }
@@ -328,7 +347,12 @@ static ProbabilityList *pl_given_le( ProbabilityList *pl, int target ) {
   return new_pl;
 }
 
-static ProbabilityList *pl_repeat_sum( ProbabilityList *pl, int n ) {
+ProbabilityList *pl_repeat_sum( ProbabilityList *pl, int n ) {
+  ProbabilityList *pd_power = NULL;
+  ProbabilityList *pd_result = NULL;
+  ProbabilityList *pd_next = NULL;
+  int power = 1;
+
   if ( n < 1 ) {
     rb_raise( rb_eRuntimeError, "Cannot calculate repeat_sum when n < 1" );
   }
@@ -336,10 +360,8 @@ static ProbabilityList *pl_repeat_sum( ProbabilityList *pl, int n ) {
     rb_raise( rb_eRuntimeError, "Too many probability slots" );
   }
 
-  ProbabilityList *pd_power = copy_probability_list( pl );
-  ProbabilityList *pd_result = NULL;
-  ProbabilityList *pd_next = NULL;
-  int power = 1;
+  pd_power = copy_probability_list( pl );
+
   while ( 1 ) {
     if ( power & n ) {
       if ( pd_result ) {
@@ -362,7 +384,7 @@ static ProbabilityList *pl_repeat_sum( ProbabilityList *pl, int n ) {
 }
 
 // Assigns { p_rejected, p_maybe, p_kept } to buffer
-static void calc_p_table( ProbabilityList *pl, int q, int kbest, double *buffer ) {
+void calc_p_table( ProbabilityList *pl, int q, int kbest, double *buffer ) {
   if ( kbest ) {
     buffer[2] = pl_p_gt( pl, q );
     buffer[1] = pl_p_eql( pl, q );
@@ -376,12 +398,12 @@ static void calc_p_table( ProbabilityList *pl, int q, int kbest, double *buffer 
 }
 
 // Assigns a list of pl variants to a buffer
-static void calc_keep_distributions( ProbabilityList *pl, int k, int q, int kbest, ProbabilityList **pl_array ) {
-  // Init array
+void calc_keep_distributions( ProbabilityList *pl, int k, int q, int kbest, ProbabilityList **pl_array ) {
+  ProbabilityList *pl_kd;
+
   int n;
   for ( n=0; n<k; n++) { pl_array[n] = NULL; }
   pl_array[0] = new_basic_pl( 1, 1.0, q * k );
-  ProbabilityList *pl_kd;
 
   if ( kbest ) {
     if ( pl_p_gt( pl, q ) > 0.0 && k > 1 ) {
@@ -404,7 +426,7 @@ static void calc_keep_distributions( ProbabilityList *pl, int k, int q, int kbes
   return;
 }
 
-static inline void clear_pl_array( int k, ProbabilityList **pl_array  ) {
+inline void clear_pl_array( int k, ProbabilityList **pl_array  ) {
   int n;
   for ( n=0; n<k; n++) {
     if ( pl_array[n] != NULL ) {
@@ -414,7 +436,20 @@ static inline void clear_pl_array( int k, ProbabilityList **pl_array  ) {
   return;
 }
 
-static ProbabilityList *pl_repeat_n_sum_k( ProbabilityList *pl, int n, int k, int kbest ) {
+ProbabilityList *pl_repeat_n_sum_k( ProbabilityList *pl, int n, int k, int kbest ) {
+  // Table of probabilities ( reject, maybe, keep ) for each "pivot point"
+  double p_table[3];
+  int keep_combos[3];
+  // Table of distributions for each count of > pivot point (vs == pivot point)
+  ProbabilityList *keep_distributions[171];
+  ProbabilityList *kd;
+  ProbabilityList *pl_result = NULL;
+
+  double *pr;
+  int d = n - k;
+  int i, j, q, dn, kn, mn, kdq;
+  double p_sequence;
+
   if ( n < 1 ) {
     rb_raise( rb_eRuntimeError, "Cannot calculate repeat_n_sum_k when n < 1" );
   }
@@ -432,20 +467,9 @@ static ProbabilityList *pl_repeat_n_sum_k( ProbabilityList *pl, int n, int k, in
   }
 
   // Init target
-  ProbabilityList *pl_result = create_probability_list();
-  double *pr = alloc_probs_iv( pl_result, 1 + k * (pl->slots - 1), 0.0 );
+  pl_result = create_probability_list();
+  pr = alloc_probs_iv( pl_result, 1 + k * (pl->slots - 1), 0.0 );
   pl_result->offset = pl->offset * k;
-
-  // Table of probabilities ( reject, maybe, keep ) for each "pivot point"
-  double p_table[3];
-  int keep_combos[3];
-  // Table of distributions for each count of > pivot point (vs == pivot point)
-  ProbabilityList *keep_distributions[171];
-  ProbabilityList *kd;
-
-  int d = n - k;
-  int i, j, q, dn, kn, mn, kdq;
-  double p_sequence;
 
   for ( i = 0; i < pl->slots; i++ ) {
     if ( ! pl->probs[i] > 0.0 ) continue;
@@ -491,21 +515,21 @@ static ProbabilityList *pl_repeat_n_sum_k( ProbabilityList *pl, int n, int k, in
 //  Ruby integration
 //
 
-static inline VALUE pl_as_ruby_class( ProbabilityList *pl, VALUE klass ) {
+inline VALUE pl_as_ruby_class( ProbabilityList *pl, VALUE klass ) {
   return Data_Wrap_Struct( klass, 0, destroy_probability_list, pl );
 }
 
-static VALUE pl_alloc(VALUE klass) {
+VALUE pl_alloc(VALUE klass) {
   return pl_as_ruby_class( create_probability_list(), klass );
 }
 
-inline static ProbabilityList *get_probability_list( VALUE obj ) {
+inline ProbabilityList *get_probability_list( VALUE obj ) {
   ProbabilityList *pl;
   Data_Get_Struct( obj, ProbabilityList, pl );
   return pl;
 }
 
-static void assert_value_wraps_pl( VALUE obj ) {
+void assert_value_wraps_pl( VALUE obj ) {
   if ( TYPE(obj) != T_DATA ||
       RDATA(obj)->dfree != (RUBY_DATA_FUNC)destroy_probability_list) {
     rb_raise( rb_eTypeError, "Expected a Probabilities object, but got something else" );
@@ -515,8 +539,10 @@ static void assert_value_wraps_pl( VALUE obj ) {
 // Validate key/value from hash, and adjust object properties as required
 int validate_key_value( VALUE key, VALUE val, VALUE obj ) {
   int k = NUM2INT( key );
-  double v = NUM2DBL( val );
   ProbabilityList *pl = get_probability_list( obj );
+  // Not assigned (to avoid "unused" warning), but this throws execption if val cannot be coerced to double
+  NUM2DBL( val );
+
   if ( k < pl->offset ) {
     if ( pl->slots < 1 ) {
       pl->slots = 1;
@@ -544,16 +570,20 @@ int copy_key_value( VALUE key, VALUE val, VALUE obj ) {
 //  Ruby class and instance methods for Probabilities
 //
 
-static VALUE probabilities_initialize( VALUE self, VALUE arr, VALUE offset ) {
-  int o = NUM2INT(offset);
+VALUE probabilities_initialize( VALUE self, VALUE arr, VALUE offset ) {
+  int i, o, s;
+  double error, p_item;
+  ProbabilityList *pl;
+  double *pr;
+
+  o = NUM2INT(offset);
   Check_Type( arr, T_ARRAY );
-  int s = FIX2INT( rb_funcall( arr, rb_intern("count"), 0 ) );
-  ProbabilityList *pl = get_probability_list( self );
+  s = FIX2INT( rb_funcall( arr, rb_intern("count"), 0 ) );
+  pl = get_probability_list( self );
   pl->offset = o;
-  int i;
-  double *pr = alloc_probs( pl, s );
+  pr = alloc_probs( pl, s );
   for(i=0; i<s; i++) {
-    double p_item = NUM2DBL( rb_ary_entry( arr, i ) );
+    p_item = NUM2DBL( rb_ary_entry( arr, i ) );
     if ( p_item < 0.0 ) {
       rb_raise( rb_eArgError, "Negative probability not allowed" );
     } else if ( p_item > 1.0 ) {
@@ -561,7 +591,7 @@ static VALUE probabilities_initialize( VALUE self, VALUE arr, VALUE offset ) {
     }
     pr[i] = p_item;
   }
-  double error = calc_cumulative( pl ) - 1.0;
+  error = calc_cumulative( pl ) - 1.0;
   if ( error < -1.0e-8 ) {
     rb_raise( rb_eArgError, "Total probabilities are less than 1.0" );
   } else if ( error > 1.0e-8 ) {
@@ -571,12 +601,16 @@ static VALUE probabilities_initialize( VALUE self, VALUE arr, VALUE offset ) {
 }
 
 
-static VALUE probabilities_initialize_copy( VALUE copy, VALUE orig ) {
-  if (copy == orig) return copy;
-  ProbabilityList *pl_copy = get_probability_list( copy );
-  ProbabilityList *pl_orig = get_probability_list( orig );
+VALUE probabilities_initialize_copy( VALUE copy, VALUE orig ) {
+  ProbabilityList *pl_copy;
+  ProbabilityList *pl_orig;
+  double *pr;
 
-  double *pr = alloc_probs( pl_copy, pl_orig->slots );
+  if (copy == orig) return copy;
+  pl_copy = get_probability_list( copy );
+  pl_orig = get_probability_list( orig );
+
+  pr = alloc_probs( pl_copy, pl_orig->slots );
   pl_copy->offset = pl_orig->offset;
   memcpy( pr, pl_orig->probs, pl_orig->slots * sizeof(double) );
   memcpy( pl_copy->cumulative, pl_orig->cumulative, pl_orig->slots * sizeof(double) );;
@@ -649,10 +683,14 @@ VALUE probabilities_repeat_sum( VALUE self, VALUE nsum ) {
   return pl_as_ruby_class( pl_repeat_sum( pl, n ), Probabilities );
 }
 
-static VALUE probabilities_repeat_n_sum_k( int argc, VALUE* argv, VALUE self ) {
+VALUE probabilities_repeat_n_sum_k( int argc, VALUE* argv, VALUE self ) {
   VALUE nsum, nkeepers, kmode;
+  int keep_best, n, k;
+  ProbabilityList *pl;
+
   rb_scan_args( argc, argv, "21", &nsum, &nkeepers, &kmode );
-  int keep_best = 1;
+
+  keep_best = 1;
   if (NIL_P(kmode)) {
     keep_best = 1;
   } else if ( rb_intern("keep_worst") == SYM2ID(kmode) ) {
@@ -661,9 +699,9 @@ static VALUE probabilities_repeat_n_sum_k( int argc, VALUE* argv, VALUE self ) {
     rb_raise( rb_eArgError, "Keep mode not recognised" );
   }
 
-  int n = NUM2INT(nsum);
-  int k = NUM2INT(nkeepers);
-  ProbabilityList *pl = get_probability_list( self );
+  n = NUM2INT(nsum);
+  k = NUM2INT(nkeepers);
+  pl = get_probability_list( self );
   return pl_as_ruby_class( pl_repeat_n_sum_k( pl, n, k, keep_best ), Probabilities );
 }
 
@@ -685,14 +723,17 @@ VALUE probabilities_each( VALUE self ) {
 
 VALUE probabilities_for_fair_die( VALUE self, VALUE sides ) {
   int s = NUM2INT( sides );
+  VALUE obj;
+  ProbabilityList *pl;
+
   if ( s < 1 ) {
     rb_raise( rb_eArgError, "Number of sides should be 1 or more" );
   }
   if ( s > 100000 ) {
     rb_raise( rb_eArgError, "Number of sides should be less than 100001" );
   }
-  VALUE obj = pl_alloc( Probabilities );
-  ProbabilityList *pl = get_probability_list( obj );
+  obj = pl_alloc( Probabilities );
+  pl = get_probability_list( obj );
   pl->offset = 1;
   alloc_probs_iv( pl, s, 1.0/s );
   return obj;
@@ -701,17 +742,20 @@ VALUE probabilities_for_fair_die( VALUE self, VALUE sides ) {
 VALUE probabilities_from_h( VALUE self, VALUE hash ) {
   VALUE obj = pl_alloc( Probabilities );
   ProbabilityList *pl = get_probability_list( obj );
+  double *pr;
+  double error;
+
   // Set these up so that they get adjusted during hash iteration
   pl->offset = 2000000000;
   pl->slots = 0;
   // First iteration establish min/max and validate all key/values
   rb_hash_foreach( hash, validate_key_value, obj );
 
-  double *pr = alloc_probs_iv( pl, pl->slots, 0.0 );
+  pr = alloc_probs_iv( pl, pl->slots, 0.0 );
   // Second iteration copy key/value pairs into structure
   rb_hash_foreach( hash, copy_key_value, obj );
 
-  double error = calc_cumulative( pl ) - 1.0;
+  error = calc_cumulative( pl ) - 1.0;
   if ( error < -1.0e-8 ) {
     rb_raise( rb_eArgError, "Total probabilities are less than 1.0" );
   } else if ( error > 1.0e-8 ) {
@@ -721,20 +765,26 @@ VALUE probabilities_from_h( VALUE self, VALUE hash ) {
 }
 
 VALUE probabilities_add_distributions( VALUE self, VALUE gdpa, VALUE gdpb ) {
-  assert_value_wraps_pl( gdpa );
-  assert_value_wraps_pl( gdpb );
   ProbabilityList *pl_a = get_probability_list( gdpa );
   ProbabilityList *pl_b = get_probability_list( gdpb );
+  assert_value_wraps_pl( gdpa );
+  assert_value_wraps_pl( gdpb );
+  pl_a = get_probability_list( gdpa );
+  pl_b = get_probability_list( gdpb );
   return pl_as_ruby_class( pl_add_distributions( pl_a, pl_b ), Probabilities );
 }
 
 VALUE probabilities_add_distributions_mult( VALUE self, VALUE m_a, VALUE gdpa, VALUE m_b, VALUE gdpb ) {
+  int mul_a, mul_b;
+  ProbabilityList *pl_a;
+  ProbabilityList *pl_b;
+
   assert_value_wraps_pl( gdpa );
   assert_value_wraps_pl( gdpb );
-  int mul_a = NUM2INT( m_a );
-  ProbabilityList *pl_a = get_probability_list( gdpa );
-  int mul_b = NUM2INT( m_b );
-  ProbabilityList *pl_b = get_probability_list( gdpb );
+  mul_a = NUM2INT( m_a );
+  pl_a = get_probability_list( gdpa );
+  mul_b = NUM2INT( m_b );
+  pl_b = get_probability_list( gdpb );
   return pl_as_ruby_class( pl_add_distributions_mult( mul_a, pl_a, mul_b, pl_b ), Probabilities );
 }
 
