@@ -16,7 +16,14 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "rspec", ">= 2.13.0"
   gem.add_development_dependency "rake", ">= 1.9.1"
   gem.add_development_dependency "yard", ">= 0.8.6"
-  gem.add_development_dependency "redcarpet", ">=2.3.0"
+
+  if RUBY_VERSION < "1.9.0"
+    # Red Carpet v3.0.0 does not compile for 1.8.7
+    gem.add_development_dependency "redcarpet", ">=2.3.0", "<3.0.0"
+  else
+    gem.add_development_dependency "redcarpet", ">=2.3.0"
+  end
+
   gem.add_development_dependency "rake-compiler"
 
   gem.add_dependency "parslet", ">= 1.5.0"
