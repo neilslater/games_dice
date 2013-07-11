@@ -78,6 +78,18 @@ describe GamesDice::Probabilities do
         h[4].should be_within(1e-9).of 2.0/24
         h[5].should be_within(1e-9).of 1.0/24
       end
+
+      it "should add asymmetric distributions accurately" do
+        da = GamesDice::Probabilities.new( [0.7,0.0,0.3], 2 )
+        db = GamesDice::Probabilities.new( [0.5,0.3,0.2], 2 )
+        pr = GamesDice::Probabilities.add_distributions_mult( 1, da, 2, db )
+        h = pr.to_h
+        h.should be_valid_distribution
+        h[6].should be_within(1e-9).of 0.7 * 0.5
+        h[8].should be_within(1e-9).of 0.7 * 0.3 + 0.3 * 0.5
+        h[10].should be_within(1e-9).of 0.7 * 0.2 + 0.3 * 0.3
+        h[12].should be_within(1e-9).of 0.3 * 0.2
+      end
     end
 
     describe "#from_h" do

@@ -230,7 +230,7 @@ static ProbabilityList *pl_add_distributions_mult( int mul_a, ProbabilityList *p
   int i,j;
   for ( i=0; i < pl_a->slots; i++ ) { for ( j=0; j < pl_b->slots; j++ ) {
     int k = mul_a * (i + pl_a->offset) + mul_b * (j + pl_b->offset) - combined_min;
-    pr[ i + j ] += (pl_a->probs)[i] * (pl_b->probs)[j];
+    pr[ k ] += (pl_a->probs)[i] * (pl_b->probs)[j];
   } }
   calc_cumulative( pl );
   return pl;
