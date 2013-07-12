@@ -791,6 +791,10 @@ VALUE probabilities_add_distributions_mult( VALUE self, VALUE m_a, VALUE gdpa, V
   return pl_as_ruby_class( pl_add_distributions_mult( mul_a, pl_a, mul_b, pl_b ), Probabilities );
 }
 
+VALUE probabilities_implemented_in( VALUE self ) {
+  return ID2SYM( rb_intern("c") );
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //  Setup Probabilities class for Ruby interpretter
@@ -818,6 +822,7 @@ void init_probabilities_class( VALUE ParentModule ) {
   rb_define_singleton_method( Probabilities, "for_fair_die", probabilities_for_fair_die, 1 );
   rb_define_singleton_method( Probabilities, "add_distributions", probabilities_add_distributions, 2 );
   rb_define_singleton_method( Probabilities, "add_distributions_mult", probabilities_add_distributions_mult, 4 );
+  rb_define_singleton_method( Probabilities, "implemented_in", probabilities_implemented_in, 0 );
   rb_define_singleton_method( Probabilities, "from_h", probabilities_from_h, 1 );
   return;
 }

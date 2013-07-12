@@ -104,6 +104,13 @@ describe GamesDice::Probabilities do
       end
     end
 
+    describe "#implemented_in" do
+      it "should be either :c or :ruby" do
+        lang = GamesDice::Probabilities.implemented_in
+        lang.should be_a Symbol
+        [:c, :ruby].member?( lang ).should be_true
+      end
+    end
   end # describe "class methods"
 
   describe "instance methods" do

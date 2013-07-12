@@ -218,6 +218,13 @@ class GamesDice::Probabilities
     GamesDice::Probabilities.new( new_probs, combined_min )
   end
 
+  # Returns a symbol for the language name that this class is implemented in. The C version of the
+  # code is noticeably faster when dealing with larger numbers of possible results.
+  # @return [Symbol] Either :c or :ruby
+  def self.implemented_in
+    :ruby
+  end
+
   # Adds a distribution to itself repeatedly, to simulate a number of dice
   # results being summed.
   # @param [Integer] n Number of repetitions, must be at least 1
