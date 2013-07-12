@@ -1,7 +1,7 @@
 require "games_dice/version"
 begin
   require "games_dice/games_dice"
-rescue
+rescue LoadError
   require "games_dice/probabilities"
 end
 require "games_dice/constants"

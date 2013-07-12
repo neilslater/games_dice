@@ -26,7 +26,7 @@ class GamesDice::Probabilities
   # @return [GamesDice::Probabilities]
   def initialize( probs = [1.0], offset = 0 )
     # This should *probably* be validated in future, but that would impact performance
-    @probs = probs
+    @probs = check_probs_array probs.clone
     @offset = offset
   end
 
@@ -285,6 +285,20 @@ class GamesDice::Probabilities
   end
 
   private
+
+  def check_probs_array probs_array
+    probs_array.map!{ |n| Float(n) }
+    total = probs_array.inject(0.0) do |t,x|
+      if x < 0.0 || x > 1.0
+        raise ArgumentError, "Found probability value #{x} which is not in range 0.0..1.0"
+      end
+      t+x
+    end
+    if (total-1.0).abs > 1e-6
+      raise ArgumentError, "Total probabilities too far from 1.0 for a valid distribution"
+    end
+    probs_array
+  end
 
   def calc_keep_distributions k, q, kmode
     if kmode == :keep_best
