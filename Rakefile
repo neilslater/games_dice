@@ -22,4 +22,10 @@ Rake::ExtensionTask.new do |ext|
   ext.gem_spec = gemspec
 end
 
+task :delete_compiled_ext do |t|
+  `rm lib/games_dice/games_dice.*`
+end
+
+task :pure_test => [:delete_compiled_ext, :test]
+
 task :default => [:compile, :test]
