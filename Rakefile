@@ -3,6 +3,11 @@ require "rspec/core/rake_task"
 require 'rake/extensiontask'
 require "yard"
 
+def can_compile_extensions
+  return false if RUBY_DESCRIPTION =~ /jruby/
+  return true
+end
+
 desc "GamesDice unit tests"
 RSpec::Core::RakeTask.new(:test) do |t|
   t.pattern = "spec/*_spec.rb"
@@ -28,4 +33,8 @@ end
 
 task :pure_test => [:delete_compiled_ext, :test]
 
-task :default => [:compile, :test]
+if can_compile_extensions
+  task :default => [:compile, :test]
+else
+  task :default => [:test]
+end
