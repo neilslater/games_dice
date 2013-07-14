@@ -3,11 +3,6 @@ lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'games_dice/version'
 
-def can_compile_extensions
-  return false if RUBY_DESCRIPTION =~ /jruby/
-  return true
-end
-
 Gem::Specification.new do |gem|
   gem.name          = "games_dice"
   gem.version       = GamesDice::VERSION
@@ -25,23 +20,17 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "rake-compiler"
 
   # Red Carpet has a C extension, and v3.0.0 is does not compile for 1.8.7
-  if can_compile_extensions
-    if RUBY_VERSION < "1.9.0"
-      gem.add_development_dependency "redcarpet", ">=2.3.0", "<3.0.0"
-    else
-      gem.add_development_dependency "redcarpet", ">=2.3.0"
-    end
+  if RUBY_VERSION < "1.9.0"
+    gem.add_development_dependency "redcarpet", ">=2.3.0", "<3.0.0"
+  else
+    gem.add_development_dependency "redcarpet", ">=2.3.0"
   end
 
   gem.add_dependency "parslet", ">= 1.5.0"
 
   gem.files         = `git ls-files`.split($/)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
-
-  if can_compile_extensions
-    gem.extensions    = gem.files.grep(%r{/extconf\.rb$})
-  end
-
+  gem.extensions    = gem.files.grep(%r{/extconf\.rb$})
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.require_paths = ["lib"]
 end
