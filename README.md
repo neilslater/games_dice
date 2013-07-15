@@ -17,18 +17,21 @@ The main features of GamesDice are:
    * Counting number of "successes" from a set of dice
    * Keeping the best, or worst, results from a set of dice
  * Can explain how a result was achieved in terms of the individual die rolls
- * Can calculate probabilities and expected values (with some limitations)
+ * Can calculate probabilities and expected values
 
 There are no game mechanics implemented in GamesDice, such as the chance to hit in a fantasy combat
 game. There is no support for player interaction within a roll, such as player choice on whether or
 not to re-roll a specific die within a combined set. These things are of course possible if you use the
 gem as-is, and add them as features within your project code.
 
-## Special Note on Versions Prior to 1.0.0
+## Supported Ruby Versions
 
-As of version 0.2.0, the gem has the same feature set as planned for version
-1.0.0. Versions between 0.2.0 and 1.0.0 are being used mainly to improve
-code quality, documentation and performance.
+GamesDice is tested routinely on
+
+ * MRI Ruby 1.8.7, 1.9.3 and 2.0.0
+ * Rubinius 1.8 and 1.9
+ * JRuby in 1.8 and 1.9 modes
+ * Ruby Enterprise Edition
 
 ## Installation
 
@@ -43,6 +46,21 @@ And then execute:
 Or install it yourself as:
 
     $ gem install games_dice
+
+When installed, GamesDice will attempt to install Ruby native extensions in C, for speeding up probabilities
+calculations. However, all the features are available in pure Ruby, and the gem should fall back to that
+automatically on installation if your system does not support C native extensions. You can verify which
+is being installed by installing the gem in verbose mode:
+
+    $ gem install games_dice --verbose
+
+You can also verify which version you are using in Ruby by calling the class method:
+
+    GamesDice::Probabilities.implemented_in
+
+which will return either *:ruby* or *:c*. Other than this method, and a speed difference between
+implementations, there should be no other difference. If you find one, then it will be considered
+as a bug.
 
 ## Usage
 
