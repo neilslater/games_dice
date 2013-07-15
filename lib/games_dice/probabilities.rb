@@ -371,6 +371,7 @@ class GamesDice::Probabilities
 
 end # class GamesDice::Probabilities
 
+# @!visibility private
 # Helper module with optimised Ruby for counting variations of arrays, such as those returned by
 # Array#repeated_combination
 #
