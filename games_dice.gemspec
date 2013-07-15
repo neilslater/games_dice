@@ -19,8 +19,9 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "yard", ">= 0.8.6"
   gem.add_development_dependency "rake-compiler"
 
-  # Red Carpet has a C extension, and v3.0.0 is does not compile for 1.8.7. This only affects the gem build process, so
-  # is only really used in environments like Travis, and is safe to wrap in the gemspec
+  # Red Carpet renders README.md, and is optional even when developing the gem.
+  # However, it has a C extension, and v3.0.0 is does not compile for 1.8.7. This only affects the gem build process, so
+  # is only really used in environments like Travis, and is safe to wrap like this in the gemspec.
   if RUBY_DESCRIPTION !~ /jruby/
     if RUBY_VERSION < "1.9.0"
       gem.add_development_dependency "redcarpet", ">=2.3.0", "<3.0.0"
