@@ -9,6 +9,19 @@ describe GamesDice::Probabilities do
         pr.should be_a GamesDice::Probabilities
         pr.to_h.should be_valid_distribution
       end
+
+      it "should raise an error if passed incorrect parameter types" do
+        lambda { GamesDice::Probabilities.new( [:not_a_num], 20 ) }.should raise_error TypeError
+        lambda { GamesDice::Probabilities.new( [0.3,:nought_point_two,0.5], 7 ) }.should raise_error TypeError
+        lambda { GamesDice::Probabilities.new( [0.3,0.2,0.5], :boo ) }.should raise_error TypeError
+        lambda { GamesDice::Probabilities.new( {:x=>:y}, 17 ) }.should raise_error TypeError
+      end
+
+      it "should raise an error if distribution is incomplete or inaccurate" do
+        lambda { GamesDice::Probabilities.new( [0.3,0.2,0.6], 3 ) }.should raise_error ArgumentError
+        lambda { GamesDice::Probabilities.new( [], 1 ) }.should raise_error ArgumentError
+        lambda { GamesDice::Probabilities.new( [0.9], 1 ) }.should raise_error ArgumentError
+      end
     end
 
     describe "#for_fair_die" do

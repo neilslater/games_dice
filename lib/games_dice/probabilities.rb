@@ -27,7 +27,7 @@ class GamesDice::Probabilities
   def initialize( probs = [1.0], offset = 0 )
     # This should *probably* be validated in future, but that would impact performance
     @probs = check_probs_array probs.clone
-    @offset = offset
+    @offset = Integer(offset)
   end
 
   # @!visibility private
@@ -294,6 +294,7 @@ class GamesDice::Probabilities
   private
 
   def check_probs_array probs_array
+    raise TypeError unless probs_array.is_a?( Array )
     probs_array.map!{ |n| Float(n) }
     total = probs_array.inject(0.0) do |t,x|
       if x < 0.0 || x > 1.0
