@@ -13,7 +13,7 @@ describe GamesDice::Probabilities do
       it "should raise an error if passed incorrect parameter types" do
         lambda { GamesDice::Probabilities.new( [:not_a_num], 20 ) }.should raise_error TypeError
         lambda { GamesDice::Probabilities.new( [0.3,:nought_point_two,0.5], 7 ) }.should raise_error TypeError
-        lambda { GamesDice::Probabilities.new( [0.3,0.2,0.5], :boo ) }.should raise_error TypeError
+        lambda { GamesDice::Probabilities.new( [0.3,0.2,0.5], {} ) }.should raise_error TypeError
         lambda { GamesDice::Probabilities.new( {:x=>:y}, 17 ) }.should raise_error TypeError
       end
 
@@ -41,7 +41,7 @@ describe GamesDice::Probabilities do
       end
 
       it "should raise an error if number of sides is not an integer" do
-        lambda { GamesDice::Probabilities.for_fair_die( :sides ) }.should raise_error TypeError
+        lambda { GamesDice::Probabilities.for_fair_die( {} ) }.should raise_error TypeError
       end
 
       it "should raise an error if number of sides is too low or too high" do
