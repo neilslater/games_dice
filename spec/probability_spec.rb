@@ -21,6 +21,7 @@ describe GamesDice::Probabilities do
         lambda { GamesDice::Probabilities.new( [0.3,0.2,0.6], 3 ) }.should raise_error ArgumentError
         lambda { GamesDice::Probabilities.new( [], 1 ) }.should raise_error ArgumentError
         lambda { GamesDice::Probabilities.new( [0.9], 1 ) }.should raise_error ArgumentError
+        lambda { GamesDice::Probabilities.new( [-0.9,0.2,0.9], 1 ) }.should raise_error ArgumentError
       end
     end
 
