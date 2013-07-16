@@ -39,6 +39,15 @@ describe GamesDice::Probabilities do
           h.values.each { |v| v.should be_within(1e-10).of 1.0/sides }
         end
       end
+
+      it "should raise an error if number of sides is not an integer" do
+        lambda { GamesDice::Probabilities.for_fair_die( :sides ) }.should raise_error TypeError
+      end
+
+      it "should raise an error if number of sides is too low or too high" do
+        lambda { GamesDice::Probabilities.for_fair_die( 0 ) }.should raise_error ArgumentError
+        lambda { GamesDice::Probabilities.for_fair_die( 1000001 ) }.should raise_error ArgumentError
+      end
     end
 
     describe "#add_distributions" do

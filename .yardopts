@@ -1,0 +1,7 @@
+lib/**/*.rb
+--exclude ext
+--no-private
+-
+README.md
+LICENSE.txt
+CHANGELOG.md

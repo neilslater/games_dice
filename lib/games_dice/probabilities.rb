@@ -166,6 +166,7 @@ class GamesDice::Probabilities
   def self.for_fair_die sides
     sides = Integer(sides)
     raise ArgumentError, "sides must be at least 1" unless sides > 0
+    raise ArgumentError, "sides can be at most 100000" if sides > 100000
     GamesDice::Probabilities.new( Array.new( sides, 1.0/sides ), 1 )
   end
 
