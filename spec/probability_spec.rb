@@ -75,6 +75,13 @@ describe GamesDice::Probabilities do
         h[11].should be_within(1e-9).of 2.0/36
         h[12].should be_within(1e-9).of 1.0/36
       end
+
+      it "should raise an error if either parameter is not a GamesDice::Probabilities object" do
+        d10 = GamesDice::Probabilities.for_fair_die( 10 )
+        lambda { GamesDice::Probabilities.add_distributions( '', 6 ) }.should raise_error TypeError
+        lambda { GamesDice::Probabilities.add_distributions( d10, 6 ) }.should raise_error TypeError
+        lambda { GamesDice::Probabilities.add_distributions( '', d10 ) }.should raise_error TypeError
+      end
     end
 
     describe "#add_distributions_mult" do
@@ -113,6 +120,20 @@ describe GamesDice::Probabilities do
         h[10].should be_within(1e-9).of 0.7 * 0.2 + 0.3 * 0.3
         h[12].should be_within(1e-9).of 0.3 * 0.2
       end
+
+      it "should raise an error if passed incorrect objects for distributions" do
+        d10 = GamesDice::Probabilities.for_fair_die( 10 )
+        lambda { GamesDice::Probabilities.add_distributions_mult( 1, '', -1,  6 ) }.should raise_error TypeError
+        lambda { GamesDice::Probabilities.add_distributions_mult( 2, d10, 3, 6 ) }.should raise_error TypeError
+        lambda { GamesDice::Probabilities.add_distributions_mult( 1, '', -1, d10 ) }.should raise_error TypeError
+      end
+
+      it "should raise an error if passed incorrect objects for multipliers" do
+        d10 = GamesDice::Probabilities.for_fair_die( 10 )
+        lambda { GamesDice::Probabilities.add_distributions_mult( {}, d10, [],  d10 ) }.should raise_error TypeError
+        lambda { GamesDice::Probabilities.add_distributions_mult( [7], d10, 3, d10 ) }.should raise_error TypeError
+        lambda { GamesDice::Probabilities.add_distributions_mult( 1, d10, {}, d10 ) }.should raise_error TypeError
+      end
     end
 
     describe "#from_h" do
@@ -122,7 +143,8 @@ describe GamesDice::Probabilities do
       end
 
       it "should raise an ArgumentError when called with a non-valid hash" do
-        # lambda { GamesDice::Probabilities.from_h( :foo ) }.should raise_error ArgumentError
+        # FIXME: This fails differently in native extensions and pure Ruby versions
+        # lambda { GamesDice::Probabilities.from_h( :foo ) }.should raise_error TypeError
         lambda { GamesDice::Probabilities.from_h( { 7 => 0.5, 9 => 0.6 } ) }.should raise_error ArgumentError
       end
     end
@@ -143,7 +165,20 @@ describe GamesDice::Probabilities do
     let(:pr10) { GamesDice::Probabilities.for_fair_die( 10 ) }
     let(:pra) { GamesDice::Probabilities.new( [ 0.4, 0.2, 0.4 ], -1 ) }
 
-    # TODO: each
+    describe "#each" do
+      it "should iterate through all result/probability pairs" do
+        yielded = []
+        pr4.each { |r,p| yielded << [r,p] }
+        yielded.should == [ [1,0.25], [2,0.25], [3,0.25], [4,0.25] ]
+      end
+
+      it "should skip zero probabilities" do
+        pr_plus_minus = GamesDice::Probabilities.new( [ 0.5, 0.0, 0.5 ], -1 )
+        yielded = []
+        pr_plus_minus .each { |r,p| yielded << [r,p] }
+        yielded.should == [ [-1,0.5], [1,0.5] ]
+      end
+    end
 
     describe "#p_eql" do
       it "should return probability of getting a number inside the range" do

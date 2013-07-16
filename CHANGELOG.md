@@ -2,7 +2,7 @@
 
 ## 0.3.7
 
- * Error raising compatibility between pure Ruby and native extension code
+ * Compatibility between pure Ruby and native extension code when handling bad method params
  * Add changelog
 
 ## 0.3.6

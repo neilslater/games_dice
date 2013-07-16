@@ -41,7 +41,7 @@ class GamesDice::Probabilities
   # @yieldparam [Float] probability Probability of result, in range 0.0..1.0
   # @return [GamesDice::Probabilities] this object
   def each
-    @probs.each_with_index { |p,i| yield( i+@offset, p ) }
+    @probs.each_with_index { |p,i| yield( i+@offset, p ) if p > 0.0 }
     return self
   end
 
@@ -176,6 +176,10 @@ class GamesDice::Probabilities
   # @param [GamesDice::Probabilities] pd_b Second distribution
   # @return [GamesDice::Probabilities]
   def self.add_distributions pd_a, pd_b
+    unless pd_a.is_a?( GamesDice::Probabilities ) && pd_b.is_a?( GamesDice::Probabilities )
+      raise TypeError, "parameter to add_distributions is not a GamesDice::Probabilities"
+    end
+
     combined_min = pd_a.min + pd_b.min
     combined_max = pd_a.max + pd_b.max
     new_probs = Array.new( 1 + combined_max - combined_min, 0.0 )
@@ -200,6 +204,13 @@ class GamesDice::Probabilities
   # @param [GamesDice::Probabilities] pd_b Second distribution
   # @return [GamesDice::Probabilities]
   def self.add_distributions_mult m_a, pd_a, m_b, pd_b
+    unless pd_a.is_a?( GamesDice::Probabilities ) && pd_b.is_a?( GamesDice::Probabilities )
+      raise TypeError, "parameter to add_distributions_mult is not a GamesDice::Probabilities"
+    end
+
+    m_a = Integer(m_a)
+    m_b = Integer(m_b)
+
     combined_min, combined_max = [
       m_a * pd_a.min + m_b * pd_b.min, m_a * pd_a.max + m_b * pd_b.min,
       m_a * pd_a.min + m_b * pd_b.max, m_a * pd_a.max + m_b * pd_b.max,
