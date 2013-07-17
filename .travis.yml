@@ -9,3 +9,6 @@ rvm:
   - jruby-18mode
   - jruby-19mode
   - jruby-head
+allow_failures:
+  rvm:
+    - ruby-head
