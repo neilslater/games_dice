@@ -516,4 +516,12 @@ describe GamesDice::Probabilities do
     end # describe "#repeat_n_sum_k"
 
   end # describe "instance methods"
+
+  describe "serialisation via Marshall" do
+    it "can load a saved GamesDice::Probabilities" do
+      pd6 = File.open( fixture('probs_fair_die_6.dat') ) { |file| Marshal.load(file) }
+      pd6.to_h.should be_valid_distribution
+      pd6.p_gt(4).should be_within(1e-10).of 1.0/3
+    end
+  end
 end
