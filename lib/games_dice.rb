@@ -13,6 +13,7 @@ require "games_dice/complex_die"
 require "games_dice/bunch"
 require "games_dice/dice"
 require "games_dice/parser"
+require "games_dice/marshal"
 
 module GamesDice
   # @!visibility private
