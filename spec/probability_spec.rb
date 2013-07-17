@@ -155,6 +155,10 @@ describe GamesDice::Probabilities do
         lambda { GamesDice::Probabilities.from_h( { :foo => 0.5, 9 => 0.5 } ) }.should raise_error
         lambda { GamesDice::Probabilities.from_h( { 7 => [], 9 => 0.5 } ) }.should raise_error TypeError
       end
+
+      it "should raise an ArgumentError when results are spread very far apart" do
+        lambda { GamesDice::Probabilities.from_h( { 0 => 0.5, 2000000 => 0.5 } ) }.should raise_error ArgumentError
+      end
     end
 
     describe "#implemented_in" do
@@ -204,6 +208,10 @@ describe GamesDice::Probabilities do
         pr10.p_eql(11).should == 0.0
         pra.p_eql(2).should == 0.0
       end
+
+      it "should raise a TypeError if asked for probability of non-Integer" do
+        lambda { pr2.p_eql( [] ) }.should raise_error TypeError
+      end
     end # describe "#p_eql"
 
     describe "#p_gt" do
@@ -235,6 +243,10 @@ describe GamesDice::Probabilities do
         pr10.p_gt(-200).should == 1.0
         pra.p_gt(-2).should == 1.0
       end
+
+      it "should raise a TypeError if asked for probability of non-Integer" do
+        lambda { pr2.p_gt( {} ) }.should raise_error TypeError
+      end
     end # describe "#p_gt"
 
     describe "#p_ge" do
@@ -257,6 +269,10 @@ describe GamesDice::Probabilities do
         pr4.p_ge(-5).should == 1.0
         pr6.p_ge(1).should == 1.0
         pr10.p_ge(-200).should == 1.0
+      end
+
+      it "should raise a TypeError if asked for probability of non-Integer" do
+        lambda { pr4.p_ge( {} ) }.should raise_error TypeError
       end
     end # describe "#p_ge"
 
@@ -281,6 +297,10 @@ describe GamesDice::Probabilities do
         pr6.p_le(0).should == 0.0
         pr10.p_le(-200).should == 0.0
       end
+
+      it "should raise a TypeError if asked for probability of non-Integer" do
+        lambda { pr4.p_le( [] ) }.should raise_error TypeError
+      end
     end # describe "#p_le"
 
     describe "#p_lt" do
@@ -303,6 +323,10 @@ describe GamesDice::Probabilities do
         pr4.p_lt(-5).should == 0.0
         pr6.p_lt(1).should == 0.0
         pr10.p_lt(-200).should == 0.0
+      end
+
+      it "should raise a TypeError if asked for probability of non-Integer" do
+        lambda { pr6.p_lt( nil ) }.should raise_error TypeError
       end
     end # describe "#p_lt"
 
@@ -347,7 +371,7 @@ describe GamesDice::Probabilities do
     end
 
     describe "#given_ge" do
-     it "should return a new distribution with probabilities calculated assuming value is >= target" do
+      it "should return a new distribution with probabilities calculated assuming value is >= target" do
         pd = pr2.given_ge(2)
         pd.to_h.should == { 2 => 1.0 }
         pd = pr10.given_ge(4)
@@ -355,16 +379,24 @@ describe GamesDice::Probabilities do
         pd.p_eql( 3 ).should == 0.0
         pd.p_eql( 10 ).should be_within(1.0e-9).of 0.1/0.7
       end
+
+      it "should raise a TypeError if asked for probability of non-Integer" do
+        lambda { pr10.given_ge( nil ) }.should raise_error TypeError
+      end
     end
 
     describe "#given_le" do
-     it "should return a new distribution with probabilities calculated assuming value is <= target" do
+      it "should return a new distribution with probabilities calculated assuming value is <= target" do
         pd = pr2.given_le(2)
         pd.to_h.should == { 1 => 0.5, 2 => 0.5 }
         pd = pr10.given_le(4)
         pd.to_h.should be_valid_distribution
         pd.p_eql( 3 ).should be_within(1.0e-9).of 0.1/0.4
         pd.p_eql( 10 ).should == 0.0
+      end
+
+      it "should raise a TypeError if asked for probability of non-Integer" do
+        lambda { pr10.given_le( {} ) }.should raise_error TypeError
       end
     end
 
@@ -376,6 +408,16 @@ describe GamesDice::Probabilities do
         pr.to_h.should be_valid_distribution
         pr = d4b.repeat_sum( 12 )
         pr.to_h.should be_valid_distribution
+      end
+
+      it "should raise an error if any param is unexpected type" do
+        d6 = GamesDice::Probabilities.for_fair_die( 6 )
+        lambda{ d6.repeat_sum( {} ) }.should raise_error TypeError
+      end
+
+      it "should raise an error if distribution would have more than a million results" do
+        d1000 = GamesDice::Probabilities.for_fair_die( 1000 )
+        lambda{ d1000.repeat_sum( 11000 ) }.should raise_error
       end
 
       it "should calculate a '3d6' distribution accurately" do
@@ -410,6 +452,17 @@ describe GamesDice::Probabilities do
         pr.to_h.should be_valid_distribution
         pr = d4b.repeat_n_sum_k( 12, 4 )
         pr.to_h.should be_valid_distribution
+      end
+
+      it "should raise an error if any param is unexpected type" do
+        d6 = GamesDice::Probabilities.for_fair_die( 6 )
+        lambda{ d6.repeat_n_sum_k( {}, 10 ) }.should raise_error TypeError
+        lambda{ d6.repeat_n_sum_k( 10, {} ) }.should raise_error TypeError
+      end
+
+      it "should raise an error if n is greater than 170" do
+        d6 = GamesDice::Probabilities.for_fair_die( 6 )
+        lambda{ d6.repeat_n_sum_k( 171, 10 ) }.should raise_error
       end
 
       it "should calculate a '4d6 keep best 3' distribution accurately" do

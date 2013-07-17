@@ -245,6 +245,7 @@ class GamesDice::Probabilities
   def repeat_sum n
     n = Integer( n )
     raise "Cannot combine probabilities less than once" if n < 1
+    raise "Probability distribution too large" if ( n * @probs.count ) > 1000000
     revbin = n.to_s(2).reverse.each_char.to_a.map { |c| c == '1' }
     pd_power = self
     pd_result = nil
@@ -272,6 +273,7 @@ class GamesDice::Probabilities
     n = Integer( n )
     k = Integer( k )
     raise "Cannot combine probabilities less than once" if n < 1
+    raise "Cannot calculate accurately for more than 170 diece" if n > 170
     if k >= n
       return repeat_sum( n )
     end
@@ -365,7 +367,9 @@ class GamesDice::Probabilities
   def self.prob_h_to_ao h
     rmin,rmax = h.keys.minmax
     o = rmin
-    a = Array.new( 1 + rmax - rmin, 0.0 )
+    s = 1 + rmax - rmin
+    raise ArgumentError, "Range of possible results too large" if s > 1000000
+    a = Array.new( s, 0.0 )
     h.each { |k,v| a[k-rmin] = Float(v) }
     [a,o]
   end
