@@ -744,6 +744,8 @@ VALUE probabilities_for_fair_die( VALUE self, VALUE sides ) {
 }
 
 VALUE probabilities_from_h( VALUE self, VALUE hash ) {
+  Check_Type( hash, T_HASH );
+
   VALUE obj = pl_alloc( Probabilities );
   ProbabilityList *pl = get_probability_list( obj );
   double error;

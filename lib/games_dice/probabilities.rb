@@ -156,6 +156,7 @@ class GamesDice::Probabilities
   #   and the matching value is probability of getting that result
   # @return [GamesDice::Probabilities]
   def self.from_h prob_hash
+    raise TypeError, "from_h expected a Hash" unless prob_hash.is_a? Hash
     probs, offset = prob_h_to_ao( prob_hash )
     GamesDice::Probabilities.new( probs, offset )
   end
@@ -365,7 +366,7 @@ class GamesDice::Probabilities
     rmin,rmax = h.keys.minmax
     o = rmin
     a = Array.new( 1 + rmax - rmin, 0.0 )
-    h.each { |k,v| a[k-rmin] = v }
+    h.each { |k,v| a[k-rmin] = Float(v) }
     [a,o]
   end
 

@@ -68,7 +68,7 @@ class GamesDice::Parser < Parslet::Parser
   root :expressions
 
   # Parses a string description in the dice mini-language, and returns data for feeding into
-  # GamesDice::Dice constructore.
+  # GamesDice::Dice constructor.
   # @param [String] dice_description Text to parse e.g. '1d6'
   # @return [Hash] Analysis of dice_description
   def parse dice_description

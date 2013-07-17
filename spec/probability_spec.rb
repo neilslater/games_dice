@@ -143,9 +143,17 @@ describe GamesDice::Probabilities do
       end
 
       it "should raise an ArgumentError when called with a non-valid hash" do
-        # FIXME: This fails differently in native extensions and pure Ruby versions
-        # lambda { GamesDice::Probabilities.from_h( :foo ) }.should raise_error TypeError
         lambda { GamesDice::Probabilities.from_h( { 7 => 0.5, 9 => 0.6 } ) }.should raise_error ArgumentError
+      end
+
+      it "should raise an TypeError when called with data that is not a hash" do
+        lambda { GamesDice::Probabilities.from_h( :foo ) }.should raise_error TypeError
+      end
+
+      it "should raise a TypeError when called when keys and values are not all integers and floats" do
+        # This first one is not a TypeError in pure Ruby version, but it would make the code slower to conform that accurately
+        lambda { GamesDice::Probabilities.from_h( { :foo => 0.5, 9 => 0.5 } ) }.should raise_error
+        lambda { GamesDice::Probabilities.from_h( { 7 => [], 9 => 0.5 } ) }.should raise_error TypeError
       end
     end
 
