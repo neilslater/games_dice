@@ -8,5 +8,4 @@ rvm:
   - ree
   - jruby-18mode
   - jruby-19mode
-  - ruby-head
   - jruby-head
