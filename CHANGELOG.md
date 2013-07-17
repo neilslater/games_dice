@@ -3,7 +3,7 @@
 ## 0.3.7
 
  * Compatibility between pure Ruby and native extension code when handling bad method params
- * Add changelog
+ * Added this changelog to documentation
 
 ## 0.3.6
 

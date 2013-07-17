@@ -273,7 +273,8 @@ class GamesDice::Probabilities
     n = Integer( n )
     k = Integer( k )
     raise "Cannot combine probabilities less than once" if n < 1
-    raise "Cannot calculate accurately for more than 170 diece" if n > 170
+    # Technically this is a limitation of C code, but Ruby version is most likely slow and inaccurate beyond 170
+    raise "Too many dice to calculate numbers of arrangements" if n > 170
     if k >= n
       return repeat_sum( n )
     end
