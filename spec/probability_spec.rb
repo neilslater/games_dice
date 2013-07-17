@@ -11,8 +11,8 @@ describe GamesDice::Probabilities do
       end
 
       it "should raise an error if passed incorrect parameter types" do
-        lambda { GamesDice::Probabilities.new( [:not_a_num], 20 ) }.should raise_error TypeError
-        lambda { GamesDice::Probabilities.new( [0.3,:nought_point_two,0.5], 7 ) }.should raise_error TypeError
+        lambda { GamesDice::Probabilities.new( [ nil ], 20 ) }.should raise_error TypeError
+        lambda { GamesDice::Probabilities.new( [0.3,nil,0.5], 7 ) }.should raise_error TypeError
         lambda { GamesDice::Probabilities.new( [0.3,0.2,0.5], {} ) }.should raise_error TypeError
         lambda { GamesDice::Probabilities.new( {:x=>:y}, 17 ) }.should raise_error TypeError
       end
@@ -151,8 +151,7 @@ describe GamesDice::Probabilities do
       end
 
       it "should raise a TypeError when called when keys and values are not all integers and floats" do
-        # This first one is not a TypeError in pure Ruby version, but it would make the code slower to conform that accurately
-        lambda { GamesDice::Probabilities.from_h( { :foo => 0.5, 9 => 0.5 } ) }.should raise_error
+        lambda { GamesDice::Probabilities.from_h( { 'x' => 0.5, 9 => 0.5 } ) }.should raise_error
         lambda { GamesDice::Probabilities.from_h( { 7 => [], 9 => 0.5 } ) }.should raise_error TypeError
       end
 
@@ -326,7 +325,7 @@ describe GamesDice::Probabilities do
       end
 
       it "should raise a TypeError if asked for probability of non-Integer" do
-        lambda { pr6.p_lt( nil ) }.should raise_error TypeError
+        lambda { pr6.p_lt( {} ) }.should raise_error TypeError
       end
     end # describe "#p_lt"
 
@@ -381,7 +380,7 @@ describe GamesDice::Probabilities do
       end
 
       it "should raise a TypeError if asked for probability of non-Integer" do
-        lambda { pr10.given_ge( nil ) }.should raise_error TypeError
+        lambda { pr10.given_ge( [] ) }.should raise_error TypeError
       end
     end
 
