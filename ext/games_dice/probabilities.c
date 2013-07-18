@@ -744,11 +744,15 @@ VALUE probabilities_for_fair_die( VALUE self, VALUE sides ) {
 }
 
 VALUE probabilities_from_h( VALUE self, VALUE hash ) {
+  VALUE obj;
+  ProbabilityList *pl;
+  double error;
+
   Check_Type( hash, T_HASH );
 
-  VALUE obj = pl_alloc( Probabilities );
-  ProbabilityList *pl = get_probability_list( obj );
-  double error;
+  obj = pl_alloc( Probabilities );
+  pl = get_probability_list( obj );
+
 
   // Set these up so that they get adjusted during hash iteration
   pl->offset = 0x7fffffff;
