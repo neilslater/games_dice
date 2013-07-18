@@ -1,4 +1,9 @@
 # games_dice/spec/helpers.rb
+require 'pathname'
+
+def fixture name
+  (Pathname.new(__FILE__).dirname + "fixtures" + name).to_s
+end
 
 # TestPRNG tests short predictable series
 class TestPRNG
