@@ -22,7 +22,7 @@ class TestPRNGMax
   end
 end
 
-# TestPRNGMax checks behaviour of re-rolls
+# TestPRNGMin checks behaviour of re-rolls
 class TestPRNGMin
   def rand(n)
     1
