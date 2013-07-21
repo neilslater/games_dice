@@ -81,10 +81,7 @@ class GamesDice::ComplexDie
   # @return [Integer]
   def min
     return @min_result if @min_result
-    @min_result, @max_result = [probabilities.min, probabilities.max]
-    return @min_result if @probabilities_complete
-    logical_min, logical_max = logical_minmax
-    @min_result, @max_result = [@min_result, @max_result, logical_min, logical_max].minmax
+    calc_minmax
     @min_result
   end
 
@@ -92,10 +89,7 @@ class GamesDice::ComplexDie
   # @return [Integer] Maximum possible result from a call to #roll
   def max
     return @max_result if @max_result
-    @min_result, @max_result = [probabilities.min, probabilities.max]
-    return @max_result if @probabilities_complete
-    logical_min, logical_max = logical_minmax
-    @min_result, @max_result = [@min_result, @max_result, logical_min, logical_max].minmax
+    calc_minmax
     @max_result
   end
 
@@ -171,6 +165,13 @@ class GamesDice::ComplexDie
   end
 
   private
+
+  def calc_minmax
+    @min_result, @max_result = [probabilities.min, probabilities.max]
+    return if @probabilities_complete
+    logical_min, logical_max = logical_minmax
+    @min_result, @max_result = [@min_result, @max_result, logical_min, logical_max].minmax
+  end
 
   def construct_rerolls rerolls_input
     return nil unless rerolls_input
