@@ -126,10 +126,10 @@ class GamesDice::Dice
   private
 
   def array_to_sum array
-    sum_parts = [ array.first < 0 ? '-' + array.first.abs.to_s : array.first.to_s ]
-    sum_parts += array.drop(1).map { |n| n < 0 ? '- ' + n.abs.to_s : '+ ' + n.to_s }
-    sum_parts += [ '=', array.inject(:+) ]
-    sum_parts.join(' ')
+    ([ array.first.to_s ] +
+        array.drop(1).map { |n| n < 0 ? '- ' + n.abs.to_s : '+ ' + n.to_s } +
+        [ '=', array.inject(:+) ]
+    ).join(' ')
   end
 
   def bunches_weighted_sum summed_method
