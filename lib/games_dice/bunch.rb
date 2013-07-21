@@ -32,50 +32,17 @@ class GamesDice::Bunch
   # @option options [Integer] :keep_number Optional number of dice to keep when :keep_mode is not nil
   # @return [GamesDice::Bunch]
   def initialize( options )
-    @name = options[:name].to_s
-    @ndice = Integer(options[:ndice])
-    raise ArgumentError, ":ndice must be 1 or more, but got #{@ndice}" unless @ndice > 0
-    @sides = Integer(options[:sides])
-    raise ArgumentError, ":sides must be 1 or more, but got #{@sides}" unless @sides > 0
-
-    attr = Hash.new
+    name_number_sides_from_hash( options )
+    keep_mode_from_hash( options )
 
     if options[:prng]
-      # We deliberately do not clone this object, it will often be intended that it is shared
-      prng = options[:prng]
       raise ":prng does not support the rand() method" if ! prng.respond_to?(:rand)
     end
 
-    needs_complex_die = false
-
-    if options[:rerolls]
-      needs_complex_die = true
-      attr[:rerolls] = options[:rerolls].clone
-    end
-
-    if options[:maps]
-      needs_complex_die = true
-      attr[:maps] = options[:maps].clone
-    end
-
-    if needs_complex_die
-      attr[:prng] = prng
-      @single_die = GamesDice::ComplexDie.new( @sides, attr )
+    if options[:rerolls] || options[:maps]
+      @single_die = GamesDice::ComplexDie.new( @sides, complex_die_params_from_hash( options ) )
     else
-      @single_die = GamesDice::Die.new( @sides, prng )
-    end
-
-    case options[:keep_mode]
-    when nil then
-      @keep_mode = nil
-    when :keep_best then
-      @keep_mode = :keep_best
-      @keep_number = Integer(options[:keep_number] || 1)
-    when :keep_worst then
-      @keep_mode = :keep_worst
-      @keep_number = Integer(options[:keep_number] || 1)
-    else
-      raise ArgumentError, ":keep_mode can be nil, :keep_best or :keep_worst. Got #{options[:keep_mode].inspect}"
+      @single_die = GamesDice::Die.new( @sides, options[:prng] )
     end
   end
 
@@ -243,4 +210,38 @@ class GamesDice::Bunch
     explanation
   end
 
+  private
+
+  def name_number_sides_from_hash options
+    @name = options[:name].to_s
+    @ndice = Integer(options[:ndice])
+    raise ArgumentError, ":ndice must be 1 or more, but got #{@ndice}" unless @ndice > 0
+    @sides = Integer(options[:sides])
+    raise ArgumentError, ":sides must be 1 or more, but got #{@sides}" unless @sides > 0
+  end
+
+  def keep_mode_from_hash options
+    case options[:keep_mode]
+    when nil then
+      @keep_mode = nil
+    when :keep_best then
+      @keep_mode = :keep_best
+      @keep_number = Integer(options[:keep_number] || 1)
+    when :keep_worst then
+      @keep_mode = :keep_worst
+      @keep_number = Integer(options[:keep_number] || 1)
+    else
+      raise ArgumentError, ":keep_mode can be nil, :keep_best or :keep_worst. Got #{options[:keep_mode].inspect}"
+    end
+  end
+
+  def complex_die_params_from_hash options
+    cd_hash = Hash.new
+    [:maps,:rerolls].each do |k|
+      cd_hash[k] = options[k].clone if options[k]
+    end
+    # We deliberately do not clone this object, it will often be intended that it is shared
+    cd_hash[:prng] = options[:prng]
+    cd_hash
+  end
 end # class Bunch
