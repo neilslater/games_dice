@@ -41,7 +41,7 @@ inline int min( int *a, int n ) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Quick factorials, that fit into unsigned longs . . . the size of this structure sets the
+//  Quick factorials, that fit into doubles. . . the size of this structure sets the
 //  maximum possible n in repeat_n_sum_k calculations
 //
 

@@ -1,6 +1,8 @@
 # GamesDice
-
+[![Gem Version](https://badge.fury.io/rb/games_dice.png)](http://badge.fury.io/rb/games_dice)
 [![Build Status](https://travis-ci.org/neilslater/games_dice.png?branch=master)](http://travis-ci.org/neilslater/games_dice)
+[![Code Climate](https://codeclimate.com/github/neilslater/games_dice.png)](https://codeclimate.com/github/neilslater/games_dice)
+[![Dependency Status](https://gemnasium.com/neilslater/games_dice.png)](https://gemnasium.com/neilslater/games_dice)
 
 A library for simulating dice. Use it to construct dice-rolling systems used in role-playing and board games.
 
