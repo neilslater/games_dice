@@ -63,30 +63,21 @@ class GamesDice::Dice
   # Simulates rolling dice
   # @return [Integer] Sum of all rolled dice
   def roll
-    @result = @offset + @bunch_multipliers.zip(@bunches).inject(0) do |total,mb|
-      m,b = mb
-      total += m * b.roll
-    end
+    @result = @offset + bunches_weighted_sum( :roll )
   end
 
   # @!attribute [r] min
   # Minimum possible result from a call to #roll
   # @return [Integer]
   def min
-    @min ||= @offset + @bunch_multipliers.zip(@bunches).inject(0) do |total,mb|
-      m,b = mb
-      total += m * b.min
-    end
+    @min ||= @offset + bunches_weighted_sum( :min )
   end
 
   # @!attribute [r] max
   # Maximum possible result from a call to #roll
   # @return [Integer]
   def max
-    @max ||= @offset + @bunch_multipliers.zip(@bunches).inject(0) do |total,mb|
-      m,b = mb
-      total += m * b.max
-    end
+    @max ||= @offset + bunches_weighted_sum( :max )
   end
 
   # @!attribute [r] minmax
@@ -139,6 +130,13 @@ class GamesDice::Dice
     sum_parts += array.drop(1).map { |n| n < 0 ? '- ' + n.abs.to_s : '+ ' + n.to_s }
     sum_parts += [ '=', array.inject(:+) ]
     sum_parts.join(' ')
+  end
+
+  def bunches_weighted_sum summed_method
+    @bunch_multipliers.zip(@bunches).inject(0) do |total,mb|
+      m,b = mb
+      total += m * b.send( summed_method )
+    end
   end
 
 end # class Dice
