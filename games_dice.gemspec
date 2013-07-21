@@ -17,6 +17,8 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "rspec", ">= 2.13.0"
   gem.add_development_dependency "rake", ">= 1.9.1"
   gem.add_development_dependency "yard", ">= 0.8.6"
+  gem.add_development_dependency "coveralls", ">= 0.6.7"
+  gem.add_development_dependency "json", ">= 1.7.7"
   gem.add_development_dependency "rake-compiler"
 
   # Red Carpet renders README.md, and is optional even when developing the gem.
