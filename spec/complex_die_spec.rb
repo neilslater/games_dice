@@ -57,7 +57,7 @@ describe GamesDice::ComplexDie do
 
     lambda do
       GamesDice::ComplexDie.new( 10, :rerolls => [['hello']] )
-    end.should raise_error( TypeError )
+    end.should raise_error( ArgumentError )
 
     lambda do
       GamesDice::ComplexDie.new( 10, :rerolls =>  [ [6, :<=, :reroll_add ], :reroll_add] )
@@ -82,7 +82,7 @@ describe GamesDice::ComplexDie do
 
     lambda do
       GamesDice::ComplexDie.new( 10, :maps => [ [7] ] )
-    end.should raise_error( TypeError )
+    end.should raise_error( ArgumentError )
 
     lambda do
       GamesDice::ComplexDie.new( 10, :maps => ['hello'] )

@@ -174,27 +174,22 @@ class GamesDice::ComplexDie
   end
 
   def construct_rerolls rerolls_input
-    return nil unless rerolls_input
-    raise TypeError, "rerolls should be an Array, instead got #{rerolls_input.inspect}" unless rerolls_input.is_a?(Array)
-    rerolls_input.map do |reroll_item|
-      case reroll_item
-      when Array then GamesDice::RerollRule.new( reroll_item[0], reroll_item[1], reroll_item[2], reroll_item[3] )
-      when GamesDice::RerollRule then reroll_item
-      else
-        raise TypeError, "items in rerolls should be GamesDice::RerollRule or Array, instead got #{reroll_item.inspect}"
-      end
-    end
+    check_and_construct rerolls_input, GamesDice::RerollRule, 'rerolls'
   end
 
   def construct_maps maps_input
-    return nil unless maps_input
-    raise TypeError, "maps should be an Array, instead got #{maps_input.inspect}" unless maps_input.is_a?(Array)
-    maps_input.map do |map_item|
-      case map_item
-      when Array then GamesDice::MapRule.new( map_item[0], map_item[1], map_item[2], map_item[3] )
-      when GamesDice::MapRule then map_item
+    check_and_construct maps_input, GamesDice::MapRule, 'maps'
+  end
+
+  def check_and_construct input, klass, label
+    return nil unless input
+    raise TypeError, "#{label} should be an Array, instead got #{input.inspect}" unless input.is_a?(Array)
+    input.map do |i|
+      case i
+      when Array then klass.new( *i )
+      when klass then i
       else
-        raise TypeError, "items in maps should be GamesDice::MapRule or Array, instead got #{map_item.inspect}"
+        raise TypeError, "items in #{label} should be #{klass.name} or Array, instead got #{i.inspect}"
       end
     end
   end
