@@ -255,6 +255,8 @@ class GamesDice::Probabilities
     raise "Cannot combine probabilities less than once" if n < 1
     # Technically this is a limitation of C code, but Ruby version is most likely slow and inaccurate beyond 170
     raise "Too many dice to calculate numbers of arrangements" if n > 170
+    check_keep_mode( kmode )
+
     if k >= n
       return repeat_sum( n )
     end
@@ -320,18 +322,10 @@ class GamesDice::Probabilities
   end
 
   def calc_keep_distributions k, q, kmode
-    if kmode == :keep_best
-      p_definites = p_gt(q)
-      kd_probabilities = given_ge( q + 1 ) if p_definites > 0.0
-    elsif kmode == :keep_worst
-      p_definites = p_lt(q)
-      kd_probabilities = given_le( q - 1 ) if p_definites > 0.0
-    else
-      raise "Keep mode #{kmode.inspect} not recognised"
-    end
+    kd_probabilities = calc_keep_definite_distributions q, kmode
 
     keep_distributions = [ GamesDice::Probabilities.new( [1.0], q * k ) ]
-    if p_definites > 0.0 && k > 1
+    if kd_probabilities && k > 1
       (1...k).each do |n|
         extra_o = GamesDice::Probabilities.new( [1.0], q * ( k - n ) )
         n_probs = kd_probabilities.repeat_sum( n )
@@ -342,15 +336,27 @@ class GamesDice::Probabilities
     keep_distributions
   end
 
+  def calc_keep_definite_distributions q, kmode
+    kd_probabilities = nil
+    case kmode
+    when :keep_best
+      p_definites = p_gt(q)
+      kd_probabilities = given_ge( q + 1 ) if p_definites > 0.0
+    when :keep_worst
+      p_definites = p_lt(q)
+      kd_probabilities = given_le( q - 1 ) if p_definites > 0.0
+    end
+    kd_probabilities
+  end
+
   def calc_p_table q, p_maybe, kmode
-    if kmode == :keep_best
+    case kmode
+    when :keep_best
       p_kept = p_gt(q)
       p_rejected = p_lt(q)
-    elsif kmode == :keep_worst
+    when :keep_worst
       p_kept = p_lt(q)
       p_rejected = p_gt(q)
-    else
-      raise "Keep mode #{kmode.inspect} not recognised"
     end
     [ p_rejected, p_maybe, p_kept ]
   end
@@ -377,6 +383,10 @@ class GamesDice::Probabilities
     total = 0.0
     @probs.each_with_index { |v,i| total += (i+@offset)*v }
     total
+  end
+
+  def check_keep_mode kmode
+    raise "Keep mode #{kmode.inspect} not recognised" unless [:keep_best,:keep_worst].member?( kmode )
   end
 
 end # class GamesDice::Probabilities
