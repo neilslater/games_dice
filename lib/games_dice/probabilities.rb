@@ -230,6 +230,8 @@ class GamesDice::Probabilities
     pd_result = nil
     max_power = revbin.count - 1
 
+    # p = 1; while ( p <= t ) do; print (t & p > 0) ? '1' : '0'; p = p << 1; end
+
     revbin.each_with_index do |use_power, i|
       if use_power
         if pd_result
@@ -320,28 +322,24 @@ class GamesDice::Probabilities
 
   def calc_keep_distributions k, q, kmode
     if kmode == :keep_best
-      keep_distributions = [ GamesDice::Probabilities.new( [1.0], q * k ) ]
-      if p_gt(q) > 0.0 && k > 1
-        kd_probabilities = given_ge( q + 1 )
-        (1...k).each do |n|
-          extra_o = GamesDice::Probabilities.new( [1.0], q * ( k - n ) )
-          n_probs = kd_probabilities.repeat_sum( n )
-          keep_distributions[n] = GamesDice::Probabilities.add_distributions( extra_o, n_probs )
-        end
-      end
+      p_definites = p_gt(q)
+      kd_probabilities = given_ge( q + 1 ) if p_definites > 0.0
     elsif kmode == :keep_worst
-      keep_distributions = [ GamesDice::Probabilities.new( [1.0], q * k ) ]
-      if p_lt(q) > 0.0 && k > 1
-        kd_probabilities = given_le( q - 1 )
-        (1...k).each do |n|
-          extra_o = GamesDice::Probabilities.new( [1.0], q * ( k - n ) )
-          n_probs = kd_probabilities.repeat_sum( n )
-          keep_distributions[n] = GamesDice::Probabilities.add_distributions( extra_o, n_probs )
-        end
-      end
+      p_definites = p_lt(q)
+      kd_probabilities = given_le( q - 1 ) if p_definites > 0.0
     else
       raise "Keep mode #{kmode.inspect} not recognised"
     end
+
+    keep_distributions = [ GamesDice::Probabilities.new( [1.0], q * k ) ]
+    if p_definites > 0.0 && k > 1
+      (1...k).each do |n|
+        extra_o = GamesDice::Probabilities.new( [1.0], q * ( k - n ) )
+        n_probs = kd_probabilities.repeat_sum( n )
+        keep_distributions[n] = GamesDice::Probabilities.add_distributions( extra_o, n_probs )
+      end
+    end
+
     keep_distributions
   end
 
