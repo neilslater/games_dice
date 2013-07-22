@@ -225,22 +225,21 @@ class GamesDice::Probabilities
     n = Integer( n )
     raise "Cannot combine probabilities less than once" if n < 1
     raise "Probability distribution too large" if ( n * @probs.count ) > 1000000
-    revbin = n.to_s(2).reverse.each_char.to_a.map { |c| c == '1' }
     pd_power = self
     pd_result = nil
-    max_power = revbin.count - 1
 
-    # p = 1; while ( p <= t ) do; print (t & p > 0) ? '1' : '0'; p = p << 1; end
-
-    revbin.each_with_index do |use_power, i|
-      if use_power
+    use_power = 1
+    loop do
+      if ( use_power & n ) > 0
         if pd_result
           pd_result = GamesDice::Probabilities.add_distributions( pd_result, pd_power )
         else
           pd_result = pd_power
         end
       end
-      pd_power = GamesDice::Probabilities.add_distributions( pd_power, pd_power ) unless i == max_power
+      use_power = use_power << 1
+      break if use_power > n
+      pd_power = GamesDice::Probabilities.add_distributions( pd_power, pd_power )
     end
     pd_result
   end
