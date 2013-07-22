@@ -183,18 +183,8 @@ class GamesDice::Probabilities
 
     combined_min = pd_a.min + pd_b.min
     combined_max = pd_a.max + pd_b.max
-    new_probs = Array.new( 1 + combined_max - combined_min, 0.0 )
-    probs_a, offset_a = pd_a.to_ao
-    probs_b, offset_b = pd_b.to_ao
 
-    probs_a.each_with_index do |pa,i|
-      probs_b.each_with_index do |pb,j|
-        k = i + j
-        pc = pa * pb
-        new_probs[ k ] += pc
-      end
-    end
-    GamesDice::Probabilities.new( new_probs, combined_min )
+    add_distributions_internal combined_min, combined_max, 1, pd_a, 1, pd_b
   end
 
   # Combines two distributions with multipliers to create a third, that represents the distribution
@@ -217,18 +207,7 @@ class GamesDice::Probabilities
       m_a * pd_a.min + m_b * pd_b.max, m_a * pd_a.max + m_b * pd_b.max,
       ].minmax
 
-    new_probs = Array.new( 1 + combined_max - combined_min, 0.0 )
-    probs_a, offset_a = pd_a.to_ao
-    probs_b, offset_b = pd_b.to_ao
-
-    probs_a.each_with_index do |pa,i|
-      probs_b.each_with_index do |pb,j|
-        k = m_a * (i + offset_a) + m_b * (j + offset_b) - combined_min
-        pc = pa * pb
-        new_probs[ k ] += pc
-      end
-    end
-    GamesDice::Probabilities.new( new_probs, combined_min )
+    add_distributions_internal combined_min, combined_max, m_a, pd_a, m_b, pd_b
   end
 
   # Returns a symbol for the language name that this class is implemented in. The C version of the
@@ -308,6 +287,21 @@ class GamesDice::Probabilities
   end
 
   private
+
+  def self.add_distributions_internal combined_min, combined_max, m_a, pd_a, m_b, pd_b
+    new_probs = Array.new( 1 + combined_max - combined_min, 0.0 )
+    probs_a, offset_a = pd_a.to_ao
+    probs_b, offset_b = pd_b.to_ao
+
+    probs_a.each_with_index do |pa,i|
+      probs_b.each_with_index do |pb,j|
+        k = m_a * (i + offset_a) + m_b * (j + offset_b) - combined_min
+        pc = pa * pb
+        new_probs[ k ] += pc
+      end
+    end
+    GamesDice::Probabilities.new( new_probs, combined_min )
+  end
 
   def check_probs_array probs_array
     raise TypeError unless probs_array.is_a?( Array )
