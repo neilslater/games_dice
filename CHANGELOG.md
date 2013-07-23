@@ -1,5 +1,11 @@
 # GamesDice Changelog
 
+## 0.3.9
+
+ * New methods for inspecting and iterating over potential values in GamesDice::Die
+ * Code metric integration and badges for github
+ * Non-functional changes to improve code quality metrics on CodeClimate
+
 ## 0.3.7
 
  * Compatibility between pure Ruby and native extension code when handling bad method params
