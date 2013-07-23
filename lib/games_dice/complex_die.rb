@@ -60,7 +60,7 @@ class GamesDice::ComplexDie
   # True if all possible results are represented and assigned a probability. Dice with open-ended re-rolls
   # may have calculations cut short, and will result in a false value of this attribute. Even when this
   # attribute is false, probabilities should still be accurate to nearest 1e-9.
-  # @return [Boolean, nil] Depending on completeness when generating #probabilites
+  # @return [Boolean, nil] Depending on completeness when generating #probabilities
   attr_reader :probabilities_complete
 
   # @!attribute [r] sides
@@ -215,33 +215,37 @@ class GamesDice::ComplexDie
 
   # This isn't 100% accurate, but does cover most "normal" scenarios, and we're only falling back to it when we have to
   def logical_minmax
-    min_result = @basic_die.min
-    max_result = @basic_die.max
-    return [min_result,max_result] unless @rerolls || @maps
-    return minmax_mappings( (min_result..max_result) ) unless @rerolls
-    min_result, max_result = logical_rerolls_minmax min_result, max_result
+    return [@basic_die.min,@basic_die.max] unless @rerolls || @maps
+    return minmax_mappings( @basic_die.all_values ) unless @rerolls
+    min_result, max_result = logical_rerolls_minmax
     return minmax_mappings( (min_result..max_result) ) if @maps
     return [min_result,max_result]
   end
 
-  def logical_rerolls_minmax min_result, max_result
-    can_subtract = false
+  def logical_rerolls_minmax
+    min_result = @basic_die.min
+    max_result = @basic_die.max
+    min_subtract, max_add = find_add_subtract_extremes
+    if min_subtract
+      min_result = [ min_subtract - max_add, min_subtract - max_result ].min
+    end
+    [ min_result, max_add + max_result ]
+  end
 
+  def find_add_subtract_extremes
+    min_subtract = nil
+    total_add = 0
     @rerolls.select {|r| [:reroll_add, :reroll_subtract].member?( r.type ) }.each do |rule|
       min_reroll,max_reroll = @basic_die.all_values.select { |v| rule.applies?( v ) }.minmax
       next unless min_reroll
       if rule.type == :reroll_subtract
-        can_subtract=true
-        min_result = min_reroll
+        min_subtract = min_reroll if min_subtract.nil?
+        min_subtract = min_reroll if min_subtract > min_reroll
       else
-        max_result += max_reroll * rule.limit
+        total_add += max_reroll * rule.limit
       end
     end
-
-    if can_subtract
-      min_result -= max_result
-    end
-    [ min_result, max_result ]
+    [ min_subtract, total_add ]
   end
 
   def recursive_probabilities probabilities={},prior_probability=1.0,depth=0,prior_result=nil,rerolls_left=nil,roll_reason=:basic,subtracting=false
