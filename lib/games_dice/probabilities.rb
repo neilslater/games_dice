@@ -196,7 +196,7 @@ class GamesDice::Probabilities
     m_a = Integer(m_a)
     m_b = Integer(m_b)
 
-    combined_min, combined_max = mult_combo_minmax( m_a, pd_a, m_b, pd_b )
+    combined_min, combined_max = mult_combos( m_a, pd_a, m_b, pd_b ).minmax
 
     add_distributions_internal( combined_min, combined_max, m_a, pd_a, m_b, pd_b )
   end
@@ -272,10 +272,10 @@ class GamesDice::Probabilities
     end
   end
 
-  def self.mult_combo_minmax m_a, pd_a, m_b, pd_b
+  def self.mult_combos m_a, pd_a, m_b, pd_b
     all_minmax_combinations.map do |pda_meth, pdb_meth|
       m_a * pd_a.send(pda_meth) + m_b * pd_b.send(pdb_meth)
-    end.minmax
+    end
   end
 
   def self.all_minmax_combinations
