@@ -68,6 +68,19 @@ class GamesDice::Die
     end
   end
 
+  # Iterates through all possible results on die.
+  # @yieldparam [Integer] result A potential result from the die
+  # @return [GamesDice::Die] this object
+  def each_value
+    (1..@sides).each { |r| yield(r) }
+    self
+  end
+
+  # @return [Array<Integer>] All potential results from the die
+  def all_values
+    (1..@sides).to_a
+  end
+
   # @!attribute [r] rerolls
   # Rules for when to re-roll this die.
   # @return [nil] always nil, available for interface equivalence with GamesDice::ComplexDie

@@ -63,4 +63,20 @@ describe GamesDice::Die do
     end
   end
 
+  describe "#all_values" do
+    it "should return array with one result value per side" do
+      die = GamesDice::Die.new(8)
+      die.all_values.should == [1,2,3,4,5,6,7,8]
+    end
+  end
+
+  describe "#each_value" do
+    it "should iterate through all sides of the die" do
+      die = GamesDice::Die.new(10)
+      arr = []
+      die.each_value { |x| arr << x }
+      arr.should == [1,2,3,4,5,6,7,8,9,10]
+    end
+  end
+
 end

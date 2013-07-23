@@ -128,43 +128,45 @@ class GamesDice::ComplexDie
   # @param [Symbol] reason Assign a reason for rolling the first die.
   # @return [GamesDice::DieResult] Detailed results from rolling the die, including resolution of rules.
   def roll( reason = :basic )
-    # Important bit - actually roll the die
     @result = GamesDice::DieResult.new( @basic_die.roll, reason )
-
-    if @rerolls
-      subtracting = false
-      rerolls_remaining = @rerolls.map { |rule| rule.limit }
-      loop do
-        # Find which rule, if any, is being triggered
-        rule_idx = @rerolls.zip(rerolls_remaining).find_index do |rule,remaining|
-          next if rule.type == :reroll_subtract && @result.rolls.length > 1
-          remaining > 0 && rule.applies?( @basic_die.result )
-        end
-        break unless rule_idx
-
-        rule = @rerolls[ rule_idx ]
-        rerolls_remaining[ rule_idx ] -= 1
-        subtracting = true if rule.type == :reroll_subtract
-
-        # Apply the rule (note reversal for additions, after a subtract)
-        if subtracting && rule.type == :reroll_add
-          @result.add_roll( @basic_die.roll, :reroll_subtract )
-        else
-          @result.add_roll( @basic_die.roll, rule.type )
-        end
-      end
-    end
-
-    # apply any mapping
-    if @maps
-      m, n = calc_maps(@result.value)
-      @result.apply_map( m, n )
-    end
-
+    roll_apply_rerolls
+    roll_apply_maps
     @result
   end
 
   private
+
+  def roll_apply_rerolls
+    return unless @rerolls
+    subtracting = false
+    rerolls_remaining = @rerolls.map { |rule| rule.limit }
+
+    loop do
+      # Find which rule, if any, is being triggered
+      rule_idx = @rerolls.zip(rerolls_remaining).find_index do |rule,remaining|
+        next if rule.type == :reroll_subtract && @result.rolls.length > 1
+        remaining > 0 && rule.applies?( @basic_die.result )
+      end
+      break unless rule_idx
+
+      rule = @rerolls[ rule_idx ]
+      rerolls_remaining[ rule_idx ] -= 1
+      subtracting = true if rule.type == :reroll_subtract
+
+      # Apply the rule (note reversal for additions, after a subtract)
+      if subtracting && rule.type == :reroll_add
+        @result.add_roll( @basic_die.roll, :reroll_subtract )
+      else
+        @result.add_roll( @basic_die.roll, rule.type )
+      end
+    end
+  end
+
+  def roll_apply_maps
+    return unless @maps
+    m, n = calc_maps(@result.value)
+    @result.apply_map( m, n )
+  end
 
   def calc_minmax
     @min_result, @max_result = [probabilities.min, probabilities.max]
@@ -213,27 +215,33 @@ class GamesDice::ComplexDie
 
   # This isn't 100% accurate, but does cover most "normal" scenarios, and we're only falling back to it when we have to
   def logical_minmax
-    min_result = 1
-    max_result = @basic_die.sides
+    min_result = @basic_die.min
+    max_result = @basic_die.max
     return [min_result,max_result] unless @rerolls || @maps
     return minmax_mappings( (min_result..max_result) ) unless @rerolls
+    min_result, max_result = logical_rerolls_minmax min_result, max_result
+    return minmax_mappings( (min_result..max_result) ) if @maps
+    return [min_result,max_result]
+  end
+
+  def logical_rerolls_minmax min_result, max_result
     can_subtract = false
-    @rerolls.each do |rule|
-      next unless rule.type == :reroll_add || rule.type == :reroll_subtract
-      min_reroll,max_reroll = (1..@basic_die.sides).select { |v| rule.applies?( v ) }.minmax
-      next unless min_reroll && max_reroll
+
+    @rerolls.select {|r| [:reroll_add, :reroll_subtract].member?( r.type ) }.each do |rule|
+      min_reroll,max_reroll = @basic_die.all_values.select { |v| rule.applies?( v ) }.minmax
+      next unless min_reroll
       if rule.type == :reroll_subtract
         can_subtract=true
-        min_result = min_reroll - @basic_die.sides
+        min_result = min_reroll
       else
         max_result += max_reroll * rule.limit
       end
     end
+
     if can_subtract
-      min_result -= max_result + @basic_die.sides
+      min_result -= max_result
     end
-    return minmax_mappings( (min_result..max_result) ) if @maps
-    return [min_result,max_result]
+    [ min_result, max_result ]
   end
 
   def recursive_probabilities probabilities={},prior_probability=1.0,depth=0,prior_result=nil,rerolls_left=nil,roll_reason=:basic,subtracting=false
@@ -244,7 +252,7 @@ class GamesDice::ComplexDie
       stop_recursing = true
     end
 
-    (1..@basic_die.sides).each do |v|
+    @basic_die.each_value do |v|
       # calculate value, recurse if there is a reroll
       result_so_far, rerolls_remaining = calc_result_so_far(prior_result, rerolls_left, v, roll_reason )
 
