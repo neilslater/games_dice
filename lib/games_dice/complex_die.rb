@@ -104,18 +104,14 @@ class GamesDice::ComplexDie
       reroll_probs = recursive_probabilities
       prob_hash = {}
       reroll_probs.each do |v,p|
-        m, n = calc_maps(v)
-        prob_hash[m] ||= 0.0
-        prob_hash[m] += p
+        add_mapped_to_prob_hash( prob_hash, v, p )
       end
     elsif @rerolls
       prob_hash = recursive_probabilities
     elsif @maps
       prob_hash = {}
       @basic_die.probabilities.each do |v,p|
-        m, n = calc_maps(v)
-        prob_hash[m] ||= 0.0
-        prob_hash[m] += p
+        add_mapped_to_prob_hash( prob_hash, v, p )
       end
     else
       @probabilities = @basic_die.probabilities
@@ -135,6 +131,12 @@ class GamesDice::ComplexDie
   end
 
   private
+
+  def add_mapped_to_prob_hash prob_hash, v, p
+    m, n = calc_maps(v)
+    prob_hash[m] ||= 0.0
+    prob_hash[m] += p
+  end
 
   def roll_apply_rerolls
     return unless @rerolls
