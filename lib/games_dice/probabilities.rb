@@ -177,10 +177,7 @@ class GamesDice::Probabilities
   # @param [GamesDice::Probabilities] pd_b Second distribution
   # @return [GamesDice::Probabilities]
   def self.add_distributions pd_a, pd_b
-    unless pd_a.is_a?( GamesDice::Probabilities ) && pd_b.is_a?( GamesDice::Probabilities )
-      raise TypeError, "parameter to add_distributions is not a GamesDice::Probabilities"
-    end
-
+    check_is_gdp( pd_a, pd_b )
     combined_min = pd_a.min + pd_b.min
     combined_max = pd_a.max + pd_b.max
 
@@ -195,10 +192,7 @@ class GamesDice::Probabilities
   # @param [GamesDice::Probabilities] pd_b Second distribution
   # @return [GamesDice::Probabilities]
   def self.add_distributions_mult m_a, pd_a, m_b, pd_b
-    unless pd_a.is_a?( GamesDice::Probabilities ) && pd_b.is_a?( GamesDice::Probabilities )
-      raise TypeError, "parameter to add_distributions_mult is not a GamesDice::Probabilities"
-    end
-
+    check_is_gdp( pd_a, pd_b )
     m_a = Integer(m_a)
     m_b = Integer(m_b)
 
@@ -207,7 +201,7 @@ class GamesDice::Probabilities
       m_a * pd_a.min + m_b * pd_b.max, m_a * pd_a.max + m_b * pd_b.max,
       ].minmax
 
-    add_distributions_internal combined_min, combined_max, m_a, pd_a, m_b, pd_b
+    add_distributions_internal( combined_min, combined_max, m_a, pd_a, m_b, pd_b )
   end
 
   # Returns a symbol for the language name that this class is implemented in. The C version of the
@@ -272,6 +266,14 @@ class GamesDice::Probabilities
   end
 
   private
+
+  def self.check_is_gdp *probs
+    probs.each do |prob|
+      unless prob.is_a?( GamesDice::Probabilities )
+        raise TypeError, "parameter is not a GamesDice::Probabilities"
+      end
+    end
+  end
 
   def repeat_n_sum_k_each_q q, p_maybe, n, k, kmode, d, new_probs, new_offset
     # keep_distributions is array of Probabilities, indexed by number of keepers > q, which is in 0...k
