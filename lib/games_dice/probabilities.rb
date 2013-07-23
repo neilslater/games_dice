@@ -273,10 +273,11 @@ class GamesDice::Probabilities
   end
 
   def self.mult_combo_minmax m_a, pd_a, m_b, pd_b
-    [
-      m_a * pd_a.min + m_b * pd_b.min, m_a * pd_a.max + m_b * pd_b.min,
-      m_a * pd_a.min + m_b * pd_b.max, m_a * pd_a.max + m_b * pd_b.max,
-    ].minmax
+    a = [ :min, :max ]
+    d = a.inject([]) { |a1,x1| a.inject(a1) { |a2,x2| a2 <<  [x1,x2]; a2 } }
+    d.map do |pda_meth, pdb_meth|
+      m_a * pd_a.send(pda_meth) + m_b * pd_b.send(pdb_meth)
+    end.minmax
   end
 
   def repeat_n_sum_k_each_q q, p_maybe, n, k, kmode, d, new_probs, new_offset
