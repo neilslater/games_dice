@@ -196,10 +196,7 @@ class GamesDice::Probabilities
     m_a = Integer(m_a)
     m_b = Integer(m_b)
 
-    combined_min, combined_max = [
-      m_a * pd_a.min + m_b * pd_b.min, m_a * pd_a.max + m_b * pd_b.min,
-      m_a * pd_a.min + m_b * pd_b.max, m_a * pd_a.max + m_b * pd_b.max,
-      ].minmax
+    combined_min, combined_max = mult_combo_minmax( m_a, pd_a, m_b, pd_b )
 
     add_distributions_internal( combined_min, combined_max, m_a, pd_a, m_b, pd_b )
   end
@@ -273,6 +270,13 @@ class GamesDice::Probabilities
         raise TypeError, "parameter is not a GamesDice::Probabilities"
       end
     end
+  end
+
+  def self.mult_combo_minmax m_a, pd_a, m_b, pd_b
+    [
+      m_a * pd_a.min + m_b * pd_b.min, m_a * pd_a.max + m_b * pd_b.min,
+      m_a * pd_a.min + m_b * pd_b.max, m_a * pd_a.max + m_b * pd_b.max,
+    ].minmax
   end
 
   def repeat_n_sum_k_each_q q, p_maybe, n, k, kmode, d, new_probs, new_offset
