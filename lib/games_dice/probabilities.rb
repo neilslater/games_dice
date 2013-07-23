@@ -278,23 +278,27 @@ class GamesDice::Probabilities
     keep_distributions = calc_keep_distributions( k, q, kmode )
     p_table = calc_p_table( q, p_maybe, kmode )
     (0...k).each do |kn|
-      repeat_n_sum_k_each_q_kn( q, k, kn, d, new_probs, new_offset, keep_distributions, p_table )
+      repeat_n_sum_k_each_q_kn( k, kn, d, new_probs, new_offset, keep_distributions, p_table )
     end
   end
 
-  def repeat_n_sum_k_each_q_kn q, k, kn, d, new_probs, new_offset, keep_distributions, p_table
+  def repeat_n_sum_k_each_q_kn k, kn, d, new_probs, new_offset, keep_distributions, p_table
     keepers = [2] * kn + [1] * (k-kn)
     p_so_far = keepers.inject(1.0) { |p,idx| p * p_table[idx] }
     return unless p_so_far > 0.0
     (0..d).each do |dn|
-      discards = [1] * (d-dn) + [0] * dn
-      sequence = keepers + discards
-      p_sequence = discards.inject( p_so_far ) { |p,idx| p * p_table[idx] }
-      next unless p_sequence > 0.0
-      p_sequence *= GamesDice::Combinations.count_variations( sequence )
-      kd = keep_distributions[kn]
-      kd.each { |r,p_r| new_probs[r-new_offset] += p_r * p_sequence }
+      repeat_n_sum_k_each_q_kn_dn( keepers, kn, d, dn, p_so_far, new_probs, new_offset, keep_distributions, p_table )
     end
+  end
+
+  def repeat_n_sum_k_each_q_kn_dn keepers, kn, d, dn, p_so_far, new_probs, new_offset, keep_distributions, p_table
+    discards = [1] * (d-dn) + [0] * dn
+    sequence = keepers + discards
+    p_sequence = discards.inject( p_so_far ) { |p,idx| p * p_table[idx] }
+    return unless p_sequence > 0.0
+    p_sequence *= GamesDice::Combinations.count_variations( sequence )
+    kd = keep_distributions[kn]
+    kd.each { |r,p_r| new_probs[r-new_offset] += p_r * p_sequence }
   end
 
   def self.add_distributions_internal combined_min, combined_max, m_a, pd_a, m_b, pd_b
