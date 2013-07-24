@@ -29,8 +29,8 @@ module GamesDice::ProbabilityValidations
 end
 
 # @!visibility private
-# This module is a set of related private methods from GamesDice::Probabilities, extracted
-# to a single place to keep complexity manageable.
+# This module is a set of related private methods for GamesDice::Probabilities that
+# calculate how two distributions can be combined.
 module GamesDice::ProbabilityCalcAddDistributions
   private
 
@@ -62,8 +62,8 @@ end
 
 
 # @!visibility private
-# This module is a set of related private methods from GamesDice::Probabilities, extracted
-# to a single place to keep complexity manageable.
+# This module is a set of related private methods for GamesDice::Probabilities that
+# calculate how a distribution can be combined with itself.
 module GamesDice::ProbabilityCalcSums
 
   private
