@@ -239,27 +239,32 @@ class GamesDice::ComplexDie
   def logical_rerolls_minmax
     min_result = @basic_die.min
     max_result = @basic_die.max
-    min_subtract, max_add = find_add_subtract_extremes
+    min_subtract = find_minimum_possible_subtract
+    max_add = find_maximum_possible_adds
     if min_subtract
       min_result = [ min_subtract - max_add, min_subtract - max_result ].min
     end
     [ min_result, max_add + max_result ]
   end
 
-  def find_add_subtract_extremes
+  def find_minimum_possible_subtract
     min_subtract = nil
-    total_add = 0
-    @rerolls.select {|r| [:reroll_add, :reroll_subtract].member?( r.type ) }.each do |rule|
-      min_reroll,max_reroll = @basic_die.all_values.select { |v| rule.applies?( v ) }.minmax
+    @rerolls.select { |r| r.type == :reroll_subtract }.each do |rule|
+      min_reroll = @basic_die.all_values.select { |v| rule.applies?( v ) }.min
       next unless min_reroll
-      if rule.type == :reroll_subtract
-        min_subtract = min_reroll if min_subtract.nil?
-        min_subtract = min_reroll if min_subtract > min_reroll
-      else
-        total_add += max_reroll * rule.limit
-      end
+      min_subtract = [min_reroll,min_subtract].compact.min
     end
-    [ min_subtract, total_add ]
+    min_subtract
+  end
+
+  def find_maximum_possible_adds
+    total_add = 0
+    @rerolls.select { |r| r.type == :reroll_add }.each do |rule|
+      max_reroll = @basic_die.all_values.select { |v| rule.applies?( v ) }.max
+      next unless max_reroll
+      total_add += max_reroll * rule.limit
+    end
+    total_add
   end
 
 end # class ComplexDie
