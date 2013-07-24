@@ -1,10 +1,8 @@
 # @!visibility private
 module GamesDice::ProbabilityValidations
 
-  # TODO: Copy class methods over on include
-  def included target
-    super
-    target.extend ClassMethods
+  def self.included(klass)
+    klass.extend ClassMethods
   end
 
   private
@@ -31,30 +29,12 @@ module GamesDice::ProbabilityValidations
   module ClassMethods
     private
 
-    def self.check_is_gdp *probs
+    def check_is_gdp *probs
       probs.each do |prob|
         unless prob.is_a?( GamesDice::Probabilities )
           raise TypeError, "parameter is not a GamesDice::Probabilities"
         end
       end
-    end
-
-    # Convert hash to array,offset notation
-    def self.prob_h_to_ao h
-      rmin,rmax = h.keys.minmax
-      o = rmin
-      s = 1 + rmax - rmin
-      raise ArgumentError, "Range of possible results too large" if s > 1000000
-      a = Array.new( s, 0.0 )
-      h.each { |k,v| a[k-rmin] = Float(v) }
-      [a,o]
-    end
-
-    # Convert array,offset notation to hash
-    def self.prob_ao_to_h a, o
-      h = Hash.new
-      a.each_with_index { |v,i| h[i+o] = v if v > 0.0 }
-      h
     end
   end
 end

@@ -241,12 +241,10 @@ class GamesDice::Probabilities
 
   private
 
-  def self.check_is_gdp *probs
-    probs.each do |prob|
-      unless prob.is_a?( GamesDice::Probabilities )
-        raise TypeError, "parameter is not a GamesDice::Probabilities"
-      end
-    end
+  def calc_expected
+    total = 0.0
+    @probs.each_with_index { |v,i| total += (i+@offset)*v }
+    total
   end
 
   # Convert hash to array,offset notation
@@ -265,12 +263,6 @@ class GamesDice::Probabilities
     h = Hash.new
     a.each_with_index { |v,i| h[i+o] = v if v > 0.0 }
     h
-  end
-
-  def calc_expected
-    total = 0.0
-    @probs.each_with_index { |v,i| total += (i+@offset)*v }
-    total
   end
 
 end # class GamesDice::Probabilities
