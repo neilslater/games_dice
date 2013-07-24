@@ -35,12 +35,6 @@ class GamesDice::Probabilities
     @offset = Integer(offset)
   end
 
-  # @!visibility private
-  # the Array, Offset representation of probabilities.
-  def to_ao
-    [ @probs, @offset ]
-  end
-
   # Iterates through value, probability pairs
   # @yieldparam [Integer] result A result that may be possible in the dice scheme
   # @yieldparam [Float] probability Probability of result, in range 0.0..1.0

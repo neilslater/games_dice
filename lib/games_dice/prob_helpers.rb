@@ -1,6 +1,12 @@
 # @!visibility private
 module GamesDice::ProbabilityValidations
 
+  # @!visibility private
+  # the Array, Offset representation of probabilities.
+  def to_ao
+    [ @probs, @offset ]
+  end
+
   def self.included(klass)
     klass.extend ClassMethods
   end
