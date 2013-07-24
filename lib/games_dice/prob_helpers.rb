@@ -65,14 +65,10 @@ end
 module GamesDice::ProbabilityCalcAddDistributions
   private
 
-  def mult_combos m_a, pd_a, m_b, pd_b
-    all_minmax_combinations.map do |pda_meth, pdb_meth|
+  def calc_combined_extremes m_a, pd_a, m_b, pd_b
+    [ [ :min, :min ], [ :min, :max ], [ :max, :min ], [ :max, :max ] ].map do |pda_meth, pdb_meth|
       m_a * pd_a.send(pda_meth) + m_b * pd_b.send(pdb_meth)
     end
-  end
-
-  def all_minmax_combinations
-    [ [ :min, :min ], [ :min, :max ], [ :max, :min ], [ :max, :max ] ]
   end
 
   def add_distributions_internal combined_min, combined_max, m_a, pd_a, m_b, pd_b

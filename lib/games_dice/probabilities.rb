@@ -201,7 +201,7 @@ class GamesDice::Probabilities
     m_a = Integer(m_a)
     m_b = Integer(m_b)
 
-    combined_min, combined_max = mult_combos( m_a, pd_a, m_b, pd_b ).minmax
+    combined_min, combined_max = calc_combined_extremes( m_a, pd_a, m_b, pd_b ).minmax
 
     add_distributions_internal( combined_min, combined_max, m_a, pd_a, m_b, pd_b )
   end
