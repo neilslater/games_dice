@@ -153,13 +153,16 @@ class GamesDice::ComplexDie
       rule = @rerolls[ rule_idx ]
       rerolls_remaining[ rule_idx ] -= 1
       subtracting = true if rule.type == :reroll_subtract
+      roll_apply_reroll_rule rule, subtracting
+    end
+  end
 
-      # Apply the rule (note reversal for additions, after a subtract)
-      if subtracting && rule.type == :reroll_add
-        @result.add_roll( @basic_die.roll, :reroll_subtract )
-      else
-        @result.add_roll( @basic_die.roll, rule.type )
-      end
+  def roll_apply_reroll_rule rule, is_subtracting
+    # Apply the rule (note reversal for additions, after a subtract)
+    if is_subtracting && rule.type == :reroll_add
+      @result.add_roll( @basic_die.roll, :reroll_subtract )
+    else
+      @result.add_roll( @basic_die.roll, rule.type )
     end
   end
 
