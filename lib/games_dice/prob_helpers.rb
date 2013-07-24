@@ -33,6 +33,24 @@ module GamesDice::ProbabilityValidations
   end
 
   module ClassMethods
+    # Convert hash to array,offset notation
+    def prob_h_to_ao h
+      rmin,rmax = h.keys.minmax
+      o = rmin
+      s = 1 + rmax - rmin
+      raise ArgumentError, "Range of possible results too large" if s > 1000000
+      a = Array.new( s, 0.0 )
+      h.each { |k,v| a[k-rmin] = Float(v) }
+      [a,o]
+    end
+
+    # Convert array,offset notation to hash
+    def prob_ao_to_h a, o
+      h = Hash.new
+      a.each_with_index { |v,i| h[i+o] = v if v > 0.0 }
+      h
+    end
+
     private
 
     def check_is_gdp *probs
