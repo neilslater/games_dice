@@ -1,5 +1,9 @@
 # GamesDice Changelog
 
+## 0.3.10
+
+ * Non-functional changes to improve code quality metrics on CodeClimate
+
 ## 0.3.9
 
  * New methods for inspecting and iterating over potential values in GamesDice::Die
