@@ -1,4 +1,3 @@
-require 'games_dice'
 require 'helpers'
 
 describe GamesDice::Die do

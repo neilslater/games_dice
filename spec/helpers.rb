@@ -1,8 +1,10 @@
 # games_dice/spec/helpers.rb
 require 'pathname'
 require 'coveralls'
-
 Coveralls.wear!
+
+require 'games_dice'
+
 
 def fixture name
   (Pathname.new(__FILE__).dirname + "fixtures" + name).to_s

@@ -1,4 +1,3 @@
-require 'games_dice'
 require 'helpers'
 # This spec demonstrates that documentation from the README.md works as intended
 
