@@ -1,6 +1,6 @@
 # GamesDice Changelog
 
-## 0.3.10
+## 0.3.10 ( 29 July 2013 )
 
  * Non-functional changes to improve code quality metrics on CodeClimate
  * Altered specs to improve accuracy of coverage metrics on Coveralls
