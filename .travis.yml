@@ -4,6 +4,7 @@ rvm:
   - "1.9.2"
   - "1.9.3"
   - "2.0.0"
+  - ruby-head
   - rbx-2.1.1
   - rbx-2.2.0
   - rbx-2.2.1
@@ -14,5 +15,6 @@ rvm:
 allow_failures:
   rvm:
     - ruby-head
+    - rbx-2.1.1
     - rbx-2.2.0
     - rbx-2.2.1
