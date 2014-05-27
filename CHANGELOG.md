@@ -3,6 +3,7 @@
 ## 0.3.11 ( 26 May 2014 )
 
  * Bugfix. Actually use custom PRNG passed to GamesDice.create or GamesDice::Bunch.new
+ * Dropping support for Ruby 1.8.* versions (it may still work if you restrict parslet version)
 
 ## 0.3.10 ( 29 July 2013 )
 
