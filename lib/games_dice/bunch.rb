@@ -36,7 +36,7 @@ class GamesDice::Bunch
     keep_mode_from_hash( options )
 
     if options[:prng]
-      raise ":prng does not support the rand() method" if ! prng.respond_to?(:rand)
+      raise ":prng does not support the rand() method" if ! options[:prng].respond_to?(:rand)
     end
 
     if options[:rerolls] || options[:maps]

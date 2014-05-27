@@ -18,8 +18,15 @@ describe GamesDice do
 
     it "takes an optional parameter 'prng', which if provided it should be an object that has a method 'rand( integer )'" do
       prng = TestPRNG.new
+
       d = GamesDice.create '3d6', prng
       d.is_a?( GamesDice::Dice ).should be_true
+
+      (0..5).each do |dresult|
+        prng.stub( :rand ) { dresult }
+        expect( prng ).to receive(:rand).with(6)
+        d.roll.should == (dresult + 1) * 3
+      end
     end
   end # describe '#create'
 

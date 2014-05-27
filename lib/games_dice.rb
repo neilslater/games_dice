@@ -26,6 +26,9 @@ module GamesDice
   #
   def self.create dice_description, prng = nil
     parsed = @@parser.parse( dice_description )
-    GamesDice::Dice.new( parsed[:bunches], parsed[:offset], prng )
+    if prng
+      parsed[:bunches].each { |bunch| bunch.merge!( :prng => prng ) }
+    end
+    GamesDice::Dice.new( parsed[:bunches], parsed[:offset] )
   end
 end

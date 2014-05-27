@@ -1,5 +1,9 @@
 # GamesDice Changelog
 
+## 0.3.11 ( 26 May 2014 )
+
+ * Bugfix. Actually use custom PRNG passed to GamesDice.create or GamesDice::Bunch.new
+
 ## 0.3.10 ( 29 July 2013 )
 
  * Non-functional changes to improve code quality metrics on CodeClimate
