@@ -47,7 +47,7 @@ describe GamesDice::Die do
     it "should return the die's probability distribution as a GamesDice::Probabilities object" do
       die = GamesDice::Die.new(6)
       probs = die.probabilities
-      probs.is_a?( GamesDice::Probabilities ).should be_true
+      probs.should be_a GamesDice::Probabilities
 
       probs.to_h.should be_valid_distribution
 

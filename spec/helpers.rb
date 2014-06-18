@@ -60,11 +60,11 @@ RSpec::Matchers.define :be_valid_distribution do
     ! @error
   end
 
-  failure_message_for_should do |given|
+  failure_message do |given|
     @error ? @error : 'Distribution is valid and complete'
   end
 
-  failure_message_for_should_not do |given|
+  failure_message_when_negated do |given|
      @error ? @error : 'Distribution is valid and complete'
   end
 

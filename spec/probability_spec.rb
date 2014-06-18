@@ -163,7 +163,7 @@ describe GamesDice::Probabilities do
       it "should be either :c or :ruby" do
         lang = GamesDice::Probabilities.implemented_in
         lang.should be_a Symbol
-        [:c, :ruby].member?( lang ).should be_true
+        [:c, :ruby].member?( lang ).should == true
       end
     end
   end # describe "class methods"

@@ -6,21 +6,21 @@ describe GamesDice do
   describe '#create' do
     it "converts a string such as '3d6+6' into a GamesDice::Dice object" do
       d = GamesDice.create '3d6+6'
-      d.is_a?( GamesDice::Dice ).should be_true
+      d.should be_a GamesDice::Dice
     end
 
     it "takes a parameter 'dice_description', which is a string such as '3d6' or '2d4-1'" do
       d = GamesDice.create '3d6'
-      d.is_a?( GamesDice::Dice ).should be_true
+      d.should be_a GamesDice::Dice
       d = GamesDice.create '2d4-1'
-      d.is_a?( GamesDice::Dice ).should be_true
+      d.should be_a GamesDice::Dice
     end
 
     it "takes an optional parameter 'prng', which if provided it should be an object that has a method 'rand( integer )'" do
       prng = TestPRNG.new
 
       d = GamesDice.create '3d6', prng
-      d.is_a?( GamesDice::Dice ).should be_true
+      d.should be_a GamesDice::Dice
 
       (0..5).each do |dresult|
         prng.stub( :rand ) { dresult }
@@ -103,7 +103,7 @@ describe GamesDice::Dice do
   describe "#probabilities" do
     it "calculates probability distribution for the dice" do
       pd = dice.probabilities
-      pd.is_a?( GamesDice::Probabilities ).should be_true
+      pd.should be_a GamesDice::Probabilities
       pd.p_eql( 3).should be_within(1e-10).of 1.0/216
       pd.p_eql( 11 ).should be_within(1e-10).of 27.0/216
     end

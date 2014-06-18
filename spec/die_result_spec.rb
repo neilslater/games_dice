@@ -223,25 +223,25 @@ describe GamesDice::DieResult do
   it "should support comparison with >,<,>=,<= as if it were an integer, based on #value" do
     die_result = GamesDice::DieResult.new(7)
 
-    (die_result > 3).should be_true
-    (14 > die_result).should be_true
-    (die_result >= 7).should be_true
-    (9.5 >= die_result).should be_true
-    (die_result < 3).should be_false
-    (14 < die_result).should be_false
-    (die_result <= 8).should be_true
-    (14 <= die_result).should be_false
+    (die_result > 3).should == true
+    (14 > die_result).should == true
+    (die_result >= 7).should == true
+    (9.5 >= die_result).should == true
+    (die_result < 3).should == false
+    (14 < die_result).should == false
+    (die_result <= 8).should == true
+    (14 <= die_result).should == false
 
     other_die_result = GamesDice::DieResult.new(6)
     other_die_result.add_roll(6,:reroll_add)
-    (die_result > other_die_result).should be_false
-    (other_die_result > die_result).should be_true
-    (die_result >= other_die_result).should be_false
-    (other_die_result >= die_result).should be_true
-    (die_result < other_die_result).should be_true
-    (other_die_result < die_result).should be_false
-    (die_result <= other_die_result).should be_true
-    (other_die_result <= die_result).should be_false
+    (die_result > other_die_result).should == false
+    (other_die_result > die_result).should == true
+    (die_result >= other_die_result).should == false
+    (other_die_result >= die_result).should == true
+    (die_result < other_die_result).should == true
+    (other_die_result < die_result).should == false
+    (die_result <= other_die_result).should == true
+    (other_die_result <= die_result).should == false
 
   end
 

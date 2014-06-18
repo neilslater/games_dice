@@ -25,18 +25,18 @@ describe GamesDice::RerollRule do
 
     it "should return true if a trigger condition is met" do
       rule = GamesDice::RerollRule.new( 5, :>, :reroll_subtract )
-      rule.applies?(4).should be_true
+      rule.applies?(4).should == true
 
       rule = GamesDice::RerollRule.new( (1..5), :member?, :reroll_subtract )
-      rule.applies?(4).should be_true
+      rule.applies?(4).should == true
     end
 
     it "should return false if a trigger condition is not met" do
       rule = GamesDice::RerollRule.new( 5, :>, :reroll_subtract )
-      rule.applies?(7).should be_false
+      rule.applies?(7).should == false
 
       rule = GamesDice::RerollRule.new( (1..5), :member?, :reroll_subtract )
-      rule.applies?(6).should be_false
+      rule.applies?(6).should == false
     end
 
   end

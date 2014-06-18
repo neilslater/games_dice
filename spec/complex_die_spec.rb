@@ -153,7 +153,7 @@ describe GamesDice::ComplexDie do
       die = GamesDice::ComplexDie.new(10, :rerolls => [GamesDice::RerollRule.new(10, :<=, :reroll_add)] )
       probs = die.probabilities.to_h
       probs[8].should be_within(1e-10).of 0.1
-      probs[10].should be_false
+      probs[10].should be_nil
       probs[13].should be_within(1e-10).of 0.01
       probs[27].should be_within(1e-10).of 0.001
       probs.values.inject(:+).should be_within(1e-9).of 1.0

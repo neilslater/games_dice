@@ -31,12 +31,12 @@ describe GamesDice::MapRule do
       rule.map_from(4).should == 3
     end
 
-    it "should return false for no match" do
+    it "should return nil for no match" do
       rule = GamesDice::MapRule.new( 5, :>, -1 )
-      rule.map_from(6).should be_false
+      rule.map_from(6).should be_nil
 
       rule = GamesDice::MapRule.new( (1..5), :member?, 3 )
-      rule.map_from(6).should be_false
+      rule.map_from(6).should be_nil
     end
 
   end
