@@ -30,12 +30,11 @@ gem as-is, and add them as features within your project code.
 
 ## Supported Ruby Versions
 
-GamesDice is tested routinely on
+GamesDice is tested routinely on MRI Rubies 1.9.3, 2.0.0, 2.1.0, 2.1.1 and JRuby, and the
+"build passing" badge is based on those tests.
 
- * MRI Ruby 1.8.7, 1.9.3 and 2.0.0
- * Rubinius 1.8 and 1.9
- * JRuby in 1.8 and 1.9 modes
- * Ruby Enterprise Edition
+It *should* also work in versions from 1.8.7, in Ruby Enterprise and in Rubinius, but it
+is not tested routinely on those Rubies.
 
 ## Installation
 
