@@ -98,7 +98,7 @@ class GamesDice::Bunch
   # @return [Array<GamesDice::DieResult>, nil] Sequence of GamesDice::DieResult objects.
   def result_details
     return nil unless @raw_result_details
-    @raw_result_details.map { |r| r.is_a?(Fixnum) ? GamesDice::DieResult.new(r) : r }
+    @raw_result_details.map { |r| r.is_a?(Integer) ? GamesDice::DieResult.new(r) : r }
   end
 
   # @!attribute [r] min

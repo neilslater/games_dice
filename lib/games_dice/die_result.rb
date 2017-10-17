@@ -145,7 +145,7 @@ class GamesDice::DieResult
   end
 
   # @!visibility private
-  # all coercions simply use #value (i.e. nil or a Fixnum)
+  # all coercions simply use #value (i.e. nil or a Integer)
   def coerce(thing)
     @value.coerce(thing)
   end
