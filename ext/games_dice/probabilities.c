@@ -472,7 +472,7 @@ ProbabilityList *pl_repeat_n_sum_k( ProbabilityList *pl, int n, int k, int kbest
   pl_result->offset = pl->offset * k;
 
   for ( i = 0; i < pl->slots; i++ ) {
-    if ( ! ( pl->probs[i] > 0.0 ) ) continue;
+    if ( pl->probs[i] <= 0.0 ) continue;
 
     q = i + pl->offset;
     calc_keep_distributions( pl, k, q, kbest, keep_distributions );
