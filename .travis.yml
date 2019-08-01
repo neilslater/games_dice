@@ -1,6 +1,11 @@
 language: ruby
 before_install:
  - gem install bundler -v 1.17.3
+
+os:
+  - linux
+  - osx
+
 rvm:
   - "2.0.0"
   - "2.1.0"
@@ -10,5 +15,8 @@ rvm:
   - "2.3.1"
   - "2.4.1"
   - "2.4.2"
+  - "2.3.8"
+  - "2.4.5"
+  - "2.5.5"
+  - "2.6.3"
   - jruby-9.0.5.0
-
