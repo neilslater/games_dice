@@ -1,5 +1,11 @@
 # GamesDice Changelog
 
+## 0.4.0 ( 19 September 2021 )
+
+ * Dropping support for older Ruby versions (< 2.6)
+ * Native extensions are no longer optional, to reduce maintenance overhead. Effectively dropping support for JRuby.
+ * Tidy up code for maintainability (Rubocop and RSpec)
+
 ## 0.3.11 ( 26 May 2014 )
 
  * Bugfix. Actually use custom PRNG passed to GamesDice.create or GamesDice::Bunch.new
