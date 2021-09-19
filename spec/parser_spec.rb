@@ -1,7 +1,6 @@
 require 'helpers'
 
 describe GamesDice::Parser do
-
   describe "#parse" do
     let(:parser) { GamesDice::Parser.new }
 
@@ -18,7 +17,7 @@ describe GamesDice::Parser do
       }
 
       variations.each do |input,expected_output|
-        parser.parse( input ).should ==  expected_output
+        expect(parser.parse(input)).to eql expected_output
       end
     end
 
@@ -30,7 +29,7 @@ describe GamesDice::Parser do
       }
 
       variations.each do |input,expected_output|
-        parser.parse( input ).should ==  expected_output
+        expect(parser.parse(input)).to eql expected_output
       end
     end
 
@@ -41,7 +40,7 @@ describe GamesDice::Parser do
       }
 
       variations.each do |input,expected_output|
-        parser.parse( input ).should ==  expected_output
+        expect(parser.parse(input)).to eql expected_output
       end
     end
 
@@ -51,7 +50,7 @@ describe GamesDice::Parser do
       }
 
       variations.each do |input,expected_output|
-        parser.parse( input ).should ==  expected_output
+        expect(parser.parse(input)).to eql expected_output
       end
     end
 
@@ -62,7 +61,7 @@ describe GamesDice::Parser do
       }
 
       variations.each do |input,expected_output|
-        parser.parse( input ).should ==  expected_output
+        expect(parser.parse(input)).to eql expected_output
       end
     end
 
@@ -74,9 +73,8 @@ describe GamesDice::Parser do
       }
 
       variations.each do |input,expected_output|
-        parser.parse( input ).should ==  expected_output
+        expect(parser.parse(input)).to eql expected_output
       end
     end
-
-  end # describe "#parse"
+  end
 end
