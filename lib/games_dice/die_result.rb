@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # This class models the output of GamesDice::ComplexDie.
 #
 # An object of the class represents the results of a roll of a ComplexDie, including any re-rolls and
@@ -25,165 +27,168 @@
 #  dr.explain_value # => "[6+3] 9 Success"
 #
 
-class GamesDice::DieResult
-  include Comparable
+module GamesDice
+  class DieResult
+    include Comparable
 
-  # Creates new instance of GamesDice::DieResult. The object can be initialised "empty" or with a first result.
-  # @param [Integer,nil] first_roll_result Value for first roll of the die.
-  # @param [Symbol] first_roll_reason Reason for first roll of the die.
-  # @return [GamesDice::DieResult]
-  def initialize( first_roll_result=nil, first_roll_reason=:basic )
-    unless GamesDice::REROLL_TYPES.has_key?(first_roll_reason)
-      raise ArgumentError, "Unrecognised reason for roll #{first_roll_reason}"
+    # Creates new instance of GamesDice::DieResult. The object can be initialised "empty" or with a first result.
+    # @param [Integer,nil] first_roll_result Value for first roll of the die.
+    # @param [Symbol] first_roll_reason Reason for first roll of the die.
+    # @return [GamesDice::DieResult]
+    def initialize(first_roll_result = nil, first_roll_reason = :basic)
+      unless GamesDice::REROLL_TYPES.key?(first_roll_reason)
+        raise ArgumentError, "Unrecognised reason for roll #{first_roll_reason}"
+      end
+
+      if first_roll_result
+        @rolls = [Integer(first_roll_result)]
+        @roll_reasons = [first_roll_reason]
+        @total = @rolls[0]
+      else
+        @rolls = []
+        @roll_reasons = []
+        @total = nil
+      end
+      @mapped = false
+      @value = @total
     end
 
-    if (first_roll_result)
-      @rolls = [Integer(first_roll_result)]
-      @roll_reasons = [first_roll_reason]
-      @total = @rolls[0]
-    else
-      @rolls = []
-      @roll_reasons = []
-      @total = nil
-    end
-    @mapped = false
-    @value = @total
-  end
+    # The individual die rolls that combined to generate this result.
+    # @return [Array<Integer>] Un-processed values of each die roll used for this result.
+    attr_reader :rolls
 
-  # The individual die rolls that combined to generate this result.
-  # @return [Array<Integer>] Un-processed values of each die roll used for this result.
-  attr_reader :rolls
+    # The individual reasons for each roll of the die. See GamesDice::RerollRule for allowed values.
+    # @return [Array<Symbol>] Reasons for each die roll, indexes match the #rolls Array.
+    attr_reader :roll_reasons
 
-  # The individual reasons for each roll of the die. See GamesDice::RerollRule for allowed values.
-  # @return [Array<Symbol>] Reasons for each die roll, indexes match the #rolls Array.
-  attr_reader :roll_reasons
+    # Combined result of all rolls, *before* mapping.
+    # @return [Integer,nil]
+    attr_reader :total
 
-  # Combined result of all rolls, *before* mapping.
-  # @return [Integer,nil]
-  attr_reader :total
+    # Combined result of all rolls, *after* mapping.
+    # @return [Integer,nil]
+    attr_reader :value
 
-  # Combined result of all rolls, *after* mapping.
-  # @return [Integer,nil]
-  attr_reader :value
+    # Whether or not #value has been mapped from #total.
+    # @return [Boolean]
+    attr_reader :mapped
 
-  # Whether or not #value has been mapped from #total.
-  # @return [Boolean]
-  attr_reader :mapped
+    # Adds value from a new roll to the object. GamesDice::DieResult tracks reasons for the roll
+    # and makes the correct adjustment to the total so far. Any mapped value is cleared.
+    # @param [Integer] roll_result Value result from rolling the die.
+    # @param [Symbol] roll_reason Reason for rolling the die.
+    # @return [Integer] Total so far
+    def add_roll(roll_result, roll_reason = :basic)
+      unless GamesDice::REROLL_TYPES.key?(roll_reason)
+        raise ArgumentError, "Unrecognised reason for roll #{roll_reason}"
+      end
 
-  # Adds value from a new roll to the object. GamesDice::DieResult tracks reasons for the roll
-  # and makes the correct adjustment to the total so far. Any mapped value is cleared.
-  # @param [Integer] roll_result Value result from rolling the die.
-  # @param [Symbol] roll_reason Reason for rolling the die.
-  # @return [Integer] Total so far
-  def add_roll( roll_result, roll_reason=:basic )
-    unless GamesDice::REROLL_TYPES.has_key?(roll_reason)
-      raise ArgumentError, "Unrecognised reason for roll #{roll_reason}"
-    end
-    @rolls << Integer(roll_result)
-    @roll_reasons << roll_reason
-    if @rolls.length == 1
-      @total = 0
-    end
+      @rolls << Integer(roll_result)
+      @roll_reasons << roll_reason
+      @total = 0 if @rolls.length == 1
 
-    case roll_reason
-    when :basic
-      @total = roll_result
-    when :reroll_add
-      @total += roll_result
-    when :reroll_subtract
-      @total -= roll_result
-    when :reroll_new_die
-      @total = roll_result
-    when :reroll_new_keeper
-      @total = roll_result
-    when :reroll_replace
-      @total = roll_result
-    when :reroll_use_best
-      @total = [@value,roll_result].max
-    when :reroll_use_worst
-      @total = [@value,roll_result].min
+      case roll_reason
+      when :basic
+        @total = roll_result
+      when :reroll_add
+        @total += roll_result
+      when :reroll_subtract
+        @total -= roll_result
+      when :reroll_new_die
+        @total = roll_result
+      when :reroll_new_keeper
+        @total = roll_result
+      when :reroll_replace
+        @total = roll_result
+      when :reroll_use_best
+        @total = [@value, roll_result].max
+      when :reroll_use_worst
+        @total = [@value, roll_result].min
+      end
+
+      @mapped = false
+      @value = @total
     end
 
-    @mapped = false
-    @value = @total
-  end
+    # Sets value arbitrarily, and notes that the value has been mapped. Used by GamesDice::ComplexDie
+    # when there are one or more GamesDice::MapRule objects to process for a die.
+    # @param [Integer] to_value Replacement value.
+    # @param [String] description Description of what the mapped value represents e.g. "Success"
+    # @return [nil]
+    def apply_map(to_value, description = '')
+      @mapped = true
+      @value = to_value
+      @map_description = description
+      nil
+    end
 
-  # Sets value arbitrarily, and notes that the value has been mapped. Used by GamesDice::ComplexDie
-  # when there are one or more GamesDice::MapRule objects to process for a die.
-  # @param [Integer] to_value Replacement value.
-  # @param [String] description Description of what the mapped value represents e.g. "Success"
-  # @return [nil]
-  def apply_map( to_value, description = '' )
-    @mapped = true
-    @value = to_value
-    @map_description = description
-    return
-  end
+    # Generates a text description of how #value is determined. If #value has been mapped, includes the
+    # map description, but does not include the mapped value.
+    # @return [String] Explanation of #value.
+    def explain_value
+      text = ''
+      if @rolls.length < 2
+        text = @total.to_s
+      else
+        text = "[#{@rolls[0]}"
+        text = (1..@rolls.length - 1).inject(text) do |so_far, i|
+          so_far + GamesDice::REROLL_TYPES[@roll_reasons[i]] + @rolls[i].to_s
+        end
+        text += "] #{@total}"
+      end
+      text += " #{@map_description}" if @mapped && @map_description && @map_description.length.positive?
+      text
+    end
 
-  # Generates a text description of how #value is determined. If #value has been mapped, includes the
-  # map description, but does not include the mapped value.
-  # @return [String] Explanation of #value.
-  def explain_value
-    text = ''
-    if @rolls.length < 2
+    # @!visibility private
+    # This is mis-named, it doesn't explain the total at all! It is used to generate summaries of keeper dice.
+    def explain_total
       text = @total.to_s
-    else
-      text = '[' + @rolls[0].to_s
-      text = (1..@rolls.length-1).inject( text ) { |so_far,i| so_far + GamesDice::REROLL_TYPES[@roll_reasons[i]] + @rolls[i].to_s }
-      text += '] ' + @total.to_s
+      text += " #{@map_description}" if @mapped && @map_description && @map_description.length.positive?
+      text
     end
-    text += ' ' + @map_description if @mapped && @map_description && @map_description.length > 0
-    return text
-  end
 
-  # @!visibility private
-  # This is mis-named, it doesn't explain the total at all! It is used to generate summaries of keeper dice.
-  def explain_total
-    text = @total.to_s
-    text += ' ' + @map_description if @mapped && @map_description && @map_description.length > 0
-    return text
-  end
+    # @!visibility private
+    # all coercions simply use #value (i.e. nil or a Integer)
+    def coerce(thing)
+      @value.coerce(thing)
+    end
 
-  # @!visibility private
-  # all coercions simply use #value (i.e. nil or a Integer)
-  def coerce(thing)
-    @value.coerce(thing)
-  end
+    # @!visibility private
+    # addition uses #value
+    def +(other)
+      @value + other
+    end
 
-  # @!visibility private
-  # addition uses #value
-  def +(thing)
-    @value + thing
-  end
+    # @!visibility private
+    # subtraction uses #value
+    def -(other)
+      @value - other
+    end
 
-  # @!visibility private
-  # subtraction uses #value
-  def -(thing)
-    @value - thing
-  end
+    # @!visibility private
+    # multiplication uses #value
+    def *(other)
+      @value * other
+    end
 
-  # @!visibility private
-  # multiplication uses #value
-  def *(thing)
-    @value * thing
-  end
+    # @!visibility private
+    # comparison <=> uses #value
+    def <=>(other)
+      value <=> other
+    end
 
-  # @!visibility private
-  # comparison <=> uses #value
-  def <=>(other)
-    self.value <=> other
-  end
-
-  # This is a deep clone, all attributes are cloned.
-  # @return [GamesDice::DieResult]
-  def clone
-    cloned = GamesDice::DieResult.new()
-    cloned.instance_variable_set('@rolls', @rolls.clone)
-    cloned.instance_variable_set('@roll_reasons', @roll_reasons.clone)
-    cloned.instance_variable_set('@total', @total)
-    cloned.instance_variable_set('@value', @value)
-    cloned.instance_variable_set('@mapped', @mapped)
-    cloned.instance_variable_set('@map_description', @map_description)
-    cloned
+    # This is a deep clone, all attributes are cloned.
+    # @return [GamesDice::DieResult]
+    def clone
+      cloned = GamesDice::DieResult.new
+      cloned.instance_variable_set('@rolls', @rolls.clone)
+      cloned.instance_variable_set('@roll_reasons', @roll_reasons.clone)
+      cloned.instance_variable_set('@total', @total)
+      cloned.instance_variable_set('@value', @value)
+      cloned.instance_variable_set('@mapped', @mapped)
+      cloned.instance_variable_set('@map_description', @map_description)
+      cloned
+    end
   end
 end

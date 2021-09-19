@@ -1,19 +1,21 @@
-require "games_dice/version"
+# frozen_string_literal: true
+
+require 'games_dice/version'
 begin
-  require "games_dice/games_dice"
+  require 'games_dice/games_dice'
 rescue LoadError
-  require "games_dice/probabilities"
+  require 'games_dice/probabilities'
 end
-require "games_dice/constants"
-require "games_dice/die"
-require "games_dice/die_result"
-require "games_dice/reroll_rule"
-require "games_dice/map_rule"
-require "games_dice/complex_die"
-require "games_dice/bunch"
-require "games_dice/dice"
-require "games_dice/parser"
-require "games_dice/marshal"
+require 'games_dice/constants'
+require 'games_dice/die'
+require 'games_dice/die_result'
+require 'games_dice/reroll_rule'
+require 'games_dice/map_rule'
+require 'games_dice/complex_die'
+require 'games_dice/bunch'
+require 'games_dice/dice'
+require 'games_dice/parser'
+require 'games_dice/marshal'
 
 module GamesDice
   # @!visibility private
@@ -24,11 +26,9 @@ module GamesDice
   # @param [#rand] prng Optional random number generator, default is to use Ruby's built-in #rand()
   # @return [GamesDice::Dice] A new dice object.
   #
-  def self.create dice_description, prng = nil
-    parsed = @@parser.parse( dice_description )
-    if prng
-      parsed[:bunches].each { |bunch| bunch.merge!( :prng => prng ) }
-    end
-    GamesDice::Dice.new( parsed[:bunches], parsed[:offset] )
+  def self.create(dice_description, prng = nil)
+    parsed = @@parser.parse(dice_description)
+    parsed[:bunches].each { |bunch| bunch.merge!(prng: prng) } if prng
+    GamesDice::Dice.new(parsed[:bunches], parsed[:offset])
   end
 end

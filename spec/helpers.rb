@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # games_dice/spec/helpers.rb
 require 'pathname'
 require 'coveralls'
@@ -5,31 +7,31 @@ Coveralls.wear!
 
 require 'games_dice'
 
-
-def fixture name
-  (Pathname.new(__FILE__).dirname + "fixtures" + name).to_s
+def fixture(name)
+  "#{__dir__}/fixtures/#{name}"
 end
 
 # TestPRNG tests short predictable series
 class TestPRNG
   def initialize
-    @numbers = [0.123,0.234,0.345,0.999,0.876,0.765,0.543,0.111,0.333,0.777]
+    @numbers = [0.123, 0.234, 0.345, 0.999, 0.876, 0.765, 0.543, 0.111, 0.333, 0.777]
   end
+
   def rand(n)
-    Integer( n * @numbers.pop )
+    Integer(n * @numbers.pop)
   end
 end
 
 # TestPRNGMax checks behaviour of re-rolls
 class TestPRNGMax
   def rand(n)
-    Integer( n ) - 1
+    Integer(n) - 1
   end
 end
 
 # TestPRNGMin checks behaviour of re-rolls
 class TestPRNGMin
-  def rand(n)
+  def rand(_n)
     1
   end
 end
@@ -42,13 +44,13 @@ end
 RSpec::Matchers.define :be_valid_distribution do
   match do |given|
     @error = nil
-    if ! given.is_a?(Hash)
+    if !given.is_a?(Hash)
       @error = "distribution should be a Hash, but it is a #{given.class}"
-    elsif given.keys.any? { |k| ! k.is_a?(Integer) }
-      bad_key = given.keys.first { |k| ! k.is_a?(Integer) }
+    elsif given.keys.any? { |k| !k.is_a?(Integer) }
+      bad_key = given.keys.first { |k| !k.is_a?(Integer) }
       @error = "all keys should be Integers, but found '#{bad_key.inspect}' which is a #{bad_key.class}"
-    elsif given.values.any? { |v| ! v.is_a?(Float) }
-      bad_value = given.values.find { |v| ! v.is_a?(Float) }
+    elsif given.values.any? { |v| !v.is_a?(Float) }
+      bad_value = given.values.find { |v| !v.is_a?(Float) }
       @error = "all values should be Floats, but found '#{bad_value.inspect}' which is a #{bad_value.class}"
     elsif given.values.any? { |v| v < 0.0 || v > 1.0 }
       bad_value = given.values.find { |v| v < 0.0 || v > 1.0 }
@@ -57,18 +59,18 @@ RSpec::Matchers.define :be_valid_distribution do
       total_probs = given.values.inject(:+)
       @error = "sum of values should be 1.0, but got #{total_probs}"
     end
-    ! @error
+    !@error
   end
 
-  failure_message do |given|
-    @error ? @error : 'Distribution is valid and complete'
+  failure_message do |_given|
+    @error || 'Distribution is valid and complete'
   end
 
-  failure_message_when_negated do |given|
-     @error ? @error : 'Distribution is valid and complete'
+  failure_message_when_negated do |_given|
+    @error || 'Distribution is valid and complete'
   end
 
-  description do |given|
-    "a hash describing a complete probability distribution of integer results"
+  description do |_given|
+    'a hash describing a complete probability distribution of integer results'
   end
 end
