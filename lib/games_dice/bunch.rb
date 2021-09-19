@@ -1,26 +1,25 @@
 # frozen_string_literal: true
 
-# This class models a number of identical dice, which may be either GamesDice::Die or
-# GamesDice::ComplexDie objects.
-#
-# An object of this class represents a fixed number of indentical dice that may be rolled and their
-# values summed to make a total for the bunch.
-#
-# @example The ubiquitous '3d6'
-#  d = GamesDice::Bunch.new( :ndice => 3, :sides => 6 )
-#  d.roll # => 14
-#  d.result # => 14
-#  d.explain_result # => "2 + 6 + 6 = 14"
-#  d.max # => 18
-#
-# @example Roll 5d10, and keep the best 2
-#  d = GamesDice::Bunch.new( :ndice => 5, :sides => 10 , :keep_mode => :keep_best, :keep_number => 2 )
-#  d.roll # => 18
-#  d.result # => 18
-#  d.explain_result # => "4, 9, 2, 9, 1. Keep: 9 + 9 = 18"
-#
-
 module GamesDice
+  # This class models a number of identical dice, which may be either GamesDice::Die or
+  # GamesDice::ComplexDie objects.
+  #
+  # An object of this class represents a fixed number of indentical dice that may be rolled and their
+  # values summed to make a total for the bunch.
+  #
+  # @example The ubiquitous '3d6'
+  #  d = GamesDice::Bunch.new( :ndice => 3, :sides => 6 )
+  #  d.roll # => 14
+  #  d.result # => 14
+  #  d.explain_result # => "2 + 6 + 6 = 14"
+  #  d.max # => 18
+  #
+  # @example Roll 5d10, and keep the best 2
+  #  d = GamesDice::Bunch.new( :ndice => 5, :sides => 10 , :keep_mode => :keep_best, :keep_number => 2 )
+  #  d.roll # => 18
+  #  d.result # => 18
+  #  d.explain_result # => "4, 9, 2, 9, 1. Keep: 9 + 9 = 18"
+  #
   class Bunch
     # The constructor accepts parameters that are suitable for either GamesDice::Die or GamesDice::ComplexDie
     # and decides which of those classes to instantiate.

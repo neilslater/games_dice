@@ -1,33 +1,32 @@
 # frozen_string_literal: true
 
-# This class models the output of GamesDice::ComplexDie.
-#
-# An object of the class represents the results of a roll of a ComplexDie, including any re-rolls and
-# value mapping.
-#
-# @example Building up a result manually
-#  dr = GamesDice::DieResult.new
-#  dr.add_roll 5
-#  dr.add_roll 4, :reroll_replace
-#  dr.value # => 4
-#  dr.rolls # => [5, 4]
-#  dr.roll_reasons # => [:basic, :reroll_replace]
-#  # dr can behave as dr.value due to coercion and support for some operators
-#  dr + 6 # => 10
-#
-# @example Using a result from GamesDice::ComplexDie
-#  # An "exploding" six-sided die that needs a result of 8 to score "1 Success"
-#  d = GamesDice::ComplexDie.new( 6, :rerolls => [[6, :<=, :reroll_add]], :maps => [[8, :<=, 1, 'Success']] )
-#  # Generate result object by rolling the die
-#  dr = d.roll
-#  dr.rolls         # => [6, 3]
-#  dr.roll_reasons  # => [:basic, :reroll_add]
-#  dr.total         # => 9
-#  dr.value         # => 1
-#  dr.explain_value # => "[6+3] 9 Success"
-#
-
 module GamesDice
+  # This class models the output of GamesDice::ComplexDie.
+  #
+  # An object of the class represents the results of a roll of a ComplexDie, including any re-rolls and
+  # value mapping.
+  #
+  # @example Building up a result manually
+  #  dr = GamesDice::DieResult.new
+  #  dr.add_roll 5
+  #  dr.add_roll 4, :reroll_replace
+  #  dr.value # => 4
+  #  dr.rolls # => [5, 4]
+  #  dr.roll_reasons # => [:basic, :reroll_replace]
+  #  # dr can behave as dr.value due to coercion and support for some operators
+  #  dr + 6 # => 10
+  #
+  # @example Using a result from GamesDice::ComplexDie
+  #  # An "exploding" six-sided die that needs a result of 8 to score "1 Success"
+  #  d = GamesDice::ComplexDie.new( 6, :rerolls => [[6, :<=, :reroll_add]], :maps => [[8, :<=, 1, 'Success']] )
+  #  # Generate result object by rolling the die
+  #  dr = d.roll
+  #  dr.rolls         # => [6, 3]
+  #  dr.roll_reasons  # => [:basic, :reroll_add]
+  #  dr.total         # => 9
+  #  dr.value         # => 1
+  #  dr.explain_value # => "[6+3] 9 Success"
+  #
   class DieResult
     include Comparable
 

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module GamesDice
+  # Probability calculations
   class Probabilities
     # @!visibility private
     # Adds support for Marshal, via to_h and from_h methods

@@ -2,28 +2,27 @@
 
 require 'games_dice/complex_die_helpers'
 
-# This class models a die that is built up from a simpler unit by adding rules to re-roll
-# and interpret the value shown.
-#
-# An object of this class represents a single complex die. It rolls 1..#sides, with equal weighting
-# for each value. The value from a roll may be used to trigger yet more rolls that combine together.
-# After any re-rolls, the value can be interpretted ("mapped") as another integer, which is used as
-# the final result.
-#
-# @example An open-ended percentile die from a popular RPG
-#  d = GamesDice::ComplexDie.new( 100, :rerolls => [[96, :<=, :reroll_add],[5, :>=, :reroll_subtract]] )
-#  d.roll # => #<GamesDice::DieResult:0x007ff03a2415f8 @rolls=[4, 27], ...>
-#  d.result.value # => -23
-#  d.explain_result # => "[4-27] -23"
-#
-# @example An "exploding" six-sided die with a target number
-#  d = GamesDice::ComplexDie.new( 6, :rerolls => [[6, :<=, :reroll_add]], :maps => [[8, :<=, 1, 'Success']] )
-#  d.roll # => #<GamesDice::DieResult:0x007ff03a1e8e08 @rolls=[6, 5], ...>
-#  d.result.value # => 1
-#  d.explain_result # => "[6+5] 11 Success"
-#
-
 module GamesDice
+  # This class models a die that is built up from a simpler unit by adding rules to re-roll
+  # and interpret the value shown.
+  #
+  # An object of this class represents a single complex die. It rolls 1..#sides, with equal weighting
+  # for each value. The value from a roll may be used to trigger yet more rolls that combine together.
+  # After any re-rolls, the value can be interpretted ("mapped") as another integer, which is used as
+  # the final result.
+  #
+  # @example An open-ended percentile die from a popular RPG
+  #  d = GamesDice::ComplexDie.new( 100, :rerolls => [[96, :<=, :reroll_add],[5, :>=, :reroll_subtract]] )
+  #  d.roll # => #<GamesDice::DieResult:0x007ff03a2415f8 @rolls=[4, 27], ...>
+  #  d.result.value # => -23
+  #  d.explain_result # => "[4-27] -23"
+  #
+  # @example An "exploding" six-sided die with a target number
+  #  d = GamesDice::ComplexDie.new( 6, :rerolls => [[6, :<=, :reroll_add]], :maps => [[8, :<=, 1, 'Success']] )
+  #  d.roll # => #<GamesDice::DieResult:0x007ff03a1e8e08 @rolls=[6, 5], ...>
+  #  d.result.value # => 1
+  #  d.explain_result # => "[6+5] 11 Success"
+  #
   class ComplexDie
     include GamesDice::ComplexDieHelpers
 

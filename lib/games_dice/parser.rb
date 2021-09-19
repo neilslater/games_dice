@@ -2,13 +2,12 @@
 
 require 'parslet'
 
-# Based on the parslet gem, this class defines the dice mini-language used by GamesDice.create
-#
-# An instance of this class is a parser for the language. There are no user-definable instance
-# variables.
-#
-
 module GamesDice
+  # Based on the parslet gem, this class defines the dice mini-language used by GamesDice.create
+  #
+  # An instance of this class is a parser for the language. There are no user-definable instance
+  # variables.
+  #
   class Parser < Parslet::Parser
     # Parslet rules that define the dice string grammar.
     rule(:integer) { match('[0-9]').repeat(1) }

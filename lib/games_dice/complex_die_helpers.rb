@@ -2,6 +2,7 @@
 
 # @!visibility private
 module GamesDice
+  # Private extension methods for GamesDice::ComplexDie
   module ComplexDieHelpers
     private
 

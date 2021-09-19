@@ -1,25 +1,25 @@
 # frozen_string_literal: true
 
-# This class models the simplest, most-familiar kind of die.
-#
-# An object of the class represents a basic die that rolls 1..#sides, with equal weighting for each value.
-#
-# @example Create a 6-sided die, and roll it
-#  d = GamesDice::Die.new( 6 )
-#  d.roll # => Integer in range 1..6
-#  d.result # => same Integer value as just returned by d.roll
-#
-# @example Create a 10-sided die, that rolls using a monkey-patch to SecureRandom
-#  module SecureRandom
-#    def self.rand n
-#      random_number( n )
-#    end
-#  end
-#  d = GamesDice::Die.new( 10, SecureRandom )
-#  d.roll # => (secure) Integer in range 1..10
-#  d.result # => same Integer value as just returned by d.roll
-
 module GamesDice
+  # This class models the simplest, most-familiar kind of die.
+  #
+  # An object of the class represents a basic die that rolls 1..#sides, with equal weighting for each value.
+  #
+  # @example Create a 6-sided die, and roll it
+  #  d = GamesDice::Die.new( 6 )
+  #  d.roll # => Integer in range 1..6
+  #  d.result # => same Integer value as just returned by d.roll
+  #
+  # @example Create a 10-sided die, that rolls using a monkey-patch to SecureRandom
+  #  module SecureRandom
+  #    def self.rand n
+  #      random_number( n )
+  #    end
+  #  end
+  #  d = GamesDice::Die.new( 10, SecureRandom )
+  #  d.roll # => (secure) Integer in range 1..10
+  #  d.result # => same Integer value as just returned by d.roll
+  #
   class Die
     # Creates new instance of GamesDice::Die
     # @param [Integer] sides the number of sides

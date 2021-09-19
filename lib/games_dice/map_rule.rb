@@ -1,25 +1,24 @@
 # frozen_string_literal: true
 
-# This class models rules that convert numbers shown on a die to values used in a game. A
-# common use for this is to count "successes" - dice that score a certain number or higher.
-#
-# An object of the class represents a single rule, such as "count a die result of 5 or more as 1
-# _success_".
-#
-# @example A rule for counting successes
-#  rule = GamesDice::MapRule.new( 6, :<=, 1, 'Success' )
-#  # Test how the rule applies . . .
-#  rule.map_from 4   # => nil
-#  rule.map_from 6   # => 1
-#
-# @example A rule for counting "fumbles" which reduce total successes
-#  rule = GamesDice::MapRule.new( 1, :==, -1, 'Fumble' )
-#  # Test how the rule applies . . .
-#  rule.map_from 7   # => nil
-#  rule.map_from 1   # => -1
-#
-
 module GamesDice
+  # This class models rules that convert numbers shown on a die to values used in a game. A
+  # common use for this is to count "successes" - dice that score a certain number or higher.
+  #
+  # An object of the class represents a single rule, such as "count a die result of 5 or more as 1
+  # _success_".
+  #
+  # @example A rule for counting successes
+  #  rule = GamesDice::MapRule.new( 6, :<=, 1, 'Success' )
+  #  # Test how the rule applies . . .
+  #  rule.map_from 4   # => nil
+  #  rule.map_from 6   # => 1
+  #
+  # @example A rule for counting "fumbles" which reduce total successes
+  #  rule = GamesDice::MapRule.new( 1, :==, -1, 'Fumble' )
+  #  # Test how the rule applies . . .
+  #  rule.map_from 7   # => nil
+  #  rule.map_from 1   # => -1
+  #
   class MapRule
     # Creates new instance of GamesDice::MapRule. The rule will be assessed as
     #   trigger_value.send( trigger_op, x )

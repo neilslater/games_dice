@@ -1,24 +1,24 @@
 # frozen_string_literal: true
 
-# This class models a combination of GamesDice::Bunch objects plus a fixed offset.
-#
-# An object of this class is a dice "recipe" that specifies the numbers and types of
-# dice that can be rolled to generate an integer value.
-#
-# @example '3d6+6' hitpoints, whatever that means in the game you are playing
-#  d = GamesDice::Dice.new( [{:ndice => 3, :sides => 6}], 6, 'Hit points' )
-#  d.roll # => 20
-#  d.result # => 20
-#  d.explain_result # => "3d6: 3 + 5 + 6 = 14. 14 + 6 = 20"
-#  d.probabilities.expected # => 16.5
-#
-# @example Roll d20 twice, take best result, and add 5.
-#  d = GamesDice::Dice.new( [{:ndice => 2, :sides => 20 , :keep_mode => :keep_best, :keep_number => 1}], 5 )
-#  d.roll # => 21
-#  d.result # => 21
-#  d.explain_result # => "2d20: 4, 16. Keep: 16. 16 + 5 = 21"
-#
 module GamesDice
+  # This class models a combination of GamesDice::Bunch objects plus a fixed offset.
+  #
+  # An object of this class is a dice "recipe" that specifies the numbers and types of
+  # dice that can be rolled to generate an integer value.
+  #
+  # @example '3d6+6' hitpoints, whatever that means in the game you are playing
+  #  d = GamesDice::Dice.new( [{:ndice => 3, :sides => 6}], 6, 'Hit points' )
+  #  d.roll # => 20
+  #  d.result # => 20
+  #  d.explain_result # => "3d6: 3 + 5 + 6 = 14. 14 + 6 = 20"
+  #  d.probabilities.expected # => 16.5
+  #
+  # @example Roll d20 twice, take best result, and add 5.
+  #  d = GamesDice::Dice.new( [{:ndice => 2, :sides => 20 , :keep_mode => :keep_best, :keep_number => 1}], 5 )
+  #  d.roll # => 21
+  #  d.result # => 21
+  #  d.explain_result # => "2d20: 4, 16. Keep: 16. 16 + 5 = 21"
+  #
   class Dice
     # The first parameter is an array of values that are passed to GamesDice::Bunch constructors.
     # @param [Array<Hash>] bunches Array of options for creating bunches
@@ -97,7 +97,7 @@ module GamesDice
     def probabilities
       return @probabilities if @probabilities
 
-      probs = @bunch_multipliers.zip(@bunches).inject(GamesDice::Probabilities.new([1.0], @offset)) do |probs, mb|
+      @bunch_multipliers.zip(@bunches).inject(GamesDice::Probabilities.new([1.0], @offset)) do |probs, mb|
         m, b = mb
         GamesDice::Probabilities.add_distributions_mult(1, probs, m, b.probabilities)
       end
@@ -112,13 +112,7 @@ module GamesDice
 
       return @offset.to_s if explanations.count.zero?
 
-      if explanations.count == 1
-        if @offset.zero?
-          return explanations[0]
-        else
-          return "#{explanations[0]}. #{array_to_sum([@bunches[0].result, @offset])}"
-        end
-      end
+      return simple_explanation(explanations.first) if explanations.count == 1
 
       bunch_values = @bunch_multipliers.zip(@bunches).map { |m, b| m * b.result }
       bunch_values << @offset if @offset != 0
@@ -127,6 +121,12 @@ module GamesDice
     end
 
     private
+
+    def simple_explanation(explanation)
+      return explanation if @offset.zero?
+
+      "#{explanation}. #{array_to_sum([@bunches[0].result, @offset])}"
+    end
 
     def array_to_sum(array)
       (numbers_to_strings(array) + ['=', array.inject(:+)]).join(' ')
@@ -139,7 +139,7 @@ module GamesDice
     def bunches_weighted_sum(summed_method)
       @bunch_multipliers.zip(@bunches).inject(0) do |total, mb|
         m, b = mb
-        total += m * b.send(summed_method)
+        total + (m * b.send(summed_method))
       end
     end
   end

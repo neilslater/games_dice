@@ -16,6 +16,7 @@ Gem::Specification.new do |gem|
   gem.homepage      = 'https://github.com/neilslater/games_dice'
   gem.license       = 'MIT'
 
+  gem.required_ruby_version = '>= 2.6.0'
   gem.add_development_dependency 'coveralls', '>= 0.6.7'
   gem.add_development_dependency 'json', '>= 1.7.7'
   gem.add_development_dependency 'rake', '>= 1.9.1'
