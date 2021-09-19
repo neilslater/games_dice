@@ -1,9 +1,7 @@
 require 'helpers'
 
 describe GamesDice::Dice do
-
   describe "dice scheme" do
-
     before :each do
       srand(67809)
     end
@@ -13,8 +11,8 @@ describe GamesDice::Dice do
 
       it "should simulate rolling a ten-sided die, and adding two to each result" do
         [5,4,10,10,7,5,9].each do |expected_total|
-          dice.roll.should == expected_total
-          dice.result.should == expected_total
+          expect(dice.roll).to eql expected_total
+          expect(dice.result).to eql expected_total
         end
       end
     end
@@ -24,11 +22,10 @@ describe GamesDice::Dice do
 
       it "should simulate rolling two six-sided dice and adding six to the result" do
         [15,12,17,15,13,13,16].each do |expected_total|
-          dice.roll.should == expected_total
-          dice.result.should == expected_total
+          expect(dice.roll).to eql expected_total
+          expect(dice.result).to eql expected_total
         end
       end
     end
-
   end
 end

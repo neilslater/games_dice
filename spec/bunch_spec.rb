@@ -1,9 +1,7 @@
 require 'helpers'
 
 describe GamesDice::Bunch do
-
   describe "dice scheme" do
-
     before :each do
       srand(67809)
     end
@@ -13,40 +11,40 @@ describe GamesDice::Bunch do
 
       it "should simulate rolling a ten-sided die" do
         [3,2,8,8,5,3,7].each do |expected_total|
-          bunch.roll.should == expected_total
-          bunch.result.should == expected_total
+          expect(bunch.roll).to eql expected_total
+          expect(bunch.result).to eql expected_total
         end
       end
 
       it "should concisely explain each result" do
         ["3", "2", "8", "8"].each do |expected_explain|
           bunch.roll
-          bunch.explain_result.should == expected_explain
+          expect(bunch.explain_result).to eql expected_explain
         end
       end
 
       it "should calculate correct min, max = 1,10" do
-        bunch.min.should == 1
-        bunch.max.should == 10
+        expect(bunch.min).to eql 1
+        expect(bunch.max).to eql 10
       end
 
       it "should have a mean value of 5.5" do
-        bunch.probabilities.expected.should be_within(1e-10).of 5.5
+        expect(bunch.probabilities.expected).to be_within(1e-10).of 5.5
       end
 
       it "should calculate probabilities correctly" do
         prob_hash = bunch.probabilities.to_h
-        prob_hash[1].should be_within(1e-10).of 0.1
-        prob_hash[2].should be_within(1e-10).of 0.1
-        prob_hash[3].should be_within(1e-10).of 0.1
-        prob_hash[4].should be_within(1e-10).of 0.1
-        prob_hash[5].should be_within(1e-10).of 0.1
-        prob_hash[6].should be_within(1e-10).of 0.1
-        prob_hash[7].should be_within(1e-10).of 0.1
-        prob_hash[8].should be_within(1e-10).of 0.1
-        prob_hash[9].should be_within(1e-10).of 0.1
-        prob_hash[10].should be_within(1e-10).of 0.1
-        prob_hash.values.inject(:+).should be_within(1e-9).of 1.0
+        expect(prob_hash[1]).to be_within(1e-10).of 0.1
+        expect(prob_hash[2]).to be_within(1e-10).of 0.1
+        expect(prob_hash[3]).to be_within(1e-10).of 0.1
+        expect(prob_hash[4]).to be_within(1e-10).of 0.1
+        expect(prob_hash[5]).to be_within(1e-10).of 0.1
+        expect(prob_hash[6]).to be_within(1e-10).of 0.1
+        expect(prob_hash[7]).to be_within(1e-10).of 0.1
+        expect(prob_hash[8]).to be_within(1e-10).of 0.1
+        expect(prob_hash[9]).to be_within(1e-10).of 0.1
+        expect(prob_hash[10]).to be_within(1e-10).of 0.1
+        expect(prob_hash.values.inject(:+)).to be_within(1e-9).of 1.0
       end
     end
 
@@ -55,41 +53,41 @@ describe GamesDice::Bunch do
 
       it "should simulate rolling two six-sided dice and adding them" do
         [9,6,11,9,7,7,10].each do |expected_total|
-          bunch.roll.should == expected_total
-          bunch.result.should == expected_total
+          expect(bunch.roll).to eql expected_total
+          expect(bunch.result).to eql expected_total
         end
       end
 
       it "should concisely explain each result" do
         ["3 + 6 = 9","2 + 4 = 6","5 + 6 = 11","3 + 6 = 9","2 + 5 = 7","6 + 1 = 7","5 + 5 = 10",].each do |expected_explain|
           bunch.roll
-          bunch.explain_result.should == expected_explain
+          expect(bunch.explain_result).to eql expected_explain
         end
       end
 
       it "should calculate correct min, max = 2,12" do
-        bunch.min.should == 2
-        bunch.max.should == 12
+        expect(bunch.min).to eql 2
+        expect(bunch.max).to eql 12
       end
 
       it "should have a mean value of 7.0" do
-        bunch.probabilities.expected.should be_within(1e-10).of 7.0
+        expect(bunch.probabilities.expected).to be_within(1e-10).of 7.0
       end
 
       it "should calculate probabilities correctly" do
         prob_hash = bunch.probabilities.to_h
-        prob_hash[2].should be_within(1e-10).of 1/36.0
-        prob_hash[3].should be_within(1e-10).of 2/36.0
-        prob_hash[4].should be_within(1e-10).of 3/36.0
-        prob_hash[5].should be_within(1e-10).of 4/36.0
-        prob_hash[6].should be_within(1e-10).of 5/36.0
-        prob_hash[7].should be_within(1e-10).of 6/36.0
-        prob_hash[8].should be_within(1e-10).of 5/36.0
-        prob_hash[9].should be_within(1e-10).of 4/36.0
-        prob_hash[10].should be_within(1e-10).of 3/36.0
-        prob_hash[11].should be_within(1e-10).of 2/36.0
-        prob_hash[12].should be_within(1e-10).of 1/36.0
-        prob_hash.values.inject(:+).should be_within(1e-9).of 1.0
+        expect(prob_hash[2]).to be_within(1e-10).of 1/36.0
+        expect(prob_hash[3]).to be_within(1e-10).of 2/36.0
+        expect(prob_hash[4]).to be_within(1e-10).of 3/36.0
+        expect(prob_hash[5]).to be_within(1e-10).of 4/36.0
+        expect(prob_hash[6]).to be_within(1e-10).of 5/36.0
+        expect(prob_hash[7]).to be_within(1e-10).of 6/36.0
+        expect(prob_hash[8]).to be_within(1e-10).of 5/36.0
+        expect(prob_hash[9]).to be_within(1e-10).of 4/36.0
+        expect(prob_hash[10]).to be_within(1e-10).of 3/36.0
+        expect(prob_hash[11]).to be_within(1e-10).of 2/36.0
+        expect(prob_hash[12]).to be_within(1e-10).of 1/36.0
+        expect(prob_hash.values.inject(:+)).to be_within(1e-9).of 1.0
       end
     end
 
@@ -98,8 +96,8 @@ describe GamesDice::Bunch do
 
       it "should simulate rolling twenty ten-sided dice and adding them" do
         [132,103,102,124,132,96,111].each do |expected_total|
-          bunch.roll.should == expected_total
-          bunch.result.should == expected_total
+          expect(bunch.roll).to eql expected_total
+          expect(bunch.result).to eql expected_total
         end
       end
 
@@ -109,24 +107,24 @@ describe GamesDice::Bunch do
          "6 + 1 + 1 + 3 + 1 + 4 + 9 + 6 + 3 + 10 + 9 + 10 + 8 + 4 + 1 + 4 + 2 + 1 + 10 + 9 = 102",
          ].each do |expected_explain|
           bunch.roll
-          bunch.explain_result.should == expected_explain
+          expect(bunch.explain_result).to eql expected_explain
         end
       end
 
       it "should calculate correct min, max = 20,200" do
-        bunch.min.should == 20
-        bunch.max.should == 200
+        expect(bunch.min).to eql 20
+        expect(bunch.max).to eql 200
       end
 
       it "should have a mean value of 110.0" do
-        bunch.probabilities.expected.should be_within(1e-8).of 110.0
+        expect(bunch.probabilities.expected).to be_within(1e-8).of 110.0
       end
 
       it "should calculate probabilities correctly" do
         prob_hash = bunch.probabilities.to_h
-        prob_hash[20].should be_within(1e-26).of 1e-20
-        prob_hash[110].should be_within(1e-10).of 0.0308191892
-        prob_hash.values.inject(:+).should be_within(1e-9).of 1.0
+        expect(prob_hash[20]).to be_within(1e-26).of 1e-20
+        expect(prob_hash[110]).to be_within(1e-10).of 0.0308191892
+        expect(prob_hash.values.inject(:+)).to be_within(1e-9).of 1.0
       end
     end
 
@@ -135,8 +133,8 @@ describe GamesDice::Bunch do
 
       it "should simulate rolling four six-sided dice and adding the best three values" do
         [13,17,13,12,13,10,14].each do |expected_total|
-          bunch.roll.should == expected_total
-          bunch.result.should == expected_total
+          expect(bunch.roll).to eql expected_total
+          expect(bunch.result).to eql expected_total
         end
       end
 
@@ -147,38 +145,38 @@ describe GamesDice::Bunch do
          "5, 5, 2, 1. Keep: 2 + 5 + 5 = 12",
          ].each do |expected_explain|
           bunch.roll
-          bunch.explain_result.should == expected_explain
+          expect(bunch.explain_result).to eql expected_explain
         end
       end
 
       it "should calculate correct min, max = 3,18" do
-        bunch.min.should == 3
-        bunch.max.should == 18
+        expect(bunch.min).to eql 3
+        expect(bunch.max).to eql 18
       end
 
       it "should have a mean value of roughly 12.2446" do
-        bunch.probabilities.expected.should be_within(1e-9).of 12.244598765
+        expect(bunch.probabilities.expected).to be_within(1e-9).of 12.244598765
       end
 
       it "should calculate probabilities correctly" do
         prob_hash = bunch.probabilities.to_h
-        prob_hash[3].should be_within(1e-10).of 1/1296.0
-        prob_hash[4].should be_within(1e-10).of 4/1296.0
-        prob_hash[5].should be_within(1e-10).of 10/1296.0
-        prob_hash[6].should be_within(1e-10).of 21/1296.0
-        prob_hash[7].should be_within(1e-10).of 38/1296.0
-        prob_hash[8].should be_within(1e-10).of 62/1296.0
-        prob_hash[9].should be_within(1e-10).of 91/1296.0
-        prob_hash[10].should be_within(1e-10).of 122/1296.0
-        prob_hash[11].should be_within(1e-10).of 148/1296.0
-        prob_hash[12].should be_within(1e-10).of 167/1296.0
-        prob_hash[13].should be_within(1e-10).of 172/1296.0
-        prob_hash[14].should be_within(1e-10).of 160/1296.0
-        prob_hash[15].should be_within(1e-10).of 131/1296.0
-        prob_hash[16].should be_within(1e-10).of 94/1296.0
-        prob_hash[17].should be_within(1e-10).of 54/1296.0
-        prob_hash[18].should be_within(1e-10).of 21/1296.0
-        prob_hash.values.inject(:+).should be_within(1e-9).of 1.0
+        expect(prob_hash[3]).to be_within(1e-10).of 1/1296.0
+        expect(prob_hash[4]).to be_within(1e-10).of 4/1296.0
+        expect(prob_hash[5]).to be_within(1e-10).of 10/1296.0
+        expect(prob_hash[6]).to be_within(1e-10).of 21/1296.0
+        expect(prob_hash[7]).to be_within(1e-10).of 38/1296.0
+        expect(prob_hash[8]).to be_within(1e-10).of 62/1296.0
+        expect(prob_hash[9]).to be_within(1e-10).of 91/1296.0
+        expect(prob_hash[10]).to be_within(1e-10).of 122/1296.0
+        expect(prob_hash[11]).to be_within(1e-10).of 148/1296.0
+        expect(prob_hash[12]).to be_within(1e-10).of 167/1296.0
+        expect(prob_hash[13]).to be_within(1e-10).of 172/1296.0
+        expect(prob_hash[14]).to be_within(1e-10).of 160/1296.0
+        expect(prob_hash[15]).to be_within(1e-10).of 131/1296.0
+        expect(prob_hash[16]).to be_within(1e-10).of 94/1296.0
+        expect(prob_hash[17]).to be_within(1e-10).of 54/1296.0
+        expect(prob_hash[18]).to be_within(1e-10).of 21/1296.0
+        expect(prob_hash.values.inject(:+)).to be_within(1e-9).of 1.0
       end
     end
 
@@ -187,8 +185,8 @@ describe GamesDice::Bunch do
 
       it "should simulate rolling ten ten-sided dice and keeping the worst value" do
         [2,5,1,2,1,1,2].each do |expected_total|
-          bunch.roll.should == expected_total
-          bunch.result.should == expected_total
+          expect(bunch.roll).to eql expected_total
+          expect(bunch.result).to eql expected_total
         end
       end
 
@@ -199,32 +197,32 @@ describe GamesDice::Bunch do
          "7, 7, 6, 5, 2, 7, 4, 9, 7, 2. Keep: 2",
          ].each do |expected_explain|
           bunch.roll
-          bunch.explain_result.should == expected_explain
+          expect(bunch.explain_result).to eql expected_explain
         end
       end
 
       it "should calculate correct min, max = 1,10" do
-        bunch.min.should == 1
-        bunch.max.should == 10
+        expect(bunch.min).to eql 1
+        expect(bunch.max).to eql 10
       end
 
       it "should have a mean value of roughly 1.491" do
-        bunch.probabilities.expected.should be_within(1e-9).of 1.4914341925
+        expect(bunch.probabilities.expected).to be_within(1e-9).of 1.4914341925
       end
 
       it "should calculate probabilities correctly" do
         prob_hash = bunch.probabilities.to_h
-        prob_hash[1].should be_within(1e-10).of 0.6513215599
-        prob_hash[2].should be_within(1e-10).of 0.2413042577
-        prob_hash[3].should be_within(1e-10).of 0.0791266575
-        prob_hash[4].should be_within(1e-10).of 0.0222009073
-        prob_hash[5].should be_within(1e-10).of 0.0050700551
-        prob_hash[6].should be_within(1e-10).of 0.0008717049
-        prob_hash[7].should be_within(1e-10).of 0.0000989527
-        prob_hash[8].should be_within(1e-10).of 0.0000058025
-        prob_hash[9].should be_within(1e-10).of 0.0000001023
-        prob_hash[10].should be_within(1e-18).of 1e-10
-        prob_hash.values.inject(:+).should be_within(1e-9).of 1.0
+        expect(prob_hash[1]).to be_within(1e-10).of 0.6513215599
+        expect(prob_hash[2]).to be_within(1e-10).of 0.2413042577
+        expect(prob_hash[3]).to be_within(1e-10).of 0.0791266575
+        expect(prob_hash[4]).to be_within(1e-10).of 0.0222009073
+        expect(prob_hash[5]).to be_within(1e-10).of 0.0050700551
+        expect(prob_hash[6]).to be_within(1e-10).of 0.0008717049
+        expect(prob_hash[7]).to be_within(1e-10).of 0.0000989527
+        expect(prob_hash[8]).to be_within(1e-10).of 0.0000058025
+        expect(prob_hash[9]).to be_within(1e-10).of 0.0000001023
+        expect(prob_hash[10]).to be_within(1e-18).of 1e-10
+        expect(prob_hash.values.inject(:+)).to be_within(1e-9).of 1.0
       end
     end
 
@@ -237,8 +235,8 @@ describe GamesDice::Bunch do
 
       it "should simulate rolling five ten-sided 'exploding' dice and adding the best two values" do
         [16,24,17,28,12,21,16].each do |expected_total|
-          bunch.roll.should == expected_total
-          bunch.result.should == expected_total
+          expect(bunch.roll).to eql expected_total
+          expect(bunch.result).to eql expected_total
         end
       end
 
@@ -249,49 +247,49 @@ describe GamesDice::Bunch do
          "[10+9] 19, 5, 9, 3, 9. Keep: 9 + 19 = 28",
          ].each do |expected_explain|
           bunch.roll
-          bunch.explain_result.should == expected_explain
+          expect(bunch.explain_result).to eql expected_explain
         end
       end
 
       it "should calculate correct min, max = 2, > 100" do
-        bunch.min.should == 2
-        bunch.max.should > 100
+        expect(bunch.min).to eql 2
+        expect(bunch.max).to be > 100
       end
 
       it "should have a mean value of roughly 18.986" do
-        bunch.probabilities.expected.should be_within(1e-9).of 18.9859925804
+        expect(bunch.probabilities.expected).to be_within(1e-9).of 18.9859925804
       end
 
       it "should calculate probabilities correctly" do
         prob_hash = bunch.probabilities.to_h
-        prob_hash[2].should be_within(1e-10).of 0.00001
-        prob_hash[3].should be_within(1e-10).of 0.00005
-        prob_hash[4].should be_within(1e-10).of 0.00031
-        prob_hash[5].should be_within(1e-10).of 0.00080
-        prob_hash[6].should be_within(1e-10).of 0.00211
-        prob_hash[7].should be_within(1e-10).of 0.00405
-        prob_hash[8].should be_within(1e-10).of 0.00781
-        prob_hash[9].should be_within(1e-10).of 0.01280
-        prob_hash[10].should be_within(1e-10).of 0.02101
-        prob_hash[12].should be_within(1e-10).of 0.045715
-        prob_hash[13].should be_within(1e-10).of 0.060830
-        prob_hash[14].should be_within(1e-10).of 0.077915
-        prob_hash[15].should be_within(1e-10).of 0.090080
-        prob_hash[16].should be_within(1e-10).of 0.097935
-        prob_hash[17].should be_within(1e-10).of 0.091230
-        prob_hash[18].should be_within(1e-10).of 0.070015
-        prob_hash[19].should be_within(1e-10).of 0.020480
-        prob_hash[20].should be_within(1e-10).of 0.032805
-        prob_hash[22].should be_within(1e-10).of 0.0334626451
-        prob_hash[23].should be_within(1e-10).of 0.0338904805
-        prob_hash[24].should be_within(1e-10).of 0.0338098781
-        prob_hash[25].should be_within(1e-10).of 0.0328226480
-        prob_hash[26].should be_within(1e-10).of 0.0304393461
-        prob_hash[27].should be_within(1e-10).of 0.0260456005
-        prob_hash[28].should be_within(1e-10).of 0.0189361531
-        prob_hash[29].should be_within(1e-10).of 0.0082804480
-        prob_hash[30].should be_within(1e-10).of 0.0103524151
-        prob_hash.values.inject(:+).should be_within(1e-9).of 1.0
+        expect(prob_hash[2]).to be_within(1e-10).of 0.00001
+        expect(prob_hash[3]).to be_within(1e-10).of 0.00005
+        expect(prob_hash[4]).to be_within(1e-10).of 0.00031
+        expect(prob_hash[5]).to be_within(1e-10).of 0.00080
+        expect(prob_hash[6]).to be_within(1e-10).of 0.00211
+        expect(prob_hash[7]).to be_within(1e-10).of 0.00405
+        expect(prob_hash[8]).to be_within(1e-10).of 0.00781
+        expect(prob_hash[9]).to be_within(1e-10).of 0.01280
+        expect(prob_hash[10]).to be_within(1e-10).of 0.02101
+        expect(prob_hash[12]).to be_within(1e-10).of 0.045715
+        expect(prob_hash[13]).to be_within(1e-10).of 0.060830
+        expect(prob_hash[14]).to be_within(1e-10).of 0.077915
+        expect(prob_hash[15]).to be_within(1e-10).of 0.090080
+        expect(prob_hash[16]).to be_within(1e-10).of 0.097935
+        expect(prob_hash[17]).to be_within(1e-10).of 0.091230
+        expect(prob_hash[18]).to be_within(1e-10).of 0.070015
+        expect(prob_hash[19]).to be_within(1e-10).of 0.020480
+        expect(prob_hash[20]).to be_within(1e-10).of 0.032805
+        expect(prob_hash[22]).to be_within(1e-10).of 0.0334626451
+        expect(prob_hash[23]).to be_within(1e-10).of 0.0338904805
+        expect(prob_hash[24]).to be_within(1e-10).of 0.0338098781
+        expect(prob_hash[25]).to be_within(1e-10).of 0.0328226480
+        expect(prob_hash[26]).to be_within(1e-10).of 0.0304393461
+        expect(prob_hash[27]).to be_within(1e-10).of 0.0260456005
+        expect(prob_hash[28]).to be_within(1e-10).of 0.0189361531
+        expect(prob_hash[29]).to be_within(1e-10).of 0.0082804480
+        expect(prob_hash[30]).to be_within(1e-10).of 0.0103524151
+        expect(prob_hash.values.inject(:+)).to be_within(1e-9).of 1.0
       end
     end
 
@@ -304,8 +302,8 @@ describe GamesDice::Bunch do
 
       it "should simulate rolling two twenty-sided dice and keeping the best value" do
         [19,18,14,6,13,10,16].each do |expected_total|
-          bunch.roll.should == expected_total
-          bunch.result.should == expected_total
+          expect(bunch.roll).to eql expected_total
+          expect(bunch.result).to eql expected_total
         end
       end
 
@@ -316,42 +314,42 @@ describe GamesDice::Bunch do
          "3, 6. Keep: 6",
          ].each do |expected_explain|
           bunch.roll
-          bunch.explain_result.should == expected_explain
+          expect(bunch.explain_result).to eql expected_explain
         end
       end
 
       it "should calculate correct min, max = 1,20" do
-        bunch.min.should == 1
-        bunch.max.should == 20
+        expect(bunch.min).to eql 1
+        expect(bunch.max).to eql 20
       end
 
       it "should have a mean value of 13.825" do
-        bunch.probabilities.expected.should be_within(1e-9).of 13.825
+        expect(bunch.probabilities.expected).to be_within(1e-9).of 13.825
       end
 
       it "should calculate probabilities correctly" do
         prob_hash = bunch.probabilities.to_h
-        prob_hash[1].should be_within(1e-10).of 1/400.0
-        prob_hash[2].should be_within(1e-10).of 3/400.0
-        prob_hash[3].should be_within(1e-10).of 5/400.0
-        prob_hash[4].should be_within(1e-10).of 7/400.0
-        prob_hash[5].should be_within(1e-10).of 9/400.0
-        prob_hash[6].should be_within(1e-10).of 11/400.0
-        prob_hash[7].should be_within(1e-10).of 13/400.0
-        prob_hash[8].should be_within(1e-10).of 15/400.0
-        prob_hash[9].should be_within(1e-10).of 17/400.0
-        prob_hash[10].should be_within(1e-10).of 19/400.0
-        prob_hash[11].should be_within(1e-10).of 21/400.0
-        prob_hash[12].should be_within(1e-10).of 23/400.0
-        prob_hash[13].should be_within(1e-10).of 25/400.0
-        prob_hash[14].should be_within(1e-10).of 27/400.0
-        prob_hash[15].should be_within(1e-10).of 29/400.0
-        prob_hash[16].should be_within(1e-10).of 31/400.0
-        prob_hash[17].should be_within(1e-10).of 33/400.0
-        prob_hash[18].should be_within(1e-10).of 35/400.0
-        prob_hash[19].should be_within(1e-10).of 37/400.0
-        prob_hash[20].should be_within(1e-10).of 39/400.0
-        prob_hash.values.inject(:+).should be_within(1e-9).of 1.0
+        expect(prob_hash[1]).to be_within(1e-10).of 1/400.0
+        expect(prob_hash[2]).to be_within(1e-10).of 3/400.0
+        expect(prob_hash[3]).to be_within(1e-10).of 5/400.0
+        expect(prob_hash[4]).to be_within(1e-10).of 7/400.0
+        expect(prob_hash[5]).to be_within(1e-10).of 9/400.0
+        expect(prob_hash[6]).to be_within(1e-10).of 11/400.0
+        expect(prob_hash[7]).to be_within(1e-10).of 13/400.0
+        expect(prob_hash[8]).to be_within(1e-10).of 15/400.0
+        expect(prob_hash[9]).to be_within(1e-10).of 17/400.0
+        expect(prob_hash[10]).to be_within(1e-10).of 19/400.0
+        expect(prob_hash[11]).to be_within(1e-10).of 21/400.0
+        expect(prob_hash[12]).to be_within(1e-10).of 23/400.0
+        expect(prob_hash[13]).to be_within(1e-10).of 25/400.0
+        expect(prob_hash[14]).to be_within(1e-10).of 27/400.0
+        expect(prob_hash[15]).to be_within(1e-10).of 29/400.0
+        expect(prob_hash[16]).to be_within(1e-10).of 31/400.0
+        expect(prob_hash[17]).to be_within(1e-10).of 33/400.0
+        expect(prob_hash[18]).to be_within(1e-10).of 35/400.0
+        expect(prob_hash[19]).to be_within(1e-10).of 37/400.0
+        expect(prob_hash[20]).to be_within(1e-10).of 39/400.0
+        expect(prob_hash.values.inject(:+)).to be_within(1e-9).of 1.0
       end
     end
 
@@ -364,8 +362,8 @@ describe GamesDice::Bunch do
 
       it "should simulate rolling two twenty-sided dice and keeping the best value" do
         [14,16,5,3,7,5,9].each do |expected_total|
-          bunch.roll.should == expected_total
-          bunch.result.should == expected_total
+          expect(bunch.roll).to eql expected_total
+          expect(bunch.result).to eql expected_total
         end
       end
 
@@ -376,45 +374,43 @@ describe GamesDice::Bunch do
          "3, 6. Keep: 3",
          ].each do |expected_explain|
           bunch.roll
-          bunch.explain_result.should == expected_explain
+          expect(bunch.explain_result).to eql expected_explain
         end
       end
 
       it "should calculate correct min, max = 1,20" do
-        bunch.min.should == 1
-        bunch.max.should == 20
+        expect(bunch.min).to eql 1
+        expect(bunch.max).to eql 20
       end
 
       it "should have a mean value of 7.175" do
-        bunch.probabilities.expected.should be_within(1e-9).of 7.175
+        expect(bunch.probabilities.expected).to be_within(1e-9).of 7.175
       end
 
       it "should calculate probabilities correctly" do
         prob_hash = bunch.probabilities.to_h
-        prob_hash[1].should be_within(1e-10).of 39/400.0
-        prob_hash[2].should be_within(1e-10).of 37/400.0
-        prob_hash[3].should be_within(1e-10).of 35/400.0
-        prob_hash[4].should be_within(1e-10).of 33/400.0
-        prob_hash[5].should be_within(1e-10).of 31/400.0
-        prob_hash[6].should be_within(1e-10).of 29/400.0
-        prob_hash[7].should be_within(1e-10).of 27/400.0
-        prob_hash[8].should be_within(1e-10).of 25/400.0
-        prob_hash[9].should be_within(1e-10).of 23/400.0
-        prob_hash[10].should be_within(1e-10).of 21/400.0
-        prob_hash[11].should be_within(1e-10).of 19/400.0
-        prob_hash[12].should be_within(1e-10).of 17/400.0
-        prob_hash[13].should be_within(1e-10).of 15/400.0
-        prob_hash[14].should be_within(1e-10).of 13/400.0
-        prob_hash[15].should be_within(1e-10).of 11/400.0
-        prob_hash[16].should be_within(1e-10).of 9/400.0
-        prob_hash[17].should be_within(1e-10).of 7/400.0
-        prob_hash[18].should be_within(1e-10).of 5/400.0
-        prob_hash[19].should be_within(1e-10).of 3/400.0
-        prob_hash[20].should be_within(1e-10).of 1/400.0
-        prob_hash.values.inject(:+).should be_within(1e-9).of 1.0
+        expect(prob_hash[1]).to be_within(1e-10).of 39/400.0
+        expect(prob_hash[2]).to be_within(1e-10).of 37/400.0
+        expect(prob_hash[3]).to be_within(1e-10).of 35/400.0
+        expect(prob_hash[4]).to be_within(1e-10).of 33/400.0
+        expect(prob_hash[5]).to be_within(1e-10).of 31/400.0
+        expect(prob_hash[6]).to be_within(1e-10).of 29/400.0
+        expect(prob_hash[7]).to be_within(1e-10).of 27/400.0
+        expect(prob_hash[8]).to be_within(1e-10).of 25/400.0
+        expect(prob_hash[9]).to be_within(1e-10).of 23/400.0
+        expect(prob_hash[10]).to be_within(1e-10).of 21/400.0
+        expect(prob_hash[11]).to be_within(1e-10).of 19/400.0
+        expect(prob_hash[12]).to be_within(1e-10).of 17/400.0
+        expect(prob_hash[13]).to be_within(1e-10).of 15/400.0
+        expect(prob_hash[14]).to be_within(1e-10).of 13/400.0
+        expect(prob_hash[15]).to be_within(1e-10).of 11/400.0
+        expect(prob_hash[16]).to be_within(1e-10).of 9/400.0
+        expect(prob_hash[17]).to be_within(1e-10).of 7/400.0
+        expect(prob_hash[18]).to be_within(1e-10).of 5/400.0
+        expect(prob_hash[19]).to be_within(1e-10).of 3/400.0
+        expect(prob_hash[20]).to be_within(1e-10).of 1/400.0
+        expect(prob_hash.values.inject(:+)).to be_within(1e-9).of 1.0
       end
     end
-
   end
-
 end

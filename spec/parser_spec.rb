@@ -1,6 +1,7 @@
 require 'helpers'
 
 describe GamesDice::Parser do
+
   describe "#parse" do
     let(:parser) { GamesDice::Parser.new }
 
@@ -16,7 +17,7 @@ describe GamesDice::Parser do
         '3d12+5+2d8+1d6' => { :bunches => [{:ndice=>3, :sides=>12, :multiplier=>1},{:ndice=>2, :sides=>8, :multiplier=>1},{:ndice=>1, :sides=>6, :multiplier=>1}], :offset => 5 },
       }
 
-      variations.each do |input,expected_output|
+      variations.each do |input, expected_output|
         expect(parser.parse(input)).to eql expected_output
       end
     end
@@ -28,7 +29,7 @@ describe GamesDice::Parser do
         '1d8r2' => { :bunches => [{:ndice=>1, :sides=>8, :multiplier=>1, :rerolls=>[ [2,:>=,:reroll_replace] ]}], :offset => 0 },
       }
 
-      variations.each do |input,expected_output|
+      variations.each do |input, expected_output|
         expect(parser.parse(input)).to eql expected_output
       end
     end
