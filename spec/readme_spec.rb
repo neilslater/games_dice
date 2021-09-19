@@ -17,7 +17,7 @@ describe GamesDice do
       expect(d).to be_a GamesDice::Dice
     end
 
-    it "takes an optional parameter 'prng', which if provided it should be an object that has a method 'rand( integer )'" do
+    it "takes an optional parameter 'prng', which should be an object that has a method 'rand( integer )'" do
       prng = TestPRNG.new
 
       d = GamesDice.create '3d6', prng

@@ -2,6 +2,7 @@
 
 # @!visibility private
 module GamesDice
+  # Internal helpers for probabilities
   module ProbabilityValidations
     # @!visibility private
     # the Array, Offset representation of probabilities.
@@ -100,6 +101,12 @@ end
 module GamesDice
   module ProbabilityCalcSums
     private
+
+    def calc_expected
+      total = 0.0
+      @probs.each_with_index { |v, i| total += (i + @offset) * v }
+      total
+    end
 
     def repeat_sum_internal(n)
       pd_power = self
@@ -208,27 +215,24 @@ module GamesDice
   end
 end
 
-# @!visibility private
-# Helper module with optimised Ruby for counting variations of arrays, such as those returned by
-# Array#repeated_combination
-#
-# @example How many ways can [3,3,6] be arranged?
-#  GamesDice::Combinations.count_variations( [3,3,6] )
-#  => 3
-#
-# @example When prob( a ) and result( a ) are same for any arrangement of Array a
-#  items = [1,2,3,4,5,6]
-#  items.repeated_combination(5).each do |a|
-#    this_result = result( a )
-#    this_prob = prob( a ) * GamesDice::Combinations.count_variations( a )
-#    # Do something useful with this knowledge! E.g. save it to probability array.
-#  end
-#
 module GamesDice
+  # @!visibility private
+  # Helper module with optimised Ruby for counting variations of arrays, such as those returned by
+  # Array#repeated_combination
+  #
+  # @example How many ways can [3,3,6] be arranged?
+  #  GamesDice::Combinations.count_variations( [3,3,6] )
+  #  => 3
+  #
+  # @example When prob( a ) and result( a ) are same for any arrangement of Array a
+  #  items = [1,2,3,4,5,6]
+  #  items.repeated_combination(5).each do |a|
+  #    this_result = result( a )
+  #    this_prob = prob( a ) * GamesDice::Combinations.count_variations( a )
+  #    # Do something useful with this knowledge! E.g. save it to probability array.
+  #  end
+  #
   module Combinations
-    @@variations_cache = {}
-    @@factorial_cache = [1, 1, 2, 6, 24, 120, 720, 5040, 40_320, 362_880, 3_628_800]
-
     # Counts variations of an array. A unique variation is an arrangement of the array elements which
     # is detectably different (using ==) from any other. So [1,1,1] has only 1 unique arrangement,
     # but [1,2,3] has 6 possibilities.
@@ -238,6 +242,7 @@ module GamesDice
       all_count = array.count
       group_sizes = group_counts(array)
       cache_key = "#{all_count}:#{group_sizes.join(',')}"
+      @variations_cache ||= {}
       @@variations_cache[cache_key] ||= variations_of(all_count, group_sizes)
     end
 
@@ -254,9 +259,10 @@ module GamesDice
       array.group_by { |x| x }.values.map(&:count).sort
     end
 
-    def self.factorial(n)
+    def self.factorial(num)
+      @factorial_cache ||= [1, 1, 2, 6, 24, 120, 720, 5040, 40_320, 362_880, 3_628_800]
       # Can start range from 2 because we have pre-cached the result for n=1
-      @@factorial_cache[n] ||= (2..n).inject(:*)
+      @factorial_cache[num] ||= (2..num).inject(:*)
     end
   end
 end

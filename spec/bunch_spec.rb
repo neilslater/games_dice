@@ -105,9 +105,11 @@ describe GamesDice::Bunch do
       end
 
       it 'should concisely explain each result' do
-        ['3 + 2 + 8 + 8 + 5 + 3 + 7 + 7 + 6 + 10 + 7 + 6 + 9 + 5 + 5 + 8 + 10 + 9 + 5 + 9 = 132',
-         '3 + 9 + 1 + 4 + 3 + 5 + 7 + 1 + 10 + 4 + 7 + 7 + 6 + 5 + 2 + 7 + 4 + 9 + 7 + 2 = 103',
-         '6 + 1 + 1 + 3 + 1 + 4 + 9 + 6 + 3 + 10 + 9 + 10 + 8 + 4 + 1 + 4 + 2 + 1 + 10 + 9 = 102'].each do |expected_explain|
+        explains = ['3 + 2 + 8 + 8 + 5 + 3 + 7 + 7 + 6 + 10 + 7 + 6 + 9 + 5 + 5 + 8 + 10 + 9 + 5 + 9 = 132',
+                    '3 + 9 + 1 + 4 + 3 + 5 + 7 + 1 + 10 + 4 + 7 + 7 + 6 + 5 + 2 + 7 + 4 + 9 + 7 + 2 = 103',
+                    '6 + 1 + 1 + 3 + 1 + 4 + 9 + 6 + 3 + 10 + 9 + 10 + 8 + 4 + 1 + 4 + 2 + 1 + 10 + 9 = 102']
+
+        explains.each do |expected_explain|
           bunch.roll
           expect(bunch.explain_result).to eql expected_explain
         end
@@ -262,33 +264,16 @@ describe GamesDice::Bunch do
 
       it 'should calculate probabilities correctly' do
         prob_hash = bunch.probabilities.to_h
-        expect(prob_hash[2]).to be_within(1e-10).of 0.00001
-        expect(prob_hash[3]).to be_within(1e-10).of 0.00005
-        expect(prob_hash[4]).to be_within(1e-10).of 0.00031
-        expect(prob_hash[5]).to be_within(1e-10).of 0.00080
-        expect(prob_hash[6]).to be_within(1e-10).of 0.00211
-        expect(prob_hash[7]).to be_within(1e-10).of 0.00405
-        expect(prob_hash[8]).to be_within(1e-10).of 0.00781
-        expect(prob_hash[9]).to be_within(1e-10).of 0.01280
-        expect(prob_hash[10]).to be_within(1e-10).of 0.02101
-        expect(prob_hash[12]).to be_within(1e-10).of 0.045715
-        expect(prob_hash[13]).to be_within(1e-10).of 0.060830
-        expect(prob_hash[14]).to be_within(1e-10).of 0.077915
-        expect(prob_hash[15]).to be_within(1e-10).of 0.090080
-        expect(prob_hash[16]).to be_within(1e-10).of 0.097935
-        expect(prob_hash[17]).to be_within(1e-10).of 0.091230
-        expect(prob_hash[18]).to be_within(1e-10).of 0.070015
-        expect(prob_hash[19]).to be_within(1e-10).of 0.020480
-        expect(prob_hash[20]).to be_within(1e-10).of 0.032805
-        expect(prob_hash[22]).to be_within(1e-10).of 0.0334626451
-        expect(prob_hash[23]).to be_within(1e-10).of 0.0338904805
-        expect(prob_hash[24]).to be_within(1e-10).of 0.0338098781
-        expect(prob_hash[25]).to be_within(1e-10).of 0.0328226480
-        expect(prob_hash[26]).to be_within(1e-10).of 0.0304393461
-        expect(prob_hash[27]).to be_within(1e-10).of 0.0260456005
-        expect(prob_hash[28]).to be_within(1e-10).of 0.0189361531
-        expect(prob_hash[29]).to be_within(1e-10).of 0.0082804480
-        expect(prob_hash[30]).to be_within(1e-10).of 0.0103524151
+        probs = prob_hash.values_at(*2..30)
+        expected_probs = [0.00001, 0.00005, 0.00031, 0.00080, 0.00211, 0.00405, 0.00781, 0.01280, 0.02101, 0.0312,
+                          0.045715, 0.060830, 0.077915, 0.090080, 0.097935, 0.091230, 0.070015, 0.020480, 0.032805,
+                          0.0328, 0.0334626451, 0.0338904805, 0.0338098781, 0.0328226480, 0.0304393461, 0.0260456005,
+                          0.0189361531, 0.0082804480, 0.0103524151]
+
+        probs.zip(expected_probs) do |got_prob, expected_prob|
+          expect(got_prob).to be_within(1e-10).of(expected_prob)
+        end
+
         expect(prob_hash.values.inject(:+)).to be_within(1e-9).of 1.0
       end
     end

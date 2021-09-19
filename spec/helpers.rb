@@ -17,21 +17,21 @@ class TestPRNG
     @numbers = [0.123, 0.234, 0.345, 0.999, 0.876, 0.765, 0.543, 0.111, 0.333, 0.777]
   end
 
-  def rand(n)
-    Integer(n * @numbers.pop)
+  def rand(num)
+    Integer(num * @numbers.pop)
   end
 end
 
 # TestPRNGMax checks behaviour of re-rolls
 class TestPRNGMax
-  def rand(n)
-    Integer(n) - 1
+  def rand(num)
+    Integer(num) - 1
   end
 end
 
 # TestPRNGMin checks behaviour of re-rolls
 class TestPRNGMin
-  def rand(_n)
+  def rand(_num)
     1
   end
 end

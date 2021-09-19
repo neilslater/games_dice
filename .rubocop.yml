@@ -10,4 +10,6 @@ Metrics/BlockLength:
     - context
     - describe
     - shared_examples
+    - define
+  
 

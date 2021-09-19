@@ -1,26 +1,25 @@
 # frozen_string_literal: true
 
-# This class models a variety of game rules that cause dice to be re-rolled.
-#
-# An object of the class represents a single rule, such as "re-roll a result of 1
-# and use the new value".
-#
-# @example A rule for "exploding" dice
-#  rule = GamesDice::RerollRule.new( 6, :<=, :reroll_add )
-#  # Test whether the rule applies . . .
-#  rule.applies? 4   # => false
-#  rule.applies? 6   # => true
-#  rule.type         # => :reroll_add
-#
-# @example A rule for re-rolling and taking best value if first attempt is lower than a threshold
-#  rule = GamesDice::RerollRule.new( 11, :>, :reroll_use_best, 1 )
-#  # Test whether the rule applies . . .
-#  rule.applies? 4   # => true
-#  rule.applies? 14  # => false
-#  rule.type         # => :reroll_use_best
-#
-
 module GamesDice
+  # This class models a variety of game rules that cause dice to be re-rolled.
+  #
+  # An object of the class represents a single rule, such as "re-roll a result of 1
+  # and use the new value".
+  #
+  # @example A rule for "exploding" dice
+  #  rule = GamesDice::RerollRule.new( 6, :<=, :reroll_add )
+  #  # Test whether the rule applies . . .
+  #  rule.applies? 4   # => false
+  #  rule.applies? 6   # => true
+  #  rule.type         # => :reroll_add
+  #
+  # @example A rule for re-rolling and taking best value if first attempt is lower than a threshold
+  #  rule = GamesDice::RerollRule.new( 11, :>, :reroll_use_best, 1 )
+  #  # Test whether the rule applies . . .
+  #  rule.applies? 4   # => true
+  #  rule.applies? 14  # => false
+  #  rule.type         # => :reroll_use_best
+  #
   class RerollRule
     # Creates new instance of GamesDice::RerollRule. The rule will be assessed as
     #   trigger_value.send( trigger_op, x )
@@ -57,7 +56,7 @@ module GamesDice
     # @return [Symbol] A category for the re-roll, declares how it should be processed
     # The following values are supported:
     # +:reroll_add+:: add result of reroll to running total, and ignore :reroll_subtract for this die
-    # +reroll_subtract+:: subtract result of reroll from running total, and reverse sense of any further :reroll_add results
+    # +reroll_subtract+:: subtract result of reroll from running total, reverse sense of any further :reroll_add results
     # +:reroll_replace+:: use the new value in place of existing value for the die
     # +:reroll_use_best+:: use the new value if it is higher than the existing value
     # +:reroll_use_worst+:: use the new value if it is higher than the existing value
