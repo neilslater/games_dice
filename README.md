@@ -4,7 +4,6 @@
 [![Coverage Status](https://coveralls.io/repos/neilslater/games_dice/badge.png?branch=master)](https://coveralls.io/r/neilslater/games_dice?branch=master)
 [![Inline docs](http://inch-ci.org/github/neilslater/games_dice.png?branch=master)](http://inch-ci.org/github/neilslater/games_dice)
 [![Code Climate](https://codeclimate.com/github/neilslater/games_dice.png)](https://codeclimate.com/github/neilslater/games_dice)
-[![Dependency Status](https://gemnasium.com/neilslater/games_dice.png)](https://gemnasium.com/neilslater/games_dice)
 
 A library for simulating dice. Use it to construct dice-rolling systems used in role-playing and board games.
 
