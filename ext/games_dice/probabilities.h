@@ -7,7 +7,7 @@
 
 #include <ruby.h>
 
-void init_probabilities_class( VALUE ParentModule );
+void init_probabilities_class();
 
 typedef struct _pd {
     int offset;

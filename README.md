@@ -29,11 +29,10 @@ gem as-is, and add them as features within your project code.
 
 ## Supported Ruby Versions
 
-GamesDice is tested routinely on MRI Rubies 1.9.3, 2.0.0, 2.1.0, 2.1.1 and JRuby, and the
-"build passing" badge is based on those tests.
+GamesDice is tested routinely on MRI Ruby versions 2.7 and higher.
 
-It *should* also work in versions from 1.8.7, in Ruby Enterprise and in Rubinius, but it
-is not tested routinely on those Rubies.
+Older versions of GamesDice (before 0.4.0) support older Rubies, and also offer pure Ruby versions
+of probability calculations, so can be used with JRuby.
 
 ## Installation
 
@@ -48,21 +47,6 @@ And then execute:
 Or install it yourself as:
 
     $ gem install games_dice
-
-When installed, GamesDice will attempt to install Ruby native extensions in C, for speeding up probabilities
-calculations. However, all the features are available in pure Ruby, and the gem should fall back to that
-automatically on installation if your system does not support C native extensions. You can verify which
-is being installed by installing the gem in verbose mode:
-
-    $ gem install games_dice --verbose
-
-You can also verify which version you are using in Ruby by calling the class method:
-
-    GamesDice::Probabilities.implemented_in
-
-which will return either *:ruby* or *:c*. Other than this method, and a speed difference between
-implementations, there should be no other difference. If you find one, then it will be considered
-as a bug.
 
 ## Usage
 
@@ -135,7 +119,7 @@ Returns the minimum possible value from a roll of the dice. Dice with the possib
 progressively lower and lower values will return an arbitrary low value.
 
     dice.min         # => 3
-
+ß
 #### dice.minmax
 
 Convenience method, returns an array [ dice.min, dice.max ]

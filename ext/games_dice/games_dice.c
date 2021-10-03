@@ -8,5 +8,5 @@ VALUE GamesDice = Qnil;
 
 void Init_games_dice() {
   GamesDice = rb_define_module("GamesDice");
-  init_probabilities_class( GamesDice );
+  init_probabilities_class();
 }

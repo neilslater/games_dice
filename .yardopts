@@ -1,5 +1,5 @@
 lib/**/*.rb
---exclude ext
+ext/**/*.c
 --no-private
 -
 README.md

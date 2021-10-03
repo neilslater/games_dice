@@ -574,6 +574,13 @@ int copy_key_value( VALUE key, VALUE val, VALUE obj ) {
 //  Ruby class and instance methods for Probabilities
 //
 
+/*
+ * @overload initialize(probs, offset)
+ *   Creates new instance of GamesDice::Probabilities.
+ *   @param [Array<Float>] probs Each entry in the array is the probability of getting a result
+ *   @param [Integer] offset The result associated with index of 0 in the array
+ *   @return [GamesDice::Probabilities]
+ */
 VALUE probabilities_initialize( VALUE self, VALUE arr, VALUE offset ) {
   int i, o, s;
   double error, p_item;
@@ -604,7 +611,11 @@ VALUE probabilities_initialize( VALUE self, VALUE arr, VALUE offset ) {
   return self;
 }
 
-
+/*
+ * @overload clone
+ *   Cloning an object of this class creates a deep copy of the probabilities hash.
+ *   @return [GamesDice::Probabilities]
+ */
 VALUE probabilities_initialize_copy( VALUE copy, VALUE orig ) {
   ProbabilityList *pl_copy;
   ProbabilityList *pl_orig;
@@ -806,8 +817,9 @@ VALUE probabilities_implemented_in( VALUE self ) {
 //  Setup Probabilities class for Ruby interpretter
 //
 
-void init_probabilities_class( VALUE ParentModule ) {
-  Probabilities = rb_define_class_under( ParentModule, "Probabilities", rb_cObject );
+void init_probabilities_class() {
+  VALUE GamesDice = rb_define_module("GamesDice");
+  Probabilities = rb_define_class_under( GamesDice, "Probabilities", rb_cObject );
   rb_define_alloc_func( Probabilities, pl_alloc );
   rb_define_method( Probabilities, "initialize", probabilities_initialize, 2 );
   rb_define_method( Probabilities, "initialize_copy", probabilities_initialize_copy, 1 );
