@@ -1,6 +1,35 @@
 # frozen_string_literal: true
 
 module GamesDice
+  # Module supports using DieResults directly in calculations
+  # @!visibility private
+  module ExpressionHelpers
+    # all coercions simply use #value (i.e. nil or a Integer)
+    def coerce(thing)
+      @value.coerce(thing)
+    end
+
+    # addition uses #value
+    def +(other)
+      @value + other
+    end
+
+    # subtraction uses #value
+    def -(other)
+      @value - other
+    end
+
+    # multiplication uses #value
+    def *(other)
+      @value * other
+    end
+
+    # comparison <=> uses #value
+    def <=>(other)
+      value <=> other
+    end
+  end
+
   # This class models the output of GamesDice::ComplexDie.
   #
   # An object of the class represents the results of a roll of a ComplexDie, including any re-rolls and
@@ -29,6 +58,7 @@ module GamesDice
   #
   class DieResult
     include Comparable
+    include ExpressionHelpers
 
     # Creates new instance of GamesDice::DieResult. The object can be initialised "empty" or with a first result.
     # @param [Integer,nil] first_roll_result Value for first roll of the die.
@@ -40,13 +70,9 @@ module GamesDice
       end
 
       if first_roll_result
-        @rolls = [Integer(first_roll_result)]
-        @roll_reasons = [first_roll_reason]
-        @total = @rolls[0]
+        init_with_result(first_roll_result, first_roll_reason)
       else
-        @rolls = []
-        @roll_reasons = []
-        @total = nil
+        init_empty
       end
       @mapped = false
       @value = @total
@@ -78,32 +104,13 @@ module GamesDice
     # @param [Symbol] roll_reason Reason for rolling the die.
     # @return [Integer] Total so far
     def add_roll(roll_result, roll_reason = :basic)
-      unless GamesDice::REROLL_TYPES.key?(roll_reason)
-        raise ArgumentError, "Unrecognised reason for roll #{roll_reason}"
-      end
+      raise ArgumentError, "Unrecognised roll reason #{roll_reason}" unless GamesDice::REROLL_TYPES.key?(roll_reason)
 
       @rolls << Integer(roll_result)
       @roll_reasons << roll_reason
       @total = 0 if @rolls.length == 1
 
-      case roll_reason
-      when :basic
-        @total = roll_result
-      when :reroll_add
-        @total += roll_result
-      when :reroll_subtract
-        @total -= roll_result
-      when :reroll_new_die
-        @total = roll_result
-      when :reroll_new_keeper
-        @total = roll_result
-      when :reroll_replace
-        @total = roll_result
-      when :reroll_use_best
-        @total = [@value, roll_result].max
-      when :reroll_use_worst
-        @total = [@value, roll_result].min
-      end
+      apply_roll_to_total(roll_reason, roll_result)
 
       @mapped = false
       @value = @total
@@ -125,16 +132,11 @@ module GamesDice
     # map description, but does not include the mapped value.
     # @return [String] Explanation of #value.
     def explain_value
-      text = ''
-      if @rolls.length < 2
-        text = @total.to_s
-      else
-        text = "[#{@rolls[0]}"
-        text = (1..@rolls.length - 1).inject(text) do |so_far, i|
-          so_far + GamesDice::REROLL_TYPES[@roll_reasons[i]] + @rolls[i].to_s
-        end
-        text += "] #{@total}"
-      end
+      text = if @rolls.length < 2
+               @total.to_s
+             else
+               explain_value_multiple_rolls
+             end
       text += " #{@map_description}" if @mapped && @map_description && @map_description.length.positive?
       text
     end
@@ -147,37 +149,7 @@ module GamesDice
       text
     end
 
-    # @!visibility private
-    # all coercions simply use #value (i.e. nil or a Integer)
-    def coerce(thing)
-      @value.coerce(thing)
-    end
-
-    # @!visibility private
-    # addition uses #value
-    def +(other)
-      @value + other
-    end
-
-    # @!visibility private
-    # subtraction uses #value
-    def -(other)
-      @value - other
-    end
-
-    # @!visibility private
-    # multiplication uses #value
-    def *(other)
-      @value * other
-    end
-
-    # @!visibility private
-    # comparison <=> uses #value
-    def <=>(other)
-      value <=> other
-    end
-
-    # This is a deep clone, all attributes are cloned.
+    # This is a deep clone, all attributes are also cloned.
     # @return [GamesDice::DieResult]
     def clone
       cloned = GamesDice::DieResult.new
@@ -188,6 +160,47 @@ module GamesDice
       cloned.instance_variable_set('@mapped', @mapped)
       cloned.instance_variable_set('@map_description', @map_description)
       cloned
+    end
+
+    private
+
+    # Splitting this method up further, or flattening it will not make it read better. If
+    # we had a few more reroll reasons, they could maybe be grouped and method split up.
+    # rubocop:disable Metrics/MethodLength
+    def apply_roll_to_total(roll_reason, roll_result)
+      case roll_reason
+      when :basic, :reroll_new_die, :reroll_new_keeper, :reroll_replace
+        @total = roll_result
+      when :reroll_add
+        @total += roll_result
+      when :reroll_subtract
+        @total -= roll_result
+      when :reroll_use_best
+        @total = [@value, roll_result].max
+      when :reroll_use_worst
+        @total = [@value, roll_result].min
+      end
+    end
+    # rubocop:enable Metrics/MethodLength
+
+    def init_with_result(first_roll_result, first_roll_reason)
+      @rolls = [Integer(first_roll_result)]
+      @roll_reasons = [first_roll_reason]
+      @total = @rolls[0]
+    end
+
+    def init_empty
+      @rolls = []
+      @roll_reasons = []
+      @total = nil
+    end
+
+    def explain_value_multiple_rolls
+      text = "[#{@rolls[0]}"
+      text = (1..@rolls.length - 1).inject(text) do |so_far, i|
+        so_far + GamesDice::REROLL_TYPES[@roll_reasons[i]] + @rolls[i].to_s
+      end
+      text + "] #{@total}"
     end
   end
 end

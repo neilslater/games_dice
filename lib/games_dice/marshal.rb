@@ -24,13 +24,17 @@ module GamesDice
   class Probabilities
     # @!visibility private
     # Adds support for Marshal, via to_h and from_h methods
-    def _dump(*_ignored)
-      Marshal.dump to_h
+    def marshal_dump
+      to_h
     end
 
     # @!visibility private
     def self._load(buf)
+      # Use of Marshal for general-purpose object serialisation is discouraged. However, this class does support
+      # it for backwards-compatibility.
+      # rubocop:disable Security/MarshalLoad
       h = Marshal.load buf
+      # rubocop:enable Security/MarshalLoad
       from_h h
     end
   end

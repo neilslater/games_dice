@@ -88,38 +88,42 @@ module GamesDice
     def collect_bunches(dice_expressions)
       dice_expressions[:bunches].select { |h| h[:ndice] }.map do |in_hash|
         out_hash = {}
-        # Convert integers
-        %i[ndice sides].each do |s|
-          next unless in_hash[s]
+        collect_bunch_basics(in_hash, out_hash)
+        collect_bunch_multiplier(in_hash, out_hash) if in_hash[:op]
 
-          out_hash[s] = in_hash[s].to_i
-        end
-
-        # Multiplier
-        if in_hash[:op]
-          optype = in_hash[:op].to_s
-          out_hash[:multiplier] = case optype
-                                  when '+' then 1
-                                  when '-' then -1
-                                  end
-        end
-
-        # Modifiers
         in_hash[:mods]&.each do |mod|
-          if mod[:alias]
-            collect_alias_modifier mod, out_hash
-          elsif mod[:keep]
-            collect_keeper_rule mod, out_hash
-          elsif mod[:map]
-            out_hash[:maps] ||= []
-            collect_map_rule mod, out_hash
-          elsif mod[:reroll]
-            out_hash[:rerolls] ||= []
-            collect_reroll_rule mod, out_hash
-          end
+          collect_bunch_modifier(mod, out_hash)
         end
 
         out_hash
+      end
+    end
+
+    def collect_bunch_basics(in_hash, out_hash)
+      %i[ndice sides].each do |s|
+        next unless in_hash[s]
+
+        out_hash[s] = in_hash[s].to_i
+      end
+    end
+
+    def collect_bunch_multiplier(in_hash, out_hash)
+      optype = in_hash[:op].to_s
+      out_hash[:multiplier] = case optype
+                              when '+' then 1
+                              when '-' then -1
+                              end
+    end
+
+    def collect_bunch_modifier(mod, out_hash)
+      if mod[:alias]
+        collect_alias_modifier mod, out_hash
+      elsif mod[:keep]
+        collect_keeper_rule mod, out_hash
+      elsif mod[:map]
+        collect_map_rule mod, out_hash
+      elsif mod[:reroll]
+        collect_reroll_rule mod, out_hash
       end
     end
 
@@ -154,6 +158,10 @@ module GamesDice
         return
       end
 
+      collect_complex_reroll_rule(reroll_mod, out_hash)
+    end
+
+    def collect_complex_reroll_rule(reroll_mod, out_hash)
       # Typical reroll_mod: {:reroll=>"r"@5, :condition=>{:compare_num=>"10"@7}, :type=>"add"@10}
       op = get_op_symbol(reroll_mod[:condition][:comparison] || '==')
       v = reroll_mod[:condition][:compare_num].to_i
@@ -189,6 +197,10 @@ module GamesDice
         return
       end
 
+      collect_complex_map_rule(map_mod, out_hash)
+    end
+
+    def collect_complex_map_rule(map_mod, out_hash)
       # Typical map_mod: {:map=>"m"@4, :condition=>{:compare_num=>"5"@6}, :num=>"2"@8, :output=>"Qwerty"@10}
       op = get_op_symbol(map_mod[:condition][:comparison] || '>=')
       v = map_mod[:condition][:compare_num].to_i
