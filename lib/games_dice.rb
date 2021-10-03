@@ -1,11 +1,6 @@
 # frozen_string_literal: true
 
 require 'games_dice/version'
-begin
-  require 'games_dice/games_dice'
-rescue LoadError
-  require 'games_dice/probabilities'
-end
 require 'games_dice/constants'
 require 'games_dice/die'
 require 'games_dice/die_result'
@@ -15,6 +10,7 @@ require 'games_dice/complex_die'
 require 'games_dice/bunch'
 require 'games_dice/dice'
 require 'games_dice/parser'
+require 'games_dice/games_dice'
 require 'games_dice/marshal'
 
 module GamesDice

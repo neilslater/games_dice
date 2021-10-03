@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-# @!visibility private
 module GamesDice
+  # @!visibility private
   # Private extension methods for GamesDice::ComplexDie
   module ComplexDieHelpers
     private
