@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
 module GamesDice
-  VERSION = '0.4.0'
+  # Current version of the gem.
+  VERSION = '0.4.1'
 end

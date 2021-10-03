@@ -1,5 +1,9 @@
 # GamesDice Changelog
 
+## 0.4.1 ( Unreleased )
+
+ * Tidy up documentation and address some Rubocop offences.
+
 ## 0.4.0 ( 19 September 2021 )
 
  * Dropping support for older Ruby versions (< 2.6)

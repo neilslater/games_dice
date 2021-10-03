@@ -160,14 +160,6 @@ describe GamesDice::Probabilities do
         expect(-> { GamesDice::Probabilities.from_h({ 0 => 0.5, 2_000_000 => 0.5 }) }).to raise_error ArgumentError
       end
     end
-
-    describe '#implemented_in' do
-      it 'should be either :c or :ruby' do
-        lang = GamesDice::Probabilities.implemented_in
-        expect(lang).to be_a Symbol
-        expect(%i[c ruby].member?(lang)).to eql true
-      end
-    end
   end
 
   describe 'instance methods' do
