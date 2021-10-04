@@ -28,11 +28,14 @@ module GamesDice
     # @option bunches [Integer] :sides Number of sides on a single die in the bunch, *mandatory*
     # @option bunches [String] :name Optional name for the bunch
     # @option bunches [Array<GamesDice::RerollRule,Array>] :rerolls Optional rules that cause the die to roll again
-    # @option bunches [Array<GamesDice::MapRule,Array>] :maps Optional rules to convert a value into a final result for the die
-    # @option bunches [#rand] :prng Optional alternative source of randomness to Ruby's built-in #rand, passed to GamesDice::Die's constructor
+    # @option bunches [Array<GamesDice::MapRule,Array>] :maps Optional rules to convert a value into a final result
+    #   for the die
+    # @option bunches [#rand] :prng Optional alternative source of randomness to Ruby's built-in #rand, passed to
+    #   GamesDice::Die's constructor
     # @option bunches [Symbol] :keep_mode Optional, either *:keep_best* or *:keep_worst*
     # @option bunches [Integer] :keep_number Optional number of dice to keep when :keep_mode is not nil
-    # @option bunches [Integer] :multiplier Optional, defaults to 1, and typically 1 or -1 to describe whether the Bunch total is to be added or subtracted
+    # @option bunches [Integer] :multiplier Optional, defaults to 1, and typically 1 or -1 to describe whether the
+    #   Bunch total is to be added or subtracted
     # @return [GamesDice::Dice]
     def initialize(bunches, offset = 0, name = '')
       @name = name
@@ -114,10 +117,7 @@ module GamesDice
 
       return simple_explanation(explanations.first) if explanations.count == 1
 
-      bunch_values = @bunch_multipliers.zip(@bunches).map { |m, b| m * b.result }
-      bunch_values << @offset if @offset != 0
-      explanations << array_to_sum(bunch_values)
-      explanations.join('. ')
+      multi_explanations(explanations)
     end
 
     private
@@ -126,6 +126,13 @@ module GamesDice
       return explanation if @offset.zero?
 
       "#{explanation}. #{array_to_sum([@bunches[0].result, @offset])}"
+    end
+
+    def multi_explanations(explanations)
+      bunch_values = @bunch_multipliers.zip(@bunches).map { |m, b| m * b.result }
+      bunch_values << @offset if @offset != 0
+      explanations << array_to_sum(bunch_values)
+      explanations.join('. ')
     end
 
     def array_to_sum(array)
