@@ -35,8 +35,10 @@ module GamesDice
     # @param [Integer] sides Number of sides on a single die, passed to GamesDice::Die's constructor
     # @param [Hash] options
     # @option options [Array<GamesDice::RerollRule,Array>] :rerolls The rules that cause the die to roll again
-    # @option options [Array<GamesDice::MapRule,Array>] :maps The rules to convert a value into a final result for the die
-    # @option options [#rand] :prng An alternative source of randomness to Ruby's built-in #rand, passed to GamesDice::Die's constructor
+    # @option options [Array<GamesDice::MapRule,Array>] :maps The rules to convert a value into a final result
+    #    for the die
+    # @option options [#rand] :prng An alternative source of randomness to Ruby's built-in #rand, passed to
+    #    GamesDice::Die's constructor
     # @return [GamesDice::ComplexDie]
     def initialize(sides, options = {})
       @basic_die = GamesDice::Die.new(sides, options[:prng])
@@ -46,6 +48,8 @@ module GamesDice
 
       @total = nil
       @result = nil
+
+      @probabilities_complete = true
     end
 
     # The simple component used by this complex one
@@ -107,25 +111,15 @@ module GamesDice
     def probabilities
       return @probabilities if @probabilities
 
-      @probabilities_complete = true
-      if @rerolls && @maps
-        reroll_probs = recursive_probabilities
-        prob_hash = {}
-        reroll_probs.each do |v, p|
-          add_mapped_to_prob_hash(prob_hash, v, p)
-        end
-      elsif @rerolls
-        prob_hash = recursive_probabilities
-      elsif @maps
-        prob_hash = {}
-        @basic_die.probabilities.each do |v, p|
-          add_mapped_to_prob_hash(prob_hash, v, p)
-        end
-      else
-        @probabilities = @basic_die.probabilities
-        return @probabilities
-      end
-      @probabilities = GamesDice::Probabilities.from_h(prob_hash)
+      @probabilities = if @rerolls && @maps
+                         GamesDice::Probabilities.from_h(prob_hash_with_rerolls_and_maps)
+                       elsif @rerolls
+                         GamesDice::Probabilities.from_h(recursive_probabilities)
+                       elsif @maps
+                         GamesDice::Probabilities.from_h(prob_hash_with_just_maps)
+                       else
+                         @basic_die.probabilities
+                       end
     end
 
     # Simulates rolling the die
@@ -140,10 +134,27 @@ module GamesDice
 
     private
 
-    def add_mapped_to_prob_hash(prob_hash, v, p)
-      m, n = calc_maps(v)
-      prob_hash[m] ||= 0.0
-      prob_hash[m] += p
+    def prob_hash_with_rerolls_and_maps
+      reroll_probs = recursive_probabilities
+      prob_hash = {}
+      reroll_probs.each do |v, p|
+        add_mapped_to_prob_hash(prob_hash, v, p)
+      end
+      prob_hash
+    end
+
+    def prob_hash_with_just_maps
+      prob_hash = {}
+      @basic_die.probabilities.each do |v, p|
+        add_mapped_to_prob_hash(prob_hash, v, p)
+      end
+      prob_hash
+    end
+
+    def add_mapped_to_prob_hash(prob_hash, orig_val, prob)
+      mapped_val, = calc_maps(orig_val)
+      prob_hash[mapped_val] ||= 0.0
+      prob_hash[mapped_val] += prob
     end
 
     def roll_apply_rerolls
@@ -152,6 +163,10 @@ module GamesDice
       subtracting = false
       rerolls_remaining = @rerolls.map(&:limit)
 
+      rerolls_loop(subtracting, rerolls_remaining)
+    end
+
+    def rerolls_loop(subtracting, rerolls_remaining)
       loop do
         rule_idx = find_matching_reroll_rule(@basic_die.result, @result.rolls.length, rerolls_remaining)
         break unless rule_idx
@@ -219,12 +234,11 @@ module GamesDice
       end
     end
 
-    def calc_maps(x)
+    def calc_maps(original_value)
       y = 0
       n = ''
       @maps.find do |rule|
-        maybe_y = rule.map_from(x)
-        if maybe_y
+        if (maybe_y = rule.map_from(original_value))
           y = maybe_y
           n = rule.mapped_name
         end
@@ -235,14 +249,15 @@ module GamesDice
 
     def minmax_mappings(possible_values)
       possible_values.map do |x|
-        m, n = calc_maps(x)
-        m
+        map_val, = calc_maps(x)
+        map_val
       end.minmax
     end
 
-    # This isn't 100% accurate, but does cover most "normal" scenarios, and we're only falling back to it when we have to
-    # The inaccuracy is that min_result..max_result may contain 'holes' which have extreme map values that cannot actually
-    # occur. In practice it is likely a non-issue unless someone went out of their way to invent a dice scheme that broke it.
+    # This isn't 100% accurate, but does cover most "normal" scenarios, and we're only falling back to it when we have
+    # to. The inaccuracy is that min_result..max_result may contain 'holes' which have extreme map values that cannot
+    # actually occur. In practice it is likely a non-issue unless someone went out of their way to invent a dice scheme
+    # that broke it.
     def logical_minmax
       return @basic_die.minmax unless @rerolls || @maps
       return minmax_mappings(@basic_die.all_values) unless @rerolls
