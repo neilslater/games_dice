@@ -28,8 +28,10 @@ module GamesDice
     # @option options [Integer] :sides Number of sides on a single die in the bunch, *mandatory*
     # @option options [String] :name Optional name for the bunch
     # @option options [Array<GamesDice::RerollRule,Array>] :rerolls Optional rules that cause the die to roll again
-    # @option options [Array<GamesDice::MapRule,Array>] :maps Optional rules to convert a value into a final result for the die
-    # @option options [#rand] :prng Optional alternative source of randomness to Ruby's built-in #rand, passed to GamesDice::Die's constructor
+    # @option options [Array<GamesDice::MapRule,Array>] :maps Optional rules to convert a value into a final result
+    #   for the die
+    # @option options [#rand] :prng Optional alternative source of randomness to Ruby's built-in #rand, passed to
+    #   GamesDice::Die's constructor
     # @option options [Symbol] :keep_mode Optional, either *:keep_best* or *:keep_worst*
     # @option options [Integer] :keep_number Optional number of dice to keep when :keep_mode is not nil
     # @return [GamesDice::Bunch]
@@ -135,26 +137,15 @@ module GamesDice
       @probabilities
     end
 
-    # Simulates rolling the bunch of identical dice
+    # Simulates rolling the bunch of identical diceß
     # @return [Integer] Sum of all rolled dice, or sum of all keepers
     def roll
-      @result = 0
-      @raw_result_details = []
+      generate_raw_results
+      return @result if !@keep_mode || @keep_number.to_i >= @ndice
 
-      @ndice.times do
-        @result += @single_die.roll
-        @raw_result_details << @single_die.result
-      end
-
-      return @result unless @keep_mode
-
-      use_dice = if @keep_mode && @keep_number < @ndice
-                   case @keep_mode
-                   when :keep_best then @raw_result_details.sort[-@keep_number..]
-                   when :keep_worst then @raw_result_details.sort[0..(@keep_number - 1)]
-                   end
-                 else
-                   @raw_result_details
+      use_dice = case @keep_mode
+                 when :keep_best then @raw_result_details.sort[-@keep_number..]
+                 when :keep_worst then @raw_result_details.sort[0..(@keep_number - 1)]
                  end
 
       @result = use_dice.inject(0) { |so_far, die_result| so_far + die_result }
@@ -166,43 +157,63 @@ module GamesDice
     def explain_result
       return nil unless @result
 
-      explanation = ''
-
       # With #keep_mode, we may need to show unused and used dice separately
       used_dice = result_details
-      unused_dice = []
+      used_dice, = find_used_dice_due_to_keep_mode(result_details) if @keep_mode && @keep_number < @ndice
 
-      # Pick highest numbers and their associated details
-      if @keep_mode && @keep_number < @ndice
-        full_dice = result_details.sort_by(&:total)
-        case @keep_mode
-        when :keep_best
-          used_dice = full_dice[-@keep_number..]
-          unused_dice = full_dice[0..full_dice.length - 1 - @keep_number]
-        when :keep_worst
-          used_dice = full_dice[0..(@keep_number - 1)]
-          unused_dice = full_dice[@keep_number..(full_dice.length - 1)]
-        end
+      build_explanation(used_dice)
+    end
+
+    private
+
+    def generate_raw_results
+      @result = 0
+      @raw_result_details = []
+
+      @ndice.times do
+        @result += @single_die.roll
+        @raw_result_details << @single_die.result
+      end
+    end
+
+    def find_used_dice_due_to_keep_mode(used_dice, unused_dice = [])
+      full_dice = result_details.sort_by(&:total)
+      case @keep_mode
+      when :keep_best
+        used_dice = full_dice[-@keep_number..]
+        unused_dice = full_dice[0..full_dice.length - 1 - @keep_number]
+      when :keep_worst
+        used_dice = full_dice[0..(@keep_number - 1)]
+        unused_dice = full_dice[@keep_number..(full_dice.length - 1)]
       end
 
-      # Show unused dice (if any)
+      [used_dice, unused_dice]
+    end
+
+    def build_explanation(used_dice)
       if @keep_mode || @single_die.maps
-        explanation += result_details.map(&:explain_value).join(', ')
-        if @keep_mode
-          separator = @single_die.maps ? ', ' : ' + '
-          explanation += ". Keep: #{used_dice.map(&:explain_total).join(separator)}"
-        end
-        explanation += ". Successes: #{@result}" if @single_die.maps
-        explanation += " = #{@result}" if @keep_mode && !@single_die.maps && @keep_number > 1
+        explanation = explain_with_keep_or_map(used_dice)
       else
-        explanation += used_dice.map(&:explain_value).join(' + ')
+        explanation = used_dice.map(&:explain_value).join(' + ')
         explanation += " = #{@result}" if @ndice > 1
       end
 
       explanation
     end
 
-    private
+    def explain_with_keep_or_map(used_dice)
+      explanation = result_details.map(&:explain_value).join(', ')
+      explanation += explain_kept_dice(used_dice) if @keep_mode
+      explanation += ". Successes: #{@result}" if @single_die.maps
+      explanation += " = #{@result}" if @keep_mode && !@single_die.maps && @keep_number > 1
+
+      explanation
+    end
+
+    def explain_kept_dice(used_dice)
+      separator = @single_die.maps ? ', ' : ' + '
+      ". Keep: #{used_dice.map(&:explain_total).join(separator)}"
+    end
 
     def name_number_sides_from_hash(options)
       @name = options[:name].to_s
@@ -214,14 +225,11 @@ module GamesDice
     end
 
     def keep_mode_from_hash(options)
-      case options[:keep_mode]
+      @keep_mode = options[:keep_mode]
+      case @keep_mode
       when nil
         @keep_mode = nil
-      when :keep_best
-        @keep_mode = :keep_best
-        @keep_number = Integer(options[:keep_number] || 1)
-      when :keep_worst
-        @keep_mode = :keep_worst
+      when :keep_best, :keep_worst
         @keep_number = Integer(options[:keep_number] || 1)
       else
         raise ArgumentError, ":keep_mode can be nil, :keep_best or :keep_worst. Got #{options[:keep_mode].inspect}"
