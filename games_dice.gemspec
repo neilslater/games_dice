@@ -10,9 +10,13 @@ Gem::Specification.new do |gem|
   gem.version       = GamesDice::VERSION
   gem.authors       = ['Neil Slater']
   gem.email         = ['slobo777@gmail.com']
-  gem.description   = 'A library for simulating dice. Use it to construct dice-rolling systems used in role-playing and board games.'
-  gem.summary       = 'Simulates and explains dice rolls from simple "1d6" to complex "roll 7 ten-sided dice, take best 3,
-                        results of 10 roll again and add on".'
+  gem.description   = <<~GEMDESC
+    A library for simulating dice. Use it to construct dice-rolling systems used in role-playing and board games.
+  GEMDESC
+  gem.summary = <<~GEMSUMM
+    Simulates and explains dice rolls from simple "1d6" to complex "roll 7 ten-sided dice, take best 3,
+    results of 10 roll again and add on".
+  GEMSUMM
   gem.homepage      = 'https://github.com/neilslater/games_dice'
   gem.license       = 'MIT'
 
