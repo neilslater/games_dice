@@ -46,9 +46,11 @@ module GamesDice
     rule(:condition_type_and_num) do
       opint_or_int.as(:condition) >> comma >> ctl_string.as(:type) >> comma >> integer.as(:num)
     end
+
     rule(:condition_num_and_output) do
       opint_or_int.as(:condition) >> comma >> plus_minus_integer.as(:num) >> comma >> output_string.as(:output)
     end
+
     rule(:num_and_type) { integer.as(:num) >> comma >> ctl_string.as(:type) }
 
     rule(:reroll_params) { condition_type_and_num | condition_and_type | condition_only }
@@ -80,152 +82,159 @@ module GamesDice
       # Force first item to start '+' for simpler parse rules
       dice_description = "+#{dice_description}" unless dice_description =~ /\A[+-]/
       dice_expressions = super(dice_description)
-      { bunches: collect_bunches(dice_expressions), offset: collect_offset(dice_expressions) }
+      {
+        bunches: ParseTreeProcessor.collect_bunches(dice_expressions),
+        offset: ParseTreeProcessor.collect_offset(dice_expressions)
+      }
     end
 
-    private
+    # Class converts parse tree to GamesDice hash model
+    # @!visibility private
+    class ParseTreeProcessor
+      class << self
+        def collect_bunches(dice_expressions)
+          dice_expressions[:bunches].select { |h| h[:ndice] }.map do |in_hash|
+            out_hash = {}
+            collect_bunch_basics(in_hash, out_hash)
+            collect_bunch_multiplier(in_hash, out_hash) if in_hash[:op]
 
-    def collect_bunches(dice_expressions)
-      dice_expressions[:bunches].select { |h| h[:ndice] }.map do |in_hash|
-        out_hash = {}
-        collect_bunch_basics(in_hash, out_hash)
-        collect_bunch_multiplier(in_hash, out_hash) if in_hash[:op]
+            in_hash[:mods]&.each do |mod|
+              collect_bunch_modifier(mod, out_hash)
+            end
 
-        in_hash[:mods]&.each do |mod|
-          collect_bunch_modifier(mod, out_hash)
+            out_hash
+          end
         end
 
-        out_hash
-      end
-    end
+        def collect_bunch_basics(in_hash, out_hash)
+          %i[ndice sides].each do |s|
+            next unless in_hash[s]
 
-    def collect_bunch_basics(in_hash, out_hash)
-      %i[ndice sides].each do |s|
-        next unless in_hash[s]
-
-        out_hash[s] = in_hash[s].to_i
-      end
-    end
-
-    def collect_bunch_multiplier(in_hash, out_hash)
-      optype = in_hash[:op].to_s
-      out_hash[:multiplier] = case optype
-                              when '+' then 1
-                              when '-' then -1
-                              end
-    end
-
-    def collect_bunch_modifier(mod, out_hash)
-      if mod[:alias]
-        collect_alias_modifier mod, out_hash
-      elsif mod[:keep]
-        collect_keeper_rule mod, out_hash
-      elsif mod[:map]
-        collect_map_rule mod, out_hash
-      elsif mod[:reroll]
-        collect_reroll_rule mod, out_hash
-      end
-    end
-
-    def collect_offset(dice_expressions)
-      dice_expressions[:bunches].select { |h| h[:constant] }.inject(0) do |total, in_hash|
-        c = in_hash[:constant].to_i
-        optype = in_hash[:op].to_s
-        if optype == '+'
-          total += c
-        else
-          total -= c
+            out_hash[s] = in_hash[s].to_i
+          end
         end
-        total
+
+        def collect_bunch_multiplier(in_hash, out_hash)
+          optype = in_hash[:op].to_s
+          out_hash[:multiplier] = case optype
+                                  when '+' then 1
+                                  when '-' then -1
+                                  end
+        end
+
+        def collect_bunch_modifier(mod, out_hash)
+          if mod[:alias]
+            collect_alias_modifier mod, out_hash
+          elsif mod[:keep]
+            collect_keeper_rule mod, out_hash
+          elsif mod[:map]
+            collect_map_rule mod, out_hash
+          elsif mod[:reroll]
+            collect_reroll_rule mod, out_hash
+          end
+        end
+
+        def collect_offset(dice_expressions)
+          dice_expressions[:bunches].select { |h| h[:constant] }.inject(0) do |total, in_hash|
+            c = in_hash[:constant].to_i
+            optype = in_hash[:op].to_s
+            if optype == '+'
+              total += c
+            else
+              total -= c
+            end
+            total
+          end
+        end
+
+        # Called when we have a single letter convenient alias for common dice adjustments
+        def collect_alias_modifier(alias_mod, out_hash)
+          alias_name = alias_mod[:alias].to_s
+          case alias_name
+          when 'x' # Exploding re-roll
+            out_hash[:rerolls] ||= []
+            out_hash[:rerolls] << [out_hash[:sides], :==, :reroll_add]
+          end
+        end
+
+        # Called for any parsed reroll rule
+        def collect_reroll_rule(reroll_mod, out_hash)
+          out_hash[:rerolls] ||= []
+          if reroll_mod[:simple_value]
+            out_hash[:rerolls] << [reroll_mod[:simple_value].to_i, :>=, :reroll_replace]
+            return
+          end
+
+          collect_complex_reroll_rule(reroll_mod, out_hash)
+        end
+
+        def collect_complex_reroll_rule(reroll_mod, out_hash)
+          # Typical reroll_mod: {:reroll=>"r"@5, :condition=>{:compare_num=>"10"@7}, :type=>"add"@10}
+          op = get_op_symbol(reroll_mod[:condition][:comparison] || '==')
+          v = reroll_mod[:condition][:compare_num].to_i
+          type = "reroll_#{reroll_mod[:type] || 'replace'}".to_sym
+
+          out_hash[:rerolls] << if reroll_mod[:num]
+                                  [v, op, type, reroll_mod[:num].to_i]
+                                else
+                                  [v, op, type]
+                                end
+        end
+
+        # Called for any parsed keeper mode
+        def collect_keeper_rule(keeper_mod, out_hash)
+          raise 'Cannot set keepers for a bunch twice' if out_hash[:keep_mode]
+
+          if keeper_mod[:simple_value]
+            out_hash[:keep_mode] = :keep_best
+            out_hash[:keep_number] = keeper_mod[:simple_value].to_i
+            return
+          end
+
+          # Typical keeper_mod: {:keep=>"k"@5, :num=>"1"@7, :type=>"worst"@9}
+          out_hash[:keep_number] = keeper_mod[:num].to_i
+          out_hash[:keep_mode] = "keep_#{keeper_mod[:type] || 'best'}".to_sym
+        end
+
+        # Called for any parsed map mode
+        def collect_map_rule(map_mod, out_hash)
+          out_hash[:maps] ||= []
+          if map_mod[:simple_value]
+            out_hash[:maps] << [map_mod[:simple_value].to_i, :<=, 1]
+            return
+          end
+
+          collect_complex_map_rule(map_mod, out_hash)
+        end
+
+        def collect_complex_map_rule(map_mod, out_hash)
+          # Typical map_mod: {:map=>"m"@4, :condition=>{:compare_num=>"5"@6}, :num=>"2"@8, :output=>"Qwerty"@10}
+          op = get_op_symbol(map_mod[:condition][:comparison] || '>=')
+          v = map_mod[:condition][:compare_num].to_i
+          out_val = 1
+          out_val = map_mod[:num].to_i if map_mod[:num]
+
+          out_hash[:maps] << if map_mod[:output]
+                               [v, op, out_val, map_mod[:output].to_s]
+                             else
+                               [v, op, out_val]
+                             end
+        end
+
+        # The dice description language uses (r).op.x, whilst GamesDice::RerollRule uses x.op.(r), so
+        # as well as converting to a symbol, we must reverse sense of input to constructor
+        OP_CONVERSION = {
+          '==' => :==,
+          '>=' => :<=,
+          '>' => :<,
+          '<' => :>,
+          '<=' => :>=
+        }.freeze
+
+        def get_op_symbol(parsed_op_string)
+          OP_CONVERSION[parsed_op_string.to_s]
+        end
       end
-    end
-
-    # Called when we have a single letter convenient alias for common dice adjustments
-    def collect_alias_modifier(alias_mod, out_hash)
-      alias_name = alias_mod[:alias].to_s
-      case alias_name
-      when 'x' # Exploding re-roll
-        out_hash[:rerolls] ||= []
-        out_hash[:rerolls] << [out_hash[:sides], :==, :reroll_add]
-      end
-    end
-
-    # Called for any parsed reroll rule
-    def collect_reroll_rule(reroll_mod, out_hash)
-      out_hash[:rerolls] ||= []
-      if reroll_mod[:simple_value]
-        out_hash[:rerolls] << [reroll_mod[:simple_value].to_i, :>=, :reroll_replace]
-        return
-      end
-
-      collect_complex_reroll_rule(reroll_mod, out_hash)
-    end
-
-    def collect_complex_reroll_rule(reroll_mod, out_hash)
-      # Typical reroll_mod: {:reroll=>"r"@5, :condition=>{:compare_num=>"10"@7}, :type=>"add"@10}
-      op = get_op_symbol(reroll_mod[:condition][:comparison] || '==')
-      v = reroll_mod[:condition][:compare_num].to_i
-      type = "reroll_#{reroll_mod[:type] || 'replace'}".to_sym
-
-      out_hash[:rerolls] << if reroll_mod[:num]
-                              [v, op, type, reroll_mod[:num].to_i]
-                            else
-                              [v, op, type]
-                            end
-    end
-
-    # Called for any parsed keeper mode
-    def collect_keeper_rule(keeper_mod, out_hash)
-      raise 'Cannot set keepers for a bunch twice' if out_hash[:keep_mode]
-
-      if keeper_mod[:simple_value]
-        out_hash[:keep_mode] = :keep_best
-        out_hash[:keep_number] = keeper_mod[:simple_value].to_i
-        return
-      end
-
-      # Typical keeper_mod: {:keep=>"k"@5, :num=>"1"@7, :type=>"worst"@9}
-      out_hash[:keep_number] = keeper_mod[:num].to_i
-      out_hash[:keep_mode] = "keep_#{keeper_mod[:type] || 'best'}".to_sym
-    end
-
-    # Called for any parsed map mode
-    def collect_map_rule(map_mod, out_hash)
-      out_hash[:maps] ||= []
-      if map_mod[:simple_value]
-        out_hash[:maps] << [map_mod[:simple_value].to_i, :<=, 1]
-        return
-      end
-
-      collect_complex_map_rule(map_mod, out_hash)
-    end
-
-    def collect_complex_map_rule(map_mod, out_hash)
-      # Typical map_mod: {:map=>"m"@4, :condition=>{:compare_num=>"5"@6}, :num=>"2"@8, :output=>"Qwerty"@10}
-      op = get_op_symbol(map_mod[:condition][:comparison] || '>=')
-      v = map_mod[:condition][:compare_num].to_i
-      out_val = 1
-      out_val = map_mod[:num].to_i if map_mod[:num]
-
-      out_hash[:maps] << if map_mod[:output]
-                           [v, op, out_val, map_mod[:output].to_s]
-                         else
-                           [v, op, out_val]
-                         end
-    end
-
-    # The dice description language uses (r).op.x, whilst GamesDice::RerollRule uses x.op.(r), so
-    # as well as converting to a symbol, we must reverse sense of input to constructor
-    OP_CONVERSION = {
-      '==' => :==,
-      '>=' => :<=,
-      '>' => :<,
-      '<' => :>,
-      '<=' => :>=
-    }.freeze
-
-    def get_op_symbol(parsed_op_string)
-      OP_CONVERSION[parsed_op_string.to_s]
     end
   end
 end
