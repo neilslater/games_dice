@@ -124,13 +124,13 @@ module GamesDice
 
         def collect_bunch_modifier(mod, out_hash)
           if mod[:alias]
-            collect_alias_modifier mod, out_hash
+            ParseTreeBunchModifier.collect_alias_modifier mod, out_hash
           elsif mod[:keep]
-            collect_keeper_rule mod, out_hash
+            ParseTreeBunchModifier.collect_keeper_rule mod, out_hash
           elsif mod[:map]
-            collect_map_rule mod, out_hash
+            ParseTreeBunchModifier.collect_map_rule mod, out_hash
           elsif mod[:reroll]
-            collect_reroll_rule mod, out_hash
+            ParseTreeBunchModifier.collect_reroll_rule mod, out_hash
           end
         end
 
@@ -139,14 +139,19 @@ module GamesDice
             c = in_hash[:constant].to_i
             optype = in_hash[:op].to_s
             if optype == '+'
-              total += c
+              total + c
             else
-              total -= c
+              total - c
             end
-            total
           end
         end
+      end
+    end
 
+    # Class for collating bunch data into bunch construction hash
+    # @!visibility private
+    class ParseTreeBunchModifier
+      class << self
         # Called when we have a single letter convenient alias for common dice adjustments
         def collect_alias_modifier(alias_mod, out_hash)
           alias_name = alias_mod[:alias].to_s
