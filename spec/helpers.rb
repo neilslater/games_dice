@@ -2,8 +2,6 @@
 
 # games_dice/spec/helpers.rb
 require 'pathname'
-require 'coveralls'
-Coveralls.wear!
 
 require 'games_dice'
 
