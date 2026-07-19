@@ -153,7 +153,7 @@ module GamesDice
                  when :keep_worst then @raw_result_details.sort[0..(@keep_number - 1)]
                  end
 
-      @result = use_dice.inject(0) { |so_far, die_result| so_far + die_result }
+      @result = use_dice.sum
     end
 
     # @!attribute [r] explain_result

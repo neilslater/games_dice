@@ -80,8 +80,8 @@ module GamesDice
     def parse(dice_description)
       dice_description = dice_description.to_s.strip
       # Force first item to start '+' for simpler parse rules
-      dice_description = "+#{dice_description}" unless dice_description =~ /\A[+-]/
-      dice_expressions = super(dice_description)
+      dice_description = "+#{dice_description}" unless /\A[+-]/.match?(dice_description)
+      dice_expressions = super
       {
         bunches: ParseTreeProcessor.collect_bunches(dice_expressions),
         offset: ParseTreeProcessor.collect_offset(dice_expressions)
@@ -177,7 +177,7 @@ module GamesDice
           # Typical reroll_mod: {:reroll=>"r"@5, :condition=>{:compare_num=>"10"@7}, :type=>"add"@10}
           op = get_op_symbol(reroll_mod[:condition][:comparison] || '==')
           v = reroll_mod[:condition][:compare_num].to_i
-          type = "reroll_#{reroll_mod[:type] || 'replace'}".to_sym
+          type = :"reroll_#{reroll_mod[:type] || 'replace'}"
 
           out_hash[:rerolls] << if reroll_mod[:num]
                                   [v, op, type, reroll_mod[:num].to_i]
@@ -198,7 +198,7 @@ module GamesDice
 
           # Typical keeper_mod: {:keep=>"k"@5, :num=>"1"@7, :type=>"worst"@9}
           out_hash[:keep_number] = keeper_mod[:num].to_i
-          out_hash[:keep_mode] = "keep_#{keeper_mod[:type] || 'best'}".to_sym
+          out_hash[:keep_mode] = :"keep_#{keeper_mod[:type] || 'best'}"
         end
 
         # Called for any parsed map mode

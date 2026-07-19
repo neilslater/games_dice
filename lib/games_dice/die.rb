@@ -74,8 +74,8 @@ module GamesDice
     # Iterates through all possible results on die.
     # @yieldparam [Integer] result A potential result from the die
     # @return [GamesDice::Die] this object
-    def each_value(&block)
-      (1..@sides).each(&block)
+    def each_value(&)
+      (1..@sides).each(&)
       self
     end
 

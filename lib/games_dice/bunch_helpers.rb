@@ -24,10 +24,10 @@ module GamesDice
         case @keep_mode
         when :keep_best
           used_dice = full_dice[-@keep_number..]
-          unused_dice = full_dice[0..full_dice.length - 1 - @keep_number]
+          unused_dice = full_dice[0..(full_dice.length - 1 - @keep_number)]
         when :keep_worst
           used_dice = full_dice[0..(@keep_number - 1)]
-          unused_dice = full_dice[@keep_number..(full_dice.length - 1)]
+          unused_dice = full_dice[@keep_number..]
         end
 
         [used_dice, unused_dice]

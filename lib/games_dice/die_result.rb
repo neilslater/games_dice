@@ -137,7 +137,7 @@ module GamesDice
              else
                explain_value_multiple_rolls
              end
-      text += " #{@map_description}" if @mapped && @map_description && @map_description.length.positive?
+      text += " #{@map_description}" if @mapped && @map_description&.length&.positive?
       text
     end
 
@@ -145,7 +145,7 @@ module GamesDice
     # This is mis-named, it doesn't explain the total at all! It is used to generate summaries of keeper dice.
     def explain_total
       text = @total.to_s
-      text += " #{@map_description}" if @mapped && @map_description && @map_description.length.positive?
+      text += " #{@map_description}" if @mapped && @map_description&.length&.positive?
       text
     end
 
@@ -153,12 +153,12 @@ module GamesDice
     # @return [GamesDice::DieResult]
     def clone
       cloned = GamesDice::DieResult.new
-      cloned.instance_variable_set('@rolls', @rolls.clone)
-      cloned.instance_variable_set('@roll_reasons', @roll_reasons.clone)
-      cloned.instance_variable_set('@total', @total)
-      cloned.instance_variable_set('@value', @value)
-      cloned.instance_variable_set('@mapped', @mapped)
-      cloned.instance_variable_set('@map_description', @map_description)
+      cloned.instance_variable_set(:@rolls, @rolls.clone)
+      cloned.instance_variable_set(:@roll_reasons, @roll_reasons.clone)
+      cloned.instance_variable_set(:@total, @total)
+      cloned.instance_variable_set(:@value, @value)
+      cloned.instance_variable_set(:@mapped, @mapped)
+      cloned.instance_variable_set(:@map_description, @map_description)
       cloned
     end
 
@@ -197,7 +197,7 @@ module GamesDice
 
     def explain_value_multiple_rolls
       text = "[#{@rolls[0]}"
-      text = (1..@rolls.length - 1).inject(text) do |so_far, i|
+      text = (1..(@rolls.length - 1)).inject(text) do |so_far, i|
         so_far + GamesDice::REROLL_TYPES[@roll_reasons[i]] + @rolls[i].to_s
       end
       text + "] #{@total}"

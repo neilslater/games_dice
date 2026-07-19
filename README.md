@@ -1,9 +1,4 @@
 # GamesDice
-[![Gem Version](https://badge.fury.io/rb/games_dice.png)](http://badge.fury.io/rb/games_dice)
-[![Build Status](https://travis-ci.org/neilslater/games_dice.png?branch=master)](https://api.travis-ci.com/neilslater/games_dice.svg)
-[![Coverage Status](https://coveralls.io/repos/neilslater/games_dice/badge.png?branch=master)](https://coveralls.io/r/neilslater/games_dice?branch=master)
-[![Inline docs](http://inch-ci.org/github/neilslater/games_dice.png?branch=master)](http://inch-ci.org/github/neilslater/games_dice)
-[![Code Climate](https://codeclimate.com/github/neilslater/games_dice.png)](https://codeclimate.com/github/neilslater/games_dice)
 
 A library for simulating dice. Use it to construct dice-rolling systems used in role-playing and board games.
 
@@ -29,7 +24,7 @@ gem as-is, and add them as features within your project code.
 
 ## Supported Ruby Versions
 
-GamesDice is tested routinely on MRI Ruby versions 2.7 and higher.
+GamesDice supports MRI Ruby 3.3 and 3.4.
 
 Older versions of GamesDice (before 0.4.0) support older Rubies, and also offer pure Ruby versions
 of probability calculations, so can be used with JRuby.
