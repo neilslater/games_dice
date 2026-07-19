@@ -1,6 +1,14 @@
 # GamesDice Changelog
 
-## 0.4.1 ( Unreleased )
+## 0.4.2 ( 19 July 2026 )
+
+ * Require MRI Ruby 3.3 or later and test against Ruby 3.3 and 3.4.
+ * Update development and runtime dependencies.
+ * Replace Travis CI with GitHub Actions.
+ * Modernise the RSpec suite and RuboCop configuration.
+ * Correct and clarify README documentation.
+
+## 0.4.1
 
  * Tidy up documentation and address some Rubocop offences.
 

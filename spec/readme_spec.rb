@@ -6,34 +6,35 @@ require 'helpers'
 describe GamesDice do
   describe '#create' do
     it "converts a string such as '3d6+6' into a GamesDice::Dice object" do
-      d = GamesDice.create '3d6+6'
+      d = described_class.create '3d6+6'
       expect(d).to be_a GamesDice::Dice
     end
 
     it "takes a parameter 'dice_description', which is a string such as '3d6' or '2d4-1'" do
-      d = GamesDice.create '3d6'
+      d = described_class.create '3d6'
       expect(d).to be_a GamesDice::Dice
-      d = GamesDice.create '2d4-1'
+      d = described_class.create '2d4-1'
       expect(d).to be_a GamesDice::Dice
     end
 
     it "takes an optional parameter 'prng', which should be an object that has a method 'rand( integer )'" do
       prng = TestPRNG.new
 
-      d = GamesDice.create '3d6', prng
+      d = described_class.create '3d6', prng
       expect(d).to be_a GamesDice::Dice
 
       (0..5).each do |dresult|
         allow(prng).to receive(:rand).and_return(dresult)
-        expect(prng).to receive(:rand).with(6)
-        expect(d.roll).to eql (dresult + 1) * 3
+        result = d.roll
+        expect(prng).to have_received(:rand).with(6).at_least(:once)
+        expect(result).to eql (dresult + 1) * 3
       end
     end
   end
 end
 
 describe GamesDice::Dice do
-  before :each do
+  before do
     srand(67_809)
   end
 
@@ -57,7 +58,7 @@ describe GamesDice::Dice do
       end
     end
 
-    it 'will be nil if no roll has been made yet' do
+    it 'is nil if no roll has been made yet' do
       expect(dice.result).to be_nil
     end
   end
@@ -76,20 +77,20 @@ describe GamesDice::Dice do
       end
     end
 
-    it 'will be nil if no roll has been made yet' do
+    it 'is nil if no roll has been made yet' do
       expect(dice.explain_result).to be_nil
     end
   end
 
   describe '#max' do
     it 'returns the maximum possible value from a roll of the dice' do
-      expect(dice.max).to eql 18
+      expect(dice.max).to be 18
     end
   end
 
   describe '#min' do
     it 'returns the minimum possible value from a roll of the dice' do
-      expect(dice.min).to eql 3
+      expect(dice.min).to be 3
     end
   end
 
@@ -123,34 +124,34 @@ describe GamesDice::Probabilities do
 
   describe '#max' do
     it 'returns maximum result in the probability distribution' do
-      expect(probs.max).to eql 18
+      expect(probs.max).to be 18
     end
   end
 
   describe '#min' do
     it 'returns minimum result in the probability distribution' do
-      expect(probs.min).to eql 3
+      expect(probs.min).to be 3
     end
   end
 
   describe '#p_eql( n )' do
     it 'returns the probability of a result equal to the integer n' do
       expect(probs.p_eql(3)).to be_within(1e-10).of 1.0 / 216
-      expect(probs.p_eql(2)).to eql 0.0
+      expect(probs.p_eql(2)).to be 0.0
     end
   end
 
   describe '#p_gt( n )' do
     it 'returns the probability of a result greater than the integer n' do
       expect(probs.p_gt(17)).to be_within(1e-10).of 1.0 / 216
-      expect(probs.p_gt(2)).to eql 1.0
+      expect(probs.p_gt(2)).to be 1.0
     end
   end
 
   describe '#p_ge( n )' do
     it 'returns the probability of a result greater than the integer n' do
       expect(probs.p_ge(17)).to be_within(1e-10).of 4.0 / 216
-      expect(probs.p_ge(3)).to eql 1.0
+      expect(probs.p_ge(3)).to be 1.0
     end
   end
 
@@ -164,13 +165,13 @@ describe GamesDice::Probabilities do
   describe '#p_lt( n )' do
     it 'returns the probability of a result less than the integer n' do
       expect(probs.p_lt(17)).to be_within(1e-10).of 212.0 / 216
-      expect(probs.p_lt(3)).to eql 0.0
+      expect(probs.p_lt(3)).to be 0.0
     end
   end
 end
 
 describe 'String Dice Description' do
-  before :each do
+  before do
     srand(35_241)
   end
 
@@ -245,7 +246,7 @@ describe 'String Dice Description' do
   end
 
   describe "'1d6r:1.'" do
-    it "should return same as '1d6r1'" do
+    it "return same as '1d6r1'" do
       srand(235_241)
       d = GamesDice.create '1d6r:1.'
       results1 = (1..50).map { d.roll }
@@ -259,7 +260,7 @@ describe 'String Dice Description' do
   end
 
   describe "'1d10r:10,replace,1.'" do
-    it 'should roll a 10-sided die, re-roll a result of 10 and take the value of the second roll' do
+    it 'roll a 10-sided die, re-roll a result of 10 and take the value of the second roll' do
       d = GamesDice.create '1d10r:10,replace,1.'
       expect((1..27).map do
                d.roll
@@ -268,7 +269,7 @@ describe 'String Dice Description' do
   end
 
   describe "'1d20r:<=10,use_best,1.'" do
-    it 'should roll a 20-sided die, re-roll a result if 10 or lower, and use best result' do
+    it 'roll a 20-sided die, re-roll a result if 10 or lower, and use best result' do
       d = GamesDice.create '1d20r:<=10,use_best,1.'
       expect((1..20).map do
                d.roll
@@ -277,7 +278,7 @@ describe 'String Dice Description' do
   end
 
   describe "'5d10r:10,add.k2', '5d10xk2' and '5d10x.k2'" do
-    it 'should all be equivalent' do
+    it 'all be equivalent' do
       srand(135_241)
       d = GamesDice.create '5d10r:10,add.k2'
       results1 = (1..50).map { d.roll }
@@ -307,6 +308,7 @@ describe 'String Dice Description' do
       d = GamesDice.create '9d6x.m:10.'
       expect((1..5).map { |_n| d.roll }).to eql [1, 2, 1, 1, 1]
     end
+
     it 'can be explained as number of exploding dice scoring 10+' do
       d = GamesDice.create '9d6x.m:10.'
       expect((1..5).map do |_n|
@@ -327,6 +329,7 @@ describe 'String Dice Description' do
       d = GamesDice.create '9d6x.m:10,1,S.'
       expect((1..5).map { |_n| d.roll }).to eql [1, 2, 1, 1, 1]
     end
+
     it "includes the string 'S' next to each success" do
       d = GamesDice.create '9d6x.m:10,1,S.'
       expect((1..5).map do |_n|
@@ -347,6 +350,7 @@ describe 'String Dice Description' do
       d = GamesDice.create '5d10m:>=6,1,S.m:==1,-1,F.'
       expect((1..10).map { |_n| d.roll }).to eql [2, 2, 4, 3, 2, 1, 1, 3, 3, 0]
     end
+
     it "includes the string 'S' next to each success, and 'F' next to each 'fumble'" do
       d = GamesDice.create '5d10m:>=6,1,S.m:==1,-1,F.'
       expect((1..5).map do |_n|
@@ -367,6 +371,7 @@ describe 'String Dice Description' do
       d = GamesDice.create '4d6k:3.r:1,replace,1.'
       expect((1..10).map { |_n| d.roll }).to eql [12, 14, 14, 18, 11, 17, 11, 15, 14, 14]
     end
+
     it 'includes re-rolls and keeper choice in explanations' do
       d = GamesDice.create '4d6k:3.r:1,replace,1.'
       expect((1..5).map do |_n|
@@ -387,6 +392,7 @@ describe 'String Dice Description' do
       d = GamesDice.create '2d20k:1,worst.'
       expect((1..10).map { |_n| d.roll }).to eql [18, 6, 2, 3, 5, 10, 15, 1, 7, 10]
     end
+
     it 'includes keeper choice in explanations' do
       d = GamesDice.create '2d20k:1,worst.'
       expect((1..5).map do |_n|

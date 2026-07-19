@@ -113,9 +113,9 @@ module GamesDice
 
       explanations = @bunches.map { |bunch| "#{bunch.label}: #{bunch.explain_result}" }
 
-      return @offset.to_s if explanations.count.zero?
+      return @offset.to_s if explanations.none?
 
-      return simple_explanation(explanations.first) if explanations.count == 1
+      return simple_explanation(explanations.first) if explanations.one?
 
       multi_explanations(explanations)
     end
@@ -136,7 +136,7 @@ module GamesDice
     end
 
     def array_to_sum(array)
-      (numbers_to_strings(array) + ['=', array.inject(:+)]).join(' ')
+      (numbers_to_strings(array) + ['=', array.sum]).join(' ')
     end
 
     def numbers_to_strings(array)

@@ -53,8 +53,8 @@ RSpec::Matchers.define :be_valid_distribution do
     elsif given.values.any? { |v| v < 0.0 || v > 1.0 }
       bad_value = given.values.find { |v| v < 0.0 || v > 1.0 }
       @error = "all values should be in range (0.0..1.0), but found #{bad_value}"
-    elsif (1.0 - given.values.inject(:+)).abs > 1e-6
-      total_probs = given.values.inject(:+)
+    elsif (1.0 - given.values.sum).abs > 1e-6
+      total_probs = given.values.sum
       @error = "sum of values should be 1.0, but got #{total_probs}"
     end
     !@error

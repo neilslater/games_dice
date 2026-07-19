@@ -52,6 +52,7 @@ module GamesDice
           self.prior_probability = 1.0
         end
       end
+      private_constant :RecurseStack
 
       def recursive_probabilities(stack = RecurseStack.new)
         stack.prior_probability = stack.prior_probability / @basic_die.sides
@@ -219,7 +220,7 @@ module GamesDice
         return minmax_mappings(@basic_die.all_values) unless @rerolls
 
         min_result, max_result = logical_rerolls_minmax
-        return minmax_mappings((min_result..max_result)) if @maps
+        return minmax_mappings(min_result..max_result) if @maps
 
         [min_result, max_result]
       end
