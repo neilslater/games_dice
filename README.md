@@ -24,10 +24,10 @@ gem as-is, and add them as features within your project code.
 
 ## Supported Ruby Versions
 
-GamesDice supports MRI Ruby 3.3 and 3.4.
+GamesDice 0.4.2 supports MRI Ruby 3.3 and 3.4. It uses a native extension and does not support JRuby.
 
-Older versions of GamesDice (before 0.4.0) support older Rubies, and also offer pure Ruby versions
-of probability calculations, so can be used with JRuby.
+GamesDice 0.4.0 and 0.4.1 support MRI Ruby 2.6 and later. Versions before 0.4.0 also provide a
+pure-Ruby implementation of the probability calculations and can be used with JRuby.
 
 ## Installation
 
@@ -66,8 +66,8 @@ Converts a string such as '3d6+6' into a GamesDice::Dice object
 
 Parameters:
 
- * dice_description is a string such as '3d6' or '2d4-1'. See String Dice Descriptions below for possibilities.
- * prng is optional, if provided it should be an object that has a method 'rand( integer )' that works like Ruby's built-in rand method
+ * `dice_description` is a string such as `3d6` or `2d4-1`. See String Dice Descriptions below for possibilities.
+ * `prng` is optional. If provided, it must respond to `rand(integer)` in the same way as Ruby's built-in `rand` method.
 
 Returns a GamesDice::Dice object.
 
@@ -114,7 +114,7 @@ Returns the minimum possible value from a roll of the dice. Dice with the possib
 progressively lower and lower values will return an arbitrary low value.
 
     dice.min         # => 3
-ß
+
 #### dice.minmax
 
 Convenience method, returns an array [ dice.min, dice.max ]
@@ -193,12 +193,12 @@ Returns the probability of a result less than or equal to the integer n.
 
 Returns the probability of a result less than the integer n.
 
-    probabilities.p_lt( 17 )  # => 0.9953703703703
+    probabilities.p_lt( 17 )  # => 0.9814814814814
     probabilities.p_lt( 3 )   # => 0.0
 
 #### probabilities.expected
 
-Returns the mean result, weighted by probabality of each value.
+Returns the mean result, weighted by the probability of each value.
 
     probabilities.expected  # => 10.5 (rounded to nearest 1e-9)
 
@@ -232,7 +232,7 @@ A die modifier can also be a single letter plus an integer value, e.g.
 
     1d6r1
 
-You can add comma-seperated parameters to a modifier by using a ":" (colon) character after the
+You can add comma-separated parameters to a modifier by using a ":" (colon) character after the
 modifier letter, and a "." (full stop) to signify the end of the parameters. What parameters are
 accepted, and what they mean, depends on the modifier:
 
@@ -250,7 +250,7 @@ are all equivalent.
 #### Rerolls
 
 You can specify that dice rolling certain values should be re-rolled, and how that re-roll should be
-interpretted.
+interpreted.
 
 The simple form specifies a low value that will automatically trigger a re-roll and replace:
 
@@ -265,7 +265,7 @@ The full version of this modifier, allows you to specify from 1 to 3 parameters:
 
 Where:
 
- * VALUE_COMPARISON is one of >, >=, == (default), <= < plus an integer to set conditions on when the reroll should occur
+ * VALUE_COMPARISON is one of `>`, `>=`, `==` (default), `<=`, or `<`, plus an integer that determines when the reroll occurs
  * REROLL_TYPE is one of
   * replace (default) - use the new value in place of existing value for the die
   * add - add result of reroll to running total, and ignore any subtract rules
@@ -297,7 +297,7 @@ The full version of this modifier, allows you to specify from 1 to 3 parameters:
 
 Where:
 
- * VALUE_COMPARISON is one of >, >= (default), ==, <= < plus an integer to set conditions on when the map should occur
+ * VALUE_COMPARISON is one of `>`, `>=` (default), `==`, `<=`, or `<`, plus an integer that determines when the map occurs
  * MAP_VALUE is an integer that will be used in place of a result from a die, default value is 1
   * maps are tested in order that they are declared, and first one that matches is applied
   * when at least one map has been defined, all unmapped values default to 0
