@@ -52,3 +52,41 @@ jobs:
           ruby-version: '3.3'
           bundler-cache: true
       - run: bundle exec bundle-audit check --update
+
+  native-quality:
+    name: C ${{ matrix.check }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        check: [lint, coverage, sanitize]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install C coverage tools
+        if: matrix.check == 'coverage'
+        run: sudo apt-get update && sudo apt-get install -y gcovr
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4'
+          bundler-cache: true
+      - name: Show Ruby extension compiler
+        run: |
+          ruby -rrbconfig -e 'puts RbConfig::CONFIG.fetch("CC")'
+          gcc --version
+      - name: Run native quality check
+        run: bundle exec rake c:${{ matrix.check }}
+      - name: Add C coverage summary to job summary
+        if: matrix.check == 'coverage' && always()
+        run: |
+          if test -f coverage/c/summary.txt; then
+            cat coverage/c/summary.txt >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload C coverage report
+        if: matrix.check == 'coverage' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: c-coverage
+          path: coverage/c
+          retention-days: 14
+          if-no-files-found: warn
