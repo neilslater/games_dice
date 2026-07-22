@@ -5,6 +5,7 @@ source 'https://rubygems.org'
 # Dependencies are in games_dice.gemspec
 gemspec
 
+gem 'bundler-audit', '~> 0.9', require: false
 gem 'rake', '~> 13.2'
 gem 'rake-compiler', '~> 1.2'
 gem 'redcarpet', '~> 3.6'
