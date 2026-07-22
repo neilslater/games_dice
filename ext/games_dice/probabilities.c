@@ -21,7 +21,7 @@ VALUE Probabilities = Qnil;
 //  General utils
 //
 
-inline int max( int *a, int n ) {
+static int max( int *a, int n ) {
   int m = -1000000000;
   int i;
   for ( i=0; i < n; i++ ) {
@@ -30,7 +30,7 @@ inline int max( int *a, int n ) {
   return m;
 }
 
-inline int min( int *a, int n ) {
+static int min( int *a, int n ) {
   int m = 1000000000;
   int i;
   for ( i=0; i < n; i++ ) {
@@ -110,7 +110,7 @@ double num_arrangements( int *args, int nargs ) {
 //  Probability List basics - create, delete, copy
 //
 
-ProbabilityList *create_probability_list() {
+ProbabilityList *create_probability_list(void) {
   ProbabilityList *pl;
   pl = malloc (sizeof(ProbabilityList));
   if ( pl == NULL ) {
@@ -183,7 +183,7 @@ ProbabilityList *copy_probability_list( ProbabilityList *orig ) {
   return pl;
 }
 
-inline ProbabilityList *new_basic_pl( int nslots, double iv, int o ) {
+static ProbabilityList *new_basic_pl( int nslots, double iv, int o ) {
   ProbabilityList *pl = create_probability_list();
   alloc_probs_iv( pl, nslots, iv );
   pl->offset = o;
@@ -195,11 +195,13 @@ inline ProbabilityList *new_basic_pl( int nslots, double iv, int o ) {
 //  Probability List core "native" methods
 //
 
-inline int pl_min( ProbabilityList *pl ) {
+static double pl_p_le( ProbabilityList *pl, int target );
+
+static int pl_min( ProbabilityList *pl ) {
   return pl->offset;
 }
 
-inline int pl_max( ProbabilityList *pl ) {
+static int pl_max( ProbabilityList *pl ) {
   return pl->offset + pl->slots - 1;
 }
 
@@ -243,7 +245,7 @@ ProbabilityList *pl_add_distributions_mult( int mul_a, ProbabilityList *pl_a, in
   return pl;
 }
 
-inline double pl_p_eql( ProbabilityList *pl, int target ) {
+static double pl_p_eql( ProbabilityList *pl, int target ) {
   int idx = target - pl->offset;
   if ( idx < 0 || idx >= pl->slots ) {
     return 0.0;
@@ -251,15 +253,15 @@ inline double pl_p_eql( ProbabilityList *pl, int target ) {
   return (pl->probs)[idx];
 }
 
-inline double pl_p_gt( ProbabilityList *pl, int target ) {
+static double pl_p_gt( ProbabilityList *pl, int target ) {
   return 1.0 - pl_p_le( pl, target );
 }
 
-inline double pl_p_lt( ProbabilityList *pl, int target ) {
+static double pl_p_lt( ProbabilityList *pl, int target ) {
   return pl_p_le( pl, target - 1 );
 }
 
-inline double pl_p_le( ProbabilityList *pl, int target ) {
+static double pl_p_le( ProbabilityList *pl, int target ) {
   int idx = target - pl->offset;
   if ( idx < 0 ) {
     return 0.0;
@@ -270,11 +272,11 @@ inline double pl_p_le( ProbabilityList *pl, int target ) {
   return (pl->cumulative)[idx];
 }
 
-inline double pl_p_ge( ProbabilityList *pl, int target ) {
+static double pl_p_ge( ProbabilityList *pl, int target ) {
   return 1.0 - pl_p_le( pl, target - 1 );
 }
 
-inline double pl_expected( ProbabilityList *pl ) {
+static double pl_expected( ProbabilityList *pl ) {
   double t = 0.0;
   int o = pl->offset;
   int s = pl->slots;
@@ -426,7 +428,7 @@ void calc_keep_distributions( ProbabilityList *pl, int k, int q, int kbest, Prob
   return;
 }
 
-inline void clear_pl_array( int k, ProbabilityList **pl_array  ) {
+static void clear_pl_array( int k, ProbabilityList **pl_array  ) {
   int n;
   for ( n=0; n<k; n++) {
     if ( pl_array[n] != NULL ) {
@@ -515,23 +517,50 @@ ProbabilityList *pl_repeat_n_sum_k( ProbabilityList *pl, int n, int k, int kbest
 //  Ruby integration
 //
 
-inline VALUE pl_as_ruby_class( ProbabilityList *pl, VALUE klass ) {
-  return Data_Wrap_Struct( klass, 0, destroy_probability_list, pl );
+static void free_probability_list( void *ptr ) {
+  destroy_probability_list( ptr );
+}
+
+static size_t probability_list_memsize( const void *ptr ) {
+  const ProbabilityList *pl = ptr;
+  size_t size = sizeof(ProbabilityList);
+
+  if ( pl == NULL ) return 0;
+  if ( pl->probs != NULL ) size += pl->slots * sizeof(double);
+  if ( pl->cumulative != NULL ) size += pl->slots * sizeof(double);
+  return size;
+}
+
+static const rb_data_type_t probability_list_type = {
+  .wrap_struct_name = "GamesDice::Probabilities",
+  .function = {
+    .dmark = NULL,
+    .dfree = free_probability_list,
+    .dsize = probability_list_memsize,
+    .dcompact = NULL,
+    .reserved = { NULL }
+  },
+  .parent = NULL,
+  .data = NULL,
+  .flags = 0
+};
+
+static inline VALUE pl_as_ruby_class( ProbabilityList *pl, VALUE klass ) {
+  return TypedData_Wrap_Struct( klass, &probability_list_type, pl );
 }
 
 VALUE pl_alloc(VALUE klass) {
   return pl_as_ruby_class( create_probability_list(), klass );
 }
 
-inline ProbabilityList *get_probability_list( VALUE obj ) {
+static inline ProbabilityList *get_probability_list( VALUE obj ) {
   ProbabilityList *pl;
-  Data_Get_Struct( obj, ProbabilityList, pl );
+  TypedData_Get_Struct( obj, ProbabilityList, &probability_list_type, pl );
   return pl;
 }
 
 void assert_value_wraps_pl( VALUE obj ) {
-  if ( TYPE(obj) != T_DATA ||
-      RDATA(obj)->dfree != (RUBY_DATA_FUNC)destroy_probability_list) {
+  if ( ! rb_typeddata_is_kind_of( obj, &probability_list_type ) ) {
     rb_raise( rb_eTypeError, "Expected a Probabilities object, but got something else" );
   }
 }
@@ -887,8 +916,9 @@ VALUE probabilities_from_h( VALUE self, VALUE hash ) {
  *   @return [GamesDice::Probabilities]
  */
 VALUE probabilities_add_distributions( VALUE self, VALUE gdpa, VALUE gdpb ) {
-  ProbabilityList *pl_a = get_probability_list( gdpa );
-  ProbabilityList *pl_b = get_probability_list( gdpb );
+  ProbabilityList *pl_a;
+  ProbabilityList *pl_b;
+
   assert_value_wraps_pl( gdpa );
   assert_value_wraps_pl( gdpb );
   pl_a = get_probability_list( gdpa );
@@ -925,7 +955,7 @@ VALUE probabilities_add_distributions_mult( VALUE self, VALUE m_a, VALUE gdpa, V
 //  Setup Probabilities class for Ruby interpretter
 //
 
-void init_probabilities_class() {
+void init_probabilities_class(void) {
   VALUE GamesDice = rb_define_module("GamesDice");
   Probabilities = rb_define_class_under( GamesDice, "Probabilities", rb_cObject );
   rb_define_alloc_func( Probabilities, pl_alloc );

@@ -1,5 +1,12 @@
 # GamesDice Changelog
 
+## 0.5.0 ( 22 July 2026 )
+
+ * Add support and CI coverage for Ruby 4.0.
+ * Add dependency auditing and native extension lint, sanitizer, and coverage checks to CI.
+ * Modernise native probability object memory management using Ruby's typed data API.
+ * Expand probability specifications to cover native extension edge cases.
+
 ## 0.4.2 ( 19 July 2026 )
 
  * Require MRI Ruby 3.3 or later and test against Ruby 3.3 and 3.4.

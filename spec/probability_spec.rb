@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'helpers'
+require 'objspace'
 
 describe GamesDice::Probabilities do
   describe 'class methods' do
@@ -23,6 +24,7 @@ describe GamesDice::Probabilities do
         expect { described_class.new([], 1) }.to raise_error ArgumentError
         expect { described_class.new([0.9], 1) }.to raise_error ArgumentError
         expect { described_class.new([-0.9, 0.2, 0.9], 1) }.to raise_error ArgumentError
+        expect { described_class.new([1.1], 1) }.to raise_error ArgumentError
       end
     end
 
@@ -143,8 +145,14 @@ describe GamesDice::Probabilities do
         expect(pr).to be_a described_class
       end
 
+      it 'create the same distribution when hash keys descend' do
+        pr = described_class.from_h({ 9 => 0.5, 7 => 0.5 })
+        expect(pr.to_h).to eql({ 7 => 0.5, 9 => 0.5 })
+      end
+
       it 'raise an ArgumentError when called with a non-valid hash' do
         expect { described_class.from_h({ 7 => 0.5, 9 => 0.6 }) }.to raise_error ArgumentError
+        expect { described_class.from_h({ 7 => 0.4, 9 => 0.5 }) }.to raise_error ArgumentError
       end
 
       it 'raise an TypeError when called with data that is not a hash' do
@@ -168,6 +176,21 @@ describe GamesDice::Probabilities do
     let(:pr6) { described_class.for_fair_die(6) }
     let(:pr10) { described_class.for_fair_die(10) }
     let(:pra) { described_class.new([0.4, 0.2, 0.4], -1) }
+
+    describe '#clone' do
+      it 'create an independent object with the same distribution' do
+        copy = pra.clone
+        expect(copy).not_to equal(pra)
+        expect(copy.to_h).to eql(pra.to_h)
+      end
+    end
+
+    describe 'native memory accounting' do
+      it 'include allocated probability arrays' do
+        empty = described_class.allocate
+        expect(ObjectSpace.memsize_of(pr10)).to be > ObjectSpace.memsize_of(empty)
+      end
+    end
 
     describe '#each' do
       it 'iterate through all result/probability pairs' do
@@ -375,6 +398,11 @@ describe GamesDice::Probabilities do
       it 'raise a TypeError if asked for probability of non-Integer' do
         expect { pr10.given_ge([]) }.to raise_error TypeError
       end
+
+      it 'clamp targets below the minimum and reject targets above the maximum' do
+        expect(pr10.given_ge(0).to_h).to eql(pr10.to_h)
+        expect { pr10.given_ge(11) }.to raise_error(RuntimeError, /divide by zero/)
+      end
     end
 
     describe '#given_le' do
@@ -389,6 +417,11 @@ describe GamesDice::Probabilities do
 
       it 'raise a TypeError if asked for probability of non-Integer' do
         expect { pr10.given_le({}) }.to raise_error TypeError
+      end
+
+      it 'clamp targets above the maximum and reject targets below the minimum' do
+        expect(pr10.given_le(11).to_h).to eql(pr10.to_h)
+        expect { pr10.given_le(0) }.to raise_error(RuntimeError, /divide by zero/)
       end
     end
 
@@ -405,6 +438,10 @@ describe GamesDice::Probabilities do
       it 'raise an error if any param is unexpected type' do
         d6 = described_class.for_fair_die(6)
         expect { d6.repeat_sum({}) }.to raise_error TypeError
+      end
+
+      it 'raise an error if repetitions are not positive' do
+        expect { pr6.repeat_sum(0) }.to raise_error(RuntimeError, /n < 1/)
       end
 
       it 'raise an error if distribution would have more than a million results' do
@@ -450,6 +487,24 @@ describe GamesDice::Probabilities do
         d6 = described_class.for_fair_die(6)
         expect { d6.repeat_n_sum_k({}, 10) }.to raise_error TypeError
         expect { d6.repeat_n_sum_k(10, {}) }.to raise_error TypeError
+      end
+
+      it 'raise an error if repetitions or keepers are not positive' do
+        expect { pr6.repeat_n_sum_k(0, 1) }.to raise_error(RuntimeError, /n < 1/)
+        expect { pr6.repeat_n_sum_k(2, 0) }.to raise_error(RuntimeError, /k < 1/)
+      end
+
+      it 'sum every repetition when the keeper count is at least the repetition count' do
+        expect(pr6.repeat_n_sum_k(3, 3).to_h).to eql(pr6.repeat_sum(3).to_h)
+      end
+
+      it 'raise an error if the kept distribution would have more than a million results' do
+        d1000 = described_class.for_fair_die(1000)
+        expect { d1000.repeat_n_sum_k(1003, 1002) }.to raise_error(RuntimeError, /Too many probability slots/)
+      end
+
+      it 'raise an error for an unknown keep mode' do
+        expect { pr6.repeat_n_sum_k(3, 2, :middle) }.to raise_error(ArgumentError, /Keep mode/)
       end
 
       it 'raise an error if n is greater than 170' do
@@ -505,6 +560,13 @@ describe GamesDice::Probabilities do
         expect(h[18]).to be_within(1e-10).of 5 / 400.0
         expect(h[19]).to be_within(1e-10).of 3 / 400.0
         expect(h[20]).to be_within(1e-10).of 1 / 400.0
+      end
+
+      it "calculate a '4d6 keep worst 3' distribution accurately at its bounds" do
+        h = pr6.repeat_n_sum_k(4, 3, :keep_worst).to_h
+        expect(h).to be_valid_distribution
+        expect(h[3]).to be_within(1e-10).of 21 / 1296.0
+        expect(h[18]).to be_within(1e-10).of 1 / 1296.0
       end
     end
   end

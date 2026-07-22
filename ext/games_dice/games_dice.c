@@ -6,7 +6,7 @@
 // To hold the module object
 VALUE GamesDice = Qnil;
 
-void Init_games_dice() {
+void Init_games_dice(void) {
   GamesDice = rb_define_module("GamesDice");
   init_probabilities_class();
 }
