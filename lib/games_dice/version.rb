@@ -2,5 +2,5 @@
 
 module GamesDice
   # Current version of the gem.
-  VERSION = '0.4.2'
+  VERSION = '0.5.0'
 end
