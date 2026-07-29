@@ -24,7 +24,7 @@ gem as-is, and add them as features within your project code.
 
 ## Supported Ruby Versions
 
-GamesDice 0.4.2 supports MRI Ruby 3.3 and 3.4. It uses a native extension and does not support JRuby.
+GamesDice 0.5.0 supports MRI Ruby 3.3, 3.4, and 4.0. It uses a native extension and does not support JRuby.
 
 GamesDice 0.4.0 and 0.4.1 support MRI Ruby 2.6 and later. Versions before 0.4.0 also provide a
 pure-Ruby implementation of the probability calculations and can be used with JRuby.
