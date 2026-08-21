@@ -30,8 +30,7 @@ module GamesDice
 
     # @!visibility private
     def self._load(buf)
-      # Use of Marshal for general-purpose object serialisation is discouraged. However, this class does support
-      # it for backwards-compatibility.
+      # RuboCop rationale: persisted Probabilities require Marshal compatibility; callers must load only trusted data.
       # rubocop:disable Security/MarshalLoad
       h = Marshal.load buf
       # rubocop:enable Security/MarshalLoad

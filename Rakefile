@@ -11,7 +11,7 @@ require 'yard'
 
 desc 'GamesDice unit tests'
 RSpec::Core::RakeTask.new(:spec) do |t|
-  t.pattern = 'spec/*_spec.rb'
+  t.pattern = 'spec/**/*_spec.rb'
   t.verbose = false
 end
 
@@ -46,7 +46,6 @@ rebuild_and_test_native = lambda do |mode, test: true|
 end
 
 # Native quality orchestration is kept together so each task shares the same rebuild contract.
-# rubocop:disable Metrics/BlockLength
 namespace :c do
   desc 'Compile the C extension with strict warnings'
   task :lint do
@@ -105,4 +104,3 @@ namespace :c do
     )
   end
 end
-# rubocop:enable Metrics/BlockLength

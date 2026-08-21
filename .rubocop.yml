@@ -1,53 +1,9 @@
+inherit_gem:
+  ncs_rubocop_conf:
+    - config/base.yml
+    - config/rake.yml
+    - config/rspec.yml
+    - config/native_extension.yml
+
 plugins:
   - rubocop-performance
-  - rubocop-rake
-  - rubocop-rspec
-
-AllCops:
-  TargetRubyVersion: 3.3
-  NewCops: enable
-  SuggestExtensions: false
-
-Layout/LineLength:
-  Max: 120
-  
-Metrics/BlockLength:
-  AllowedMethods:
-    - context
-    - describe
-    - shared_examples
-    - define
-
-RSpec/ExampleLength:
-  Max: 25
-
-RSpec/MultipleExpectations:
-  Max: 21
-
-RSpec/NestedGroups:
-  Max: 4
-
-# This project keeps specs flat so they are easy to run individually.
-RSpec/SpecFilePathFormat:
-  Enabled: false
-
-RSpec/IndexedLet:
-  Enabled: false
-
-RSpec/InstanceVariable:
-  Exclude:
-    - spec/complex_die_spec.rb
-
-RSpec/MultipleDescribes:
-  Exclude:
-    - spec/readme_spec.rb
-
-RSpec/DescribeClass:
-  Exclude:
-    - spec/readme_spec.rb
-
-# Probabilities implements #each without mixing in Enumerable; these specs
-# intentionally collect yielded pairs manually.
-Style/MapIntoArray:
-  Exclude:
-    - spec/probability_spec.rb

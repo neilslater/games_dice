@@ -2,7 +2,7 @@
 
 require 'helpers'
 
-describe GamesDice::Parser do
+describe GamesDice::Parser, :aggregate_failures do
   describe '#parse' do
     let(:parser) { described_class.new }
 
