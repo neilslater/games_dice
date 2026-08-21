@@ -2,7 +2,7 @@
 
 require 'helpers'
 
-describe GamesDice::Die do
+describe GamesDice::Die, :aggregate_failures do
   before do
     # Set state of default PRNG
     srand(4567)
@@ -17,8 +17,7 @@ describe GamesDice::Die do
     end
 
     it 'accept any object with a rand(Integer) method as the second param' do
-      prng = TestPRNG.new
-      die = described_class.new(20, prng)
+      die = described_class.new(20, TestPRNG.new)
       [16, 7, 3, 11, 16, 18, 20, 7].each do |expected|
         expect(die.roll).to eql expected
         expect(die.result).to eql expected
@@ -46,19 +45,10 @@ describe GamesDice::Die do
 
   describe '#probabilities' do
     it "return the die's probability distribution as a GamesDice::Probabilities object" do
-      die = described_class.new(6)
-      probs = die.probabilities
+      probs = described_class.new(6).probabilities
       expect(probs).to be_a GamesDice::Probabilities
-
       expect(probs.to_h).to be_valid_distribution
-
-      expect(probs.p_eql(1)).to be_within(1e-10).of 1 / 6.0
-      expect(probs.p_eql(2)).to be_within(1e-10).of 1 / 6.0
-      expect(probs.p_eql(3)).to be_within(1e-10).of 1 / 6.0
-      expect(probs.p_eql(4)).to be_within(1e-10).of 1 / 6.0
-      expect(probs.p_eql(5)).to be_within(1e-10).of 1 / 6.0
-      expect(probs.p_eql(6)).to be_within(1e-10).of 1 / 6.0
-
+      expect_probability_values(probs.to_h, (1..6).to_h { |result| [result, 1 / 6.0] })
       expect(probs.expected).to be_within(1e-10).of 3.5
     end
   end

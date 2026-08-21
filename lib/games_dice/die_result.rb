@@ -164,9 +164,6 @@ module GamesDice
 
     private
 
-    # Splitting this method up further, or flattening it will not make it read better. If
-    # we had a few more reroll reasons, they could maybe be grouped and method split up.
-    # rubocop:disable Metrics/MethodLength
     def apply_roll_to_total(roll_reason, roll_result)
       case roll_reason
       when :basic, :reroll_new_die, :reroll_new_keeper, :reroll_replace
@@ -175,13 +172,14 @@ module GamesDice
         @total += roll_result
       when :reroll_subtract
         @total -= roll_result
-      when :reroll_use_best
-        @total = [@value, roll_result].max
-      when :reroll_use_worst
-        @total = [@value, roll_result].min
+      when :reroll_use_best, :reroll_use_worst
+        @total = select_roll(roll_reason, roll_result)
       end
     end
-    # rubocop:enable Metrics/MethodLength
+
+    def select_roll(roll_reason, roll_result)
+      roll_reason == :reroll_use_best ? [@value, roll_result].max : [@value, roll_result].min
+    end
 
     def init_with_result(first_roll_result, first_roll_reason)
       @rolls = [Integer(first_roll_result)]

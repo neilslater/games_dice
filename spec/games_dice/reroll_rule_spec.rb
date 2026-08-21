@@ -2,7 +2,7 @@
 
 require 'helpers'
 
-describe GamesDice::RerollRule do
+describe GamesDice::RerollRule, :aggregate_failures do
   describe '#new' do
     it 'accept self-consistent operator/value pairs as a trigger' do
       expect { described_class.new(5, :>, :reroll_subtract) }.not_to raise_error

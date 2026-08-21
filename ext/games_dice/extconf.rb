@@ -6,7 +6,6 @@ require 'mkmf'
 require 'rbconfig'
 
 # mkmf exposes compiler and linker flags through these globals.
-# rubocop:disable Style/GlobalVars
 case ENV.fetch('GAMES_DICE_NATIVE_MODE', 'release')
 when 'release'
   # Use Ruby's normal extension build flags.
@@ -31,6 +30,4 @@ when 'sanitize'
 else
   abort "Unknown GAMES_DICE_NATIVE_MODE: #{ENV.fetch('GAMES_DICE_NATIVE_MODE', nil)}"
 end
-# rubocop:enable Style/GlobalVars
-
 create_makefile('games_dice/games_dice')

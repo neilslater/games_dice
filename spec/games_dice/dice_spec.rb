@@ -2,7 +2,7 @@
 
 require 'helpers'
 
-describe GamesDice::Dice do
+describe GamesDice::Dice, :aggregate_failures do
   describe 'dice scheme' do
     before do
       srand(67_809)

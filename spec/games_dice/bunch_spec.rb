@@ -2,7 +2,7 @@
 
 require 'helpers'
 
-describe GamesDice::Bunch do
+describe GamesDice::Bunch, :aggregate_failures do
   describe 'dice scheme' do
     before do
       srand(67_809)
@@ -35,18 +35,8 @@ describe GamesDice::Bunch do
       end
 
       it 'calculate probabilities correctly' do
-        prob_hash = bunch.probabilities.to_h
-        expect(prob_hash[1]).to be_within(1e-10).of 0.1
-        expect(prob_hash[2]).to be_within(1e-10).of 0.1
-        expect(prob_hash[3]).to be_within(1e-10).of 0.1
-        expect(prob_hash[4]).to be_within(1e-10).of 0.1
-        expect(prob_hash[5]).to be_within(1e-10).of 0.1
-        expect(prob_hash[6]).to be_within(1e-10).of 0.1
-        expect(prob_hash[7]).to be_within(1e-10).of 0.1
-        expect(prob_hash[8]).to be_within(1e-10).of 0.1
-        expect(prob_hash[9]).to be_within(1e-10).of 0.1
-        expect(prob_hash[10]).to be_within(1e-10).of 0.1
-        expect(prob_hash.values.sum).to be_within(1e-9).of 1.0
+        expected = (1..10).to_h { |result| [result, 0.1] }
+        expect_probability_values(bunch.probabilities.to_h, expected)
       end
     end
 
@@ -78,19 +68,8 @@ describe GamesDice::Bunch do
       end
 
       it 'calculate probabilities correctly' do
-        prob_hash = bunch.probabilities.to_h
-        expect(prob_hash[2]).to be_within(1e-10).of 1 / 36.0
-        expect(prob_hash[3]).to be_within(1e-10).of 2 / 36.0
-        expect(prob_hash[4]).to be_within(1e-10).of 3 / 36.0
-        expect(prob_hash[5]).to be_within(1e-10).of 4 / 36.0
-        expect(prob_hash[6]).to be_within(1e-10).of 5 / 36.0
-        expect(prob_hash[7]).to be_within(1e-10).of 6 / 36.0
-        expect(prob_hash[8]).to be_within(1e-10).of 5 / 36.0
-        expect(prob_hash[9]).to be_within(1e-10).of 4 / 36.0
-        expect(prob_hash[10]).to be_within(1e-10).of 3 / 36.0
-        expect(prob_hash[11]).to be_within(1e-10).of 2 / 36.0
-        expect(prob_hash[12]).to be_within(1e-10).of 1 / 36.0
-        expect(prob_hash.values.sum).to be_within(1e-9).of 1.0
+        expected = (2..12).to_h { |result| [result, (6 - (7 - result).abs) / 36.0] }
+        expect_probability_values(bunch.probabilities.to_h, expected)
       end
     end
 
@@ -162,24 +141,9 @@ describe GamesDice::Bunch do
       end
 
       it 'calculate probabilities correctly' do
-        prob_hash = bunch.probabilities.to_h
-        expect(prob_hash[3]).to be_within(1e-10).of 1 / 1296.0
-        expect(prob_hash[4]).to be_within(1e-10).of 4 / 1296.0
-        expect(prob_hash[5]).to be_within(1e-10).of 10 / 1296.0
-        expect(prob_hash[6]).to be_within(1e-10).of 21 / 1296.0
-        expect(prob_hash[7]).to be_within(1e-10).of 38 / 1296.0
-        expect(prob_hash[8]).to be_within(1e-10).of 62 / 1296.0
-        expect(prob_hash[9]).to be_within(1e-10).of 91 / 1296.0
-        expect(prob_hash[10]).to be_within(1e-10).of 122 / 1296.0
-        expect(prob_hash[11]).to be_within(1e-10).of 148 / 1296.0
-        expect(prob_hash[12]).to be_within(1e-10).of 167 / 1296.0
-        expect(prob_hash[13]).to be_within(1e-10).of 172 / 1296.0
-        expect(prob_hash[14]).to be_within(1e-10).of 160 / 1296.0
-        expect(prob_hash[15]).to be_within(1e-10).of 131 / 1296.0
-        expect(prob_hash[16]).to be_within(1e-10).of 94 / 1296.0
-        expect(prob_hash[17]).to be_within(1e-10).of 54 / 1296.0
-        expect(prob_hash[18]).to be_within(1e-10).of 21 / 1296.0
-        expect(prob_hash.values.sum).to be_within(1e-9).of 1.0
+        numerators = [1, 4, 10, 21, 38, 62, 91, 122, 148, 167, 172, 160, 131, 94, 54, 21]
+        expected = (3..18).zip(numerators.map { |numerator| numerator / 1296.0 }).to_h
+        expect_probability_values(bunch.probabilities.to_h, expected)
       end
     end
 
@@ -213,18 +177,12 @@ describe GamesDice::Bunch do
       end
 
       it 'calculate probabilities correctly' do
-        prob_hash = bunch.probabilities.to_h
-        expect(prob_hash[1]).to be_within(1e-10).of 0.6513215599
-        expect(prob_hash[2]).to be_within(1e-10).of 0.2413042577
-        expect(prob_hash[3]).to be_within(1e-10).of 0.0791266575
-        expect(prob_hash[4]).to be_within(1e-10).of 0.0222009073
-        expect(prob_hash[5]).to be_within(1e-10).of 0.0050700551
-        expect(prob_hash[6]).to be_within(1e-10).of 0.0008717049
-        expect(prob_hash[7]).to be_within(1e-10).of 0.0000989527
-        expect(prob_hash[8]).to be_within(1e-10).of 0.0000058025
-        expect(prob_hash[9]).to be_within(1e-10).of 0.0000001023
-        expect(prob_hash[10]).to be_within(1e-18).of 1e-10
-        expect(prob_hash.values.sum).to be_within(1e-9).of 1.0
+        expected = {
+          1 => 0.6513215599, 2 => 0.2413042577, 3 => 0.0791266575, 4 => 0.0222009073,
+          5 => 0.0050700551, 6 => 0.0008717049, 7 => 0.0000989527, 8 => 0.0000058025,
+          9 => 0.0000001023, 10 => 1e-10
+        }
+        expect_probability_values(bunch.probabilities.to_h, expected, tolerances: { 10 => 1e-18 })
       end
     end
 
@@ -263,18 +221,11 @@ describe GamesDice::Bunch do
       end
 
       it 'calculate probabilities correctly' do
-        prob_hash = bunch.probabilities.to_h
-        probs = prob_hash.values_at(*2..30)
-        expected_probs = [0.00001, 0.00005, 0.00031, 0.00080, 0.00211, 0.00405, 0.00781, 0.01280, 0.02101, 0.0312,
-                          0.045715, 0.060830, 0.077915, 0.090080, 0.097935, 0.091230, 0.070015, 0.020480, 0.032805,
-                          0.0328, 0.0334626451, 0.0338904805, 0.0338098781, 0.0328226480, 0.0304393461, 0.0260456005,
-                          0.0189361531, 0.0082804480, 0.0103524151]
-
-        probs.zip(expected_probs) do |got_prob, expected_prob|
-          expect(got_prob).to be_within(1e-10).of(expected_prob)
-        end
-
-        expect(prob_hash.values.sum).to be_within(1e-9).of 1.0
+        probabilities = [0.00001, 0.00005, 0.00031, 0.00080, 0.00211, 0.00405, 0.00781, 0.01280, 0.02101, 0.0312,
+                         0.045715, 0.060830, 0.077915, 0.090080, 0.097935, 0.091230, 0.070015, 0.020480, 0.032805,
+                         0.0328, 0.0334626451, 0.0338904805, 0.0338098781, 0.0328226480, 0.0304393461, 0.0260456005,
+                         0.0189361531, 0.0082804480, 0.0103524151]
+        expect_probability_values(bunch.probabilities.to_h, (2..30).zip(probabilities).to_h)
       end
     end
 
@@ -312,28 +263,8 @@ describe GamesDice::Bunch do
       end
 
       it 'calculate probabilities correctly' do
-        prob_hash = bunch.probabilities.to_h
-        expect(prob_hash[1]).to be_within(1e-10).of 1 / 400.0
-        expect(prob_hash[2]).to be_within(1e-10).of 3 / 400.0
-        expect(prob_hash[3]).to be_within(1e-10).of 5 / 400.0
-        expect(prob_hash[4]).to be_within(1e-10).of 7 / 400.0
-        expect(prob_hash[5]).to be_within(1e-10).of 9 / 400.0
-        expect(prob_hash[6]).to be_within(1e-10).of 11 / 400.0
-        expect(prob_hash[7]).to be_within(1e-10).of 13 / 400.0
-        expect(prob_hash[8]).to be_within(1e-10).of 15 / 400.0
-        expect(prob_hash[9]).to be_within(1e-10).of 17 / 400.0
-        expect(prob_hash[10]).to be_within(1e-10).of 19 / 400.0
-        expect(prob_hash[11]).to be_within(1e-10).of 21 / 400.0
-        expect(prob_hash[12]).to be_within(1e-10).of 23 / 400.0
-        expect(prob_hash[13]).to be_within(1e-10).of 25 / 400.0
-        expect(prob_hash[14]).to be_within(1e-10).of 27 / 400.0
-        expect(prob_hash[15]).to be_within(1e-10).of 29 / 400.0
-        expect(prob_hash[16]).to be_within(1e-10).of 31 / 400.0
-        expect(prob_hash[17]).to be_within(1e-10).of 33 / 400.0
-        expect(prob_hash[18]).to be_within(1e-10).of 35 / 400.0
-        expect(prob_hash[19]).to be_within(1e-10).of 37 / 400.0
-        expect(prob_hash[20]).to be_within(1e-10).of 39 / 400.0
-        expect(prob_hash.values.sum).to be_within(1e-9).of 1.0
+        expected = (1..20).to_h { |result| [result, ((2 * result) - 1) / 400.0] }
+        expect_probability_values(bunch.probabilities.to_h, expected)
       end
     end
 
@@ -371,28 +302,8 @@ describe GamesDice::Bunch do
       end
 
       it 'calculate probabilities correctly' do
-        prob_hash = bunch.probabilities.to_h
-        expect(prob_hash[1]).to be_within(1e-10).of 39 / 400.0
-        expect(prob_hash[2]).to be_within(1e-10).of 37 / 400.0
-        expect(prob_hash[3]).to be_within(1e-10).of 35 / 400.0
-        expect(prob_hash[4]).to be_within(1e-10).of 33 / 400.0
-        expect(prob_hash[5]).to be_within(1e-10).of 31 / 400.0
-        expect(prob_hash[6]).to be_within(1e-10).of 29 / 400.0
-        expect(prob_hash[7]).to be_within(1e-10).of 27 / 400.0
-        expect(prob_hash[8]).to be_within(1e-10).of 25 / 400.0
-        expect(prob_hash[9]).to be_within(1e-10).of 23 / 400.0
-        expect(prob_hash[10]).to be_within(1e-10).of 21 / 400.0
-        expect(prob_hash[11]).to be_within(1e-10).of 19 / 400.0
-        expect(prob_hash[12]).to be_within(1e-10).of 17 / 400.0
-        expect(prob_hash[13]).to be_within(1e-10).of 15 / 400.0
-        expect(prob_hash[14]).to be_within(1e-10).of 13 / 400.0
-        expect(prob_hash[15]).to be_within(1e-10).of 11 / 400.0
-        expect(prob_hash[16]).to be_within(1e-10).of 9 / 400.0
-        expect(prob_hash[17]).to be_within(1e-10).of 7 / 400.0
-        expect(prob_hash[18]).to be_within(1e-10).of 5 / 400.0
-        expect(prob_hash[19]).to be_within(1e-10).of 3 / 400.0
-        expect(prob_hash[20]).to be_within(1e-10).of 1 / 400.0
-        expect(prob_hash.values.sum).to be_within(1e-9).of 1.0
+        expected = (1..20).to_h { |result| [result, (41 - (2 * result)) / 400.0] }
+        expect_probability_values(bunch.probabilities.to_h, expected)
       end
     end
   end

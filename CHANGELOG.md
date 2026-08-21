@@ -1,5 +1,10 @@
 # GamesDice Changelog
 
+## Unreleased
+
+ * Standardise development linting on `ncs_rubocop_conf` v0.2.0 with its base, Rake, RSpec, and native-extension profiles.
+ * Refactor the test suite to meet the shared policy without reducing its assertions or coverage.
+
 ## 0.5.0 ( 22 July 2026 )
 
  * Add support and CI coverage for Ruby 4.0.

@@ -2,7 +2,7 @@
 
 require 'helpers'
 
-describe GamesDice::MapRule do
+describe GamesDice::MapRule, :aggregate_failures do
   describe '#new' do
     it 'accept self-consistent operator/value pairs as a trigger' do
       expect { described_class.new(5, :>, 1) }.not_to raise_error
