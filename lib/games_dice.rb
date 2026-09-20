@@ -26,6 +26,8 @@ module GamesDice
     GamesDice::Dice.new(parsed[:bunches], parsed[:offset])
   end
 
+  # Returns the shared parser used by {.create}.
+  # @return [GamesDice::Parser] Lazily constructed dice-notation parser.
   def self.parser
     @parser ||= GamesDice::Parser.new
   end

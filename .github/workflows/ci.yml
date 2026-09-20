@@ -26,7 +26,15 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
-      - run: bundle exec rake compile spec
+      - run: bundle exec rake
+      - name: Upload Ruby coverage report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: ruby-coverage-${{ matrix.ruby }}
+          path: coverage/ruby
+          retention-days: 14
+          if-no-files-found: warn
 
   rubocop:
     name: RuboCop (Ruby ${{ matrix.ruby }})

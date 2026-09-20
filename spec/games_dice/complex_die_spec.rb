@@ -200,4 +200,29 @@ describe GamesDice::ComplexDie, :aggregate_failures do
       end
     end
   end
+
+  it 'calculates bounds when maximum is queried first and reuses them' do
+    die = described_class.new(6)
+    expect(die.max).to eq(6)
+    expect(die.min).to eq(1)
+    expect(die.min).to eq(1)
+    expect(die.max).to eq(6)
+  end
+
+  it 'subtracts subsequent explosions after an initial subtracting reroll' do
+    prng = instance_double(TestPRNG)
+    allow(prng).to receive(:rand).with(6).and_return(0, 5, 3)
+    die = described_class.new(6, prng: prng, rerolls: [[1, :==, :reroll_subtract], [6, :==, :reroll_add]])
+    expect(die.roll).to have_attributes(value: -9, rolls: [1, 6, 4],
+                                        roll_reasons: %i[basic reroll_subtract reroll_subtract])
+    expect(die.explain_result).to eq('[1-6-4] -9')
+  end
+
+  it 'bounds open-ended additions and subtractions while ignoring impossible triggers' do
+    die = described_class.new(6, rerolls: [[1, :==, :reroll_subtract], [0, :==, :reroll_subtract],
+                                           [6, :==, :reroll_add], [7, :==, :reroll_add]])
+    expect(die.min).to eq(-5999)
+    expect(die.max).to eq(6006)
+    expect(die.probabilities_complete).to be(false)
+  end
 end

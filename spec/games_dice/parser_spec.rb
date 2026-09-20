@@ -103,4 +103,14 @@ describe GamesDice::Parser, :aggregate_failures do
       end
     end
   end
+
+  it 'rejects multiple keeper modifiers on the same bunch' do
+    expect { described_class.new.parse('4d6k3k2') }.to raise_error(RuntimeError, /keepers.*twice/)
+  end
+
+  it 'collects bare dice terms without optional signs or modifiers' do
+    tree = { bunches: [{ ndice: '2', sides: '6' }, { constant: '3', op: '+' }] }
+    expect(described_class::ParseTreeProcessor.collect_bunches(tree)).to eq([{ ndice: 2, sides: 6 }])
+    expect(described_class::ParseTreeProcessor.collect_offset(tree)).to eq(3)
+  end
 end
