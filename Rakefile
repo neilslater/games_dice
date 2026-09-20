@@ -100,8 +100,10 @@ namespace :c do
 
     rebuild_and_test_native.call('sanitize', test: false)
 
+    # MRI owns its threads' alternate signal stacks; ASan must not unmap them on thread exit.
+    # See https://bugs.ruby-lang.org/issues/20256 (also applies when preloading ASan into stock Ruby).
     sh(
-      { 'ASAN_OPTIONS' => 'detect_leaks=0', 'LD_PRELOAD' => libasan },
+      { 'ASAN_OPTIONS' => 'detect_leaks=0:use_sigaltstack=0', 'LD_PRELOAD' => libasan },
       RbConfig.ruby,
       '-S',
       'bundle',
