@@ -92,6 +92,9 @@ module GamesDice
     # @!visibility private
     class ParseTreeProcessor
       class << self
+        # Collects dice terms into constructor options, leaving constant terms for {collect_offset}.
+        # @param [Hash] dice_expressions Parsed expression tree.
+        # @return [Array<Hash>] Options for each GamesDice::Bunch.
         def collect_bunches(dice_expressions)
           dice_expressions[:bunches].select { |h| h[:ndice] }.map do |in_hash|
             out_hash = {}
@@ -106,6 +109,10 @@ module GamesDice
           end
         end
 
+        # Copies the parsed number of dice and sides into constructor options as integers.
+        # @param [Hash] in_hash Parsed dice term.
+        # @param [Hash] out_hash Constructor options to update.
+        # @return [Array<Symbol>] The processed field names.
         def collect_bunch_basics(in_hash, out_hash)
           %i[ndice sides].each do |s|
             next unless in_hash[s]
@@ -114,6 +121,10 @@ module GamesDice
           end
         end
 
+        # Converts a term's sign to its numeric multiplier.
+        # @param [Hash] in_hash Parsed dice term with an :op entry.
+        # @param [Hash] out_hash Constructor options to update.
+        # @return [Integer,nil] Multiplier, or nil for an unknown operator.
         def collect_bunch_multiplier(in_hash, out_hash)
           optype = in_hash[:op].to_s
           out_hash[:multiplier] = case optype
@@ -122,6 +133,10 @@ module GamesDice
                                   end
         end
 
+        # Dispatches a parsed modifier to its alias, keeper, map, or reroll collector.
+        # @param [Hash] mod Parsed modifier.
+        # @param [Hash] out_hash Constructor options to update.
+        # @return [Object] Result of the selected collector, or nil for an unknown modifier.
         def collect_bunch_modifier(mod, out_hash)
           if mod[:alias]
             ParseTreeBunchModifier.collect_alias_modifier mod, out_hash
@@ -134,6 +149,9 @@ module GamesDice
           end
         end
 
+        # Sums signed constant terms separately from dice terms.
+        # @param [Hash] dice_expressions Parsed expression tree.
+        # @return [Integer] Fixed offset for GamesDice::Dice.
         def collect_offset(dice_expressions)
           dice_expressions[:bunches].select { |h| h[:constant] }.inject(0) do |total, in_hash|
             c = in_hash[:constant].to_i
@@ -173,6 +191,11 @@ module GamesDice
           collect_complex_reroll_rule(reroll_mod, out_hash)
         end
 
+        # Appends a reroll rule, reversing the comparison and preserving an explicit limit.
+        # Omitted types default to replacement; an omitted limit uses RerollRule's default.
+        # @param [Hash] reroll_mod Parsed long-form reroll modifier.
+        # @param [Hash] out_hash Constructor options with an initialized :rerolls array.
+        # @return [Array<Array>] Updated reroll rules.
         def collect_complex_reroll_rule(reroll_mod, out_hash)
           # Typical reroll_mod: {:reroll=>"r"@5, :condition=>{:compare_num=>"10"@7}, :type=>"add"@10}
           op = get_op_symbol(reroll_mod[:condition][:comparison] || '==')
@@ -212,6 +235,10 @@ module GamesDice
           collect_complex_map_rule(map_mod, out_hash)
         end
 
+        # Appends a map rule, defaulting to a threshold comparison and a mapped value of one.
+        # @param [Hash] map_mod Parsed long-form map modifier, optionally including a label.
+        # @param [Hash] out_hash Constructor options with an initialized :maps array.
+        # @return [Array<Array>] Updated map rules.
         def collect_complex_map_rule(map_mod, out_hash)
           # Typical map_mod: {:map=>"m"@4, :condition=>{:compare_num=>"5"@6}, :num=>"2"@8, :output=>"Qwerty"@10}
           op = get_op_symbol(map_mod[:condition][:comparison] || '>=')
@@ -236,6 +263,9 @@ module GamesDice
           '<=' => :>=
         }.freeze
 
+        # Reverses a notation comparison for rules that send the operator to the trigger value.
+        # @param [#to_s] parsed_op_string Comparison from the parse tree.
+        # @return [Symbol,nil] Reversed operator, or nil for an unknown comparison.
         def get_op_symbol(parsed_op_string)
           OP_CONVERSION[parsed_op_string.to_s]
         end

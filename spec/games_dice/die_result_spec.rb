@@ -191,4 +191,31 @@ describe GamesDice::DieResult, :aggregate_failures do
 
     expect(die_results.map(&:value)).to eq([3, 5, 7, 8])
   end
+
+  [nil, ''].each do |label|
+    it "explains mapped results with a #{label.inspect} label" do
+      result = described_class.new(6)
+      result.apply_map(1, label)
+      expect(result).to have_attributes(value: 1, explain_value: '6', explain_total: '6')
+    end
+  end
+
+  describe 'cloning mapped results' do
+    let(:original) do
+      result = described_class.new(6)
+      result.apply_map(1, 'Success')
+      result
+    end
+    let(:copy) { original.clone }
+
+    it 'preserves the mapped state and label' do
+      expect(copy).to have_attributes(value: 1, total: 6, mapped: true, explain_value: '6 Success')
+    end
+
+    it 'does not share roll history with the original' do
+      copy.add_roll(2, :reroll_replace)
+      expect(copy).to have_attributes(value: 2, mapped: false, rolls: [6, 2])
+      expect(original).to have_attributes(value: 1, mapped: true, rolls: [6])
+    end
+  end
 end

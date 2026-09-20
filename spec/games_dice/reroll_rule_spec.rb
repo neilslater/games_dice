@@ -37,4 +37,8 @@ describe GamesDice::RerollRule, :aggregate_failures do
       expect(rule.applies?(6)).to be false
     end
   end
+
+  it 'uses the default limit when explicitly given nil' do
+    expect(described_class.new(6, :==, :reroll_add, nil).limit).to eq(1000)
+  end
 end

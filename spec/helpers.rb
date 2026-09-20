@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 # games_dice/spec/helpers.rb
+require_relative 'support/coverage'
+
 require 'pathname'
 
 require 'games_dice'

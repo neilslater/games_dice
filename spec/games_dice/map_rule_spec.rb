@@ -37,4 +37,11 @@ describe GamesDice::MapRule, :aggregate_failures do
       expect(rule.map_from(6)).to be_nil
     end
   end
+
+  it 'uses a nonboolean trigger result as the mapped value' do
+    rule = described_class.new({ 1 => 0, 6 => 3 }, :[], 99)
+    expect(rule.map_from(1)).to eq(0)
+    expect(rule.map_from(6)).to eq(3)
+    expect(rule.map_from(2)).to be_nil
+  end
 end

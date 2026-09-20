@@ -28,7 +28,14 @@ Rake::ExtensionTask.new do |ext|
   ext.gem_spec = gemspec
 end
 
-task default: %i[compile spec]
+namespace :docs do
+  desc 'Check Ruby API documentation for YARD warnings and undocumented objects'
+  task :check do
+    ruby 'script/check_documentation.rb'
+  end
+end
+
+task default: %i[compile spec docs:check]
 
 rebuild_and_test_native = lambda do |mode, test: true|
   tasks = %w[clobber compile]

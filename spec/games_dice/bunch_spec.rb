@@ -307,4 +307,46 @@ describe GamesDice::Bunch, :aggregate_failures do
       end
     end
   end
+
+  it 'rejects invalid dice counts, side counts, keeper modes and random generators' do
+    defaults = { sides: 6, ndice: 2 }
+    [{ ndice: 0 }, { sides: 0 }, { keep_mode: :unknown }].each do |options|
+      expect { described_class.new(defaults.merge(options)) }.to raise_error(ArgumentError)
+    end
+    expect { described_class.new(sides: 6, ndice: 2, prng: Object.new) }.to raise_error(RuntimeError, /prng/)
+  end
+
+  it 'has no result details or explanation before rolling' do
+    expect(described_class.new(sides: 6, ndice: 2)).to have_attributes(result_details: nil, explain_result: nil)
+  end
+
+  it 'uses the supplied name as its label and exposes its rules' do
+    bunch = described_class.new(sides: 6, ndice: 2, name: 'Damage', rerolls: [[6, :==, :reroll_add]])
+    expect(bunch.label).to eq('Damage')
+    expect(bunch.rerolls.first).to have_attributes(type: :reroll_add, trigger_value: 6)
+    expect(bunch.maps).to be_nil
+  end
+
+  it 'reuses its calculated probability distribution' do
+    bunch = described_class.new(sides: 6, ndice: 2)
+    probabilities = bunch.probabilities
+    expect(bunch.probabilities).to equal(probabilities)
+    expect(probabilities.expected).to be_within(1e-10).of(7.0)
+  end
+
+  [2, 3].product(%i[keep_best keep_worst]).each do |number, mode|
+    it "keeps all dice when #{mode} requests #{number} of two dice" do
+      bunch = described_class.new(sides: 6, ndice: 2, keep_mode: mode, keep_number: number, prng: TestPRNGMax.new)
+      expect(bunch.roll).to eq(12)
+      expect(bunch.explain_result).to eq('6, 6. Keep: 6 + 6 = 12')
+      expect(bunch.probabilities.expected).to be_within(1e-10).of(7.0)
+    end
+  end
+
+  it 'explains mapped keeper results with their labels' do
+    bunch = described_class.new(sides: 6, ndice: 3, keep_mode: :keep_best, keep_number: 2,
+                                maps: [[4, :<=, 1, 'Success']], prng: TestPRNGMax.new)
+    expect(bunch.roll).to eq(2)
+    expect(bunch.explain_result).to eq('6 Success, 6 Success, 6 Success. Keep: 6 Success, 6 Success. Successes: 2')
+  end
 end

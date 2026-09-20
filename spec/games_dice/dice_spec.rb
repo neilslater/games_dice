@@ -30,4 +30,32 @@ describe GamesDice::Dice, :aggregate_failures do
       end
     end
   end
+
+  it 'explains constant-only recipes' do
+    dice = described_class.new([], -3)
+    expect(dice.roll).to eq(-3)
+    expect(dice.explain_result).to eq('-3')
+    expect(dice.probabilities.to_h).to eq(-3 => 1.0)
+  end
+
+  it 'explains a single bunch with an offset' do
+    dice = described_class.new([{ sides: 6, ndice: 1, prng: TestPRNGMax.new }], 2)
+    expect(dice.roll).to eq(8)
+    expect(dice.explain_result).to eq('1d6: 6. 6 + 2 = 8')
+  end
+
+  describe 'multiple weighted bunch explanations' do
+    let(:bunches) do
+      [{ sides: 6, ndice: 1, prng: TestPRNGMax.new },
+       { sides: 4, ndice: 1, multiplier: -1, prng: TestPRNGMax.new }]
+    end
+
+    { 0 => '6 - 4 = 2', 3 => '6 - 4 + 3 = 5', -3 => '6 - 4 - 3 = -1' }.each do |offset, sum|
+      it "includes an offset of #{offset}" do
+        dice = described_class.new(bunches, offset)
+        expect(dice.roll).to eq(2 + offset)
+        expect(dice.explain_result).to eq("1d6: 6. 1d4: 4. #{sum}")
+      end
+    end
+  end
 end

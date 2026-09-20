@@ -15,4 +15,5 @@ gem 'rake-compiler', '~> 1.2'
 gem 'redcarpet', '~> 3.6'
 gem 'rspec', '~> 3.13'
 gem 'rubocop-performance', '~> 1.25', require: false
+gem 'simplecov', '~> 0.22.0', require: false
 gem 'yard', '~> 0.9'

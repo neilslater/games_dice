@@ -68,4 +68,15 @@ describe GamesDice::Die, :aggregate_failures do
       expect(arr).to eql [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     end
   end
+
+  it 'rejects nonpositive sides and an invalid random generator' do
+    [0, -1].each do |sides|
+      expect { described_class.new(sides) }.to raise_error(ArgumentError, /sides value/)
+    end
+    expect { described_class.new(6, Object.new) }.to raise_error(ArgumentError, /prng/)
+  end
+
+  it 'exposes no reroll or map rules for a simple die' do
+    expect(described_class.new(6)).to have_attributes(rerolls: nil, maps: nil)
+  end
 end
