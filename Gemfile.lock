@@ -1,9 +1,9 @@
 GIT
   remote: https://github.com/neilslater/ncs_rubocop_conf.git
-  revision: 985a4b5820edbe05fb1f21d39e700398709d4dbc
-  tag: v0.2.0
+  revision: 2357caa8f891e93a515611b68a394ccd5a66f4e5
+  tag: v0.2.1
   specs:
-    ncs_rubocop_conf (0.2.0)
+    ncs_rubocop_conf (0.2.1)
       rubocop (~> 1.89.0, >= 1.89.0)
       rubocop-rake (~> 0.7.0, >= 0.7.1)
       rubocop-rspec (~> 3.10.0, >= 3.10.2)

@@ -8,7 +8,7 @@ gemspec
 gem 'bundler-audit', '~> 0.9', require: false
 gem 'ncs_rubocop_conf',
     github: 'neilslater/ncs_rubocop_conf',
-    tag: 'v0.2.0',
+    tag: 'v0.2.1',
     require: false
 gem 'rake', '~> 13.2'
 gem 'rake-compiler', '~> 1.2'
