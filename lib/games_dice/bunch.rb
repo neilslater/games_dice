@@ -23,6 +23,8 @@ module GamesDice
   #  d.explain_result # => "4, 9, 2, 9, 1. Keep: 9 + 9 = 18"
   #
   class Bunch
+    include RecipeQueries
+    include ProbabilityHelpers
     include KeepHelpers
     include ExplainHelpers
 
@@ -51,6 +53,7 @@ module GamesDice
                     else
                       GamesDice::Die.new(@sides, options[:prng])
                     end
+      initialize_recipe
     end
 
     # Name to help identify bunch
@@ -75,7 +78,10 @@ module GamesDice
 
     # Result of most-recent roll, or nil if no roll made yet.
     # @return [Integer,nil]
-    attr_reader :result
+    def result
+      refresh_recipe
+      @result
+    end
 
     # @!attribute [r] label
     # Description that will be used in explanations with more than one bunch
@@ -105,80 +111,78 @@ module GamesDice
     # allowing inspection of how the result was obtained.
     # @return [Array<GamesDice::DieResult>, nil] Sequence of GamesDice::DieResult objects.
     def result_details
+      refresh_recipe
       return nil unless @raw_result_details
 
       @raw_result_details.map { |r| r.is_a?(Integer) ? GamesDice::DieResult.new(r) : r }
     end
 
     # @!attribute [r] min
-    # Minimum possible result from a call to #roll
+    # Lower bound on results; fallback bounds may include unreachable outcomes.
     # @return [Integer]
     def min
+      refresh_recipe
       n = @keep_mode ? [@keep_number, @ndice].min : @ndice
       n * @single_die.min
     end
 
     # @!attribute [r] max
-    # Maximum possible result from a call to #roll
+    # Upper bound on results; fallback bounds may include unreachable outcomes.
     # @return [Integer]
     def max
+      refresh_recipe
       n = @keep_mode ? [@keep_number, @ndice].min : @ndice
       n * @single_die.max
     end
 
     # Calculates the probability distribution for the bunch. When the bunch is composed of dice with
-    # open-ended re-roll rules, there are some arbitrary limits imposed to prevent large amounts of
-    # recursion.
+    # open-ended re-roll rules, aggregate truncation error is at most 1e-10 before floating-point roundoff.
+    # Raises ProbabilityLimitError when calculation limits prevent meeting that bound.
     # @return [GamesDice::Probabilities] Probability distribution of bunch.
     def probabilities
-      return @probabilities if @probabilities
-
-      @probabilities = if @keep_mode && @ndice > @keep_number
-                         @single_die.probabilities.repeat_n_sum_k(@ndice, @keep_number, @keep_mode)
-                       else
-                         @single_die.probabilities.repeat_sum(@ndice)
-                       end
-
-      @probabilities
+      probabilities_for_budget(ProbabilityBudget::LIMIT)
     end
 
     # Simulates rolling the bunch of identical dice
     # @return [Integer] Sum of all rolled dice, or sum of all keepers
     def roll
-      generate_raw_results
-      return @result if !@keep_mode || @keep_number.to_i >= @ndice
-
-      use_dice = case @keep_mode
-                 when :keep_best then @raw_result_details.sort[-@keep_number..]
-                 when :keep_worst then @raw_result_details.sort[0..(@keep_number - 1)]
-                 end
-
-      @result = use_dice.sum
+      with_recipe do
+        generate_raw_results
+        @used_result_details = select_keepers
+        @result = @used_result_details.sum
+      end
     end
 
     # @!attribute [r] explain_result
     # Explanation of result, or nil if no call to #roll yet.
     # @return [String,nil]
     def explain_result
+      refresh_recipe
       return nil unless @result
 
-      # With #keep_mode, we may need to show unused and used dice separately
-      used_dice = result_details
-      used_dice, = find_used_dice_due_to_keep_mode(result_details) if @keep_mode && @keep_number < @ndice
-
+      used_dice = @used_result_details.map { |result| result.is_a?(Integer) ? DieResult.new(result) : result }
       build_explanation(used_dice)
     end
 
     private
 
-    def generate_raw_results
-      @result = 0
-      @raw_result_details = []
+    def recipe_sources
+      [[[@single_die], @single_die.class]]
+    end
 
-      @ndice.times do
-        @result += @single_die.roll
-        @raw_result_details << @single_die.result
-      end
+    def recipe_labels
+      [@name]
+    end
+
+    def select_keepers
+      return @raw_result_details if !@keep_mode || @keep_number >= @ndice
+      return @raw_result_details.sort[-@keep_number..] if @keep_mode == :keep_best
+
+      @raw_result_details.sort[0...@keep_number]
+    end
+
+    def generate_raw_results
+      @raw_result_details = Array.new(@ndice) { @single_die.roll }
     end
 
     def name_number_sides_from_hash(options)

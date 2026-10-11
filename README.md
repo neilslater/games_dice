@@ -24,7 +24,7 @@ gem as-is, and add them as features within your project code.
 
 ## Supported Ruby Versions
 
-GamesDice 0.5.0 supports MRI Ruby 3.3, 3.4, and 4.0. It uses a native extension and does not support JRuby.
+GamesDice 0.6.0 supports MRI Ruby 3.3, 3.4, and 4.0. It uses a native extension and does not support JRuby.
 
 GamesDice 0.4.0 and 0.4.1 support MRI Ruby 2.6 and later. Versions before 0.4.0 also provide a
 pure-Ruby implementation of the probability calculations and can be used with JRuby.
@@ -132,7 +132,8 @@ Returns a GamesDice::Probabilities object that describes the probability distrib
 Note that some distributions, involving keeping a number best or worst results, can take
 significant time to calculate. If the theoretical distribution would contain a large number
 of very low probabilities due to a possibility of large numbers re-rolls, then the
-calculations cut short, typically approximating to the nearest 1.0e-10.
+calculation may omit unfinished branches within the aggregate `1e-10` truncation bound described below,
+or raise `GamesDice::ProbabilityLimitError` when its limits prevent that guarantee.
 
 ### GamesDice::Probabilities instance methods
 
@@ -166,7 +167,19 @@ Returns the probability of a result equal to the integer n.
     probabilities.p_eql( 3 )  # => 0.004629629629
     probabilities.p_eql( 2 )  # => 0.0
 
-Probabilities below 1e-10 due to requiring long sequences of re-rolls will calculate as 0.0
+Open-ended calculations may omit unfinished branches and normalize the completed outcomes.
+The absolute truncation error is at most `1e-10` for the entire public probability query,
+including multiple bunches and keepers, before floating-point roundoff. This differs from the
+`1e-8` input-mass tolerance for user-created `Probabilities` objects.
+
+Each component calculation evaluates at most 100,000 faces, 1,000,000 rule predicates, and
+64 rolls per branch. The error budget is shared across the entire recipe.
+Cheap exact formulas handle a deterministic additive d1 and a single ordinary replacement rule.
+If a calculation cannot meet the error bound within these limits, it raises
+`GamesDice::ProbabilityLimitError`. Rolling still follows the recipe's full limits. Dice bounds
+use cheaply provable enclosing intervals when exact probabilities are unavailable; bounds also
+raise `ProbabilityLimitError` when no such interval can be established, for example with a
+custom numeric mapping. These enclosing intervals may include unreachable results.
 
 #### probabilities.p_gt( n )
 
@@ -200,7 +213,24 @@ Returns the probability of a result less than the integer n.
 
 Returns the mean result, weighted by the probability of each value.
 
-    probabilities.expected  # => 10.5 (rounded to nearest 1e-9)
+    probabilities.expected  # => 10.5 (mean of the returned distribution)
+
+For a truncated distribution, an omitted-mass bound `e` and an enclosing result span `w`
+give an absolute error bound of `e * w` for this mean, before floating-point roundoff.
+
+## Mutable recipes and serialization
+
+The exposed bunch, multiplier, reroll, and mapping arrays remain mutable. Changes invalidate
+probability and bounds caches and clear previous results and explanations until the next roll.
+Edit the bunch and multiplier arrays together so their lengths match before querying. Custom
+trigger objects must remain stable; replace a rule to change its behavior. Mutating a recipe
+from a callback during a calculation raises `RuntimeError` and discards that calculation.
+
+Breaking change in 0.6.0: legacy serialized `GamesDice::Probabilities` objects requiring the old
+`_load` protocol are no longer supported. This also affects serialized dice containing such
+cached probabilities. New objects support Marshal dump/load round trips. Recompute persisted
+distributions from their recipes, or export hashes using the previous version and reconstruct
+with `Probabilities.from_h`. Only deserialize trusted data.
 
 ## String Dice Descriptions
 
@@ -257,7 +287,8 @@ The simple form specifies a low value that will automatically trigger a re-roll 
     1d6r1
 
 When rolled, this die will score from 1 to 6. If it rolls a 1, it will roll again automatically
-and use that result instead.
+and use that result instead, repeating while it rolls 1, up to the default limit of 1000 rerolls.
+Use `1d6r:1,replace,1.` for exactly one replacement attempt.
 
 The full version of this modifier, allows you to specify from 1 to 3 parameters:
 

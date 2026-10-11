@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'games_dice/dice_helpers'
+
 module GamesDice
   # This class models a combination of GamesDice::Bunch objects plus a fixed offset.
   #
@@ -20,6 +22,9 @@ module GamesDice
   #  d.explain_result # => "2d20: 4, 16. Keep: 16. 16 + 5 = 21"
   #
   class Dice
+    include RecipeQueries
+    include ProbabilityHelpers
+
     # The first parameter is an array of values that are passed to GamesDice::Bunch constructors.
     # @param [Array<Hash>] bunches Array of options for creating bunches
     # @param [Integer] offset Total offset
@@ -43,6 +48,7 @@ module GamesDice
       @bunches = bunches.map { |b| GamesDice::Bunch.new(b) }
       @bunch_multipliers = bunches.map { |b| b[:multiplier] || 1 }
       @result = nil
+      initialize_recipe
     end
 
     # Name to help identify dice
@@ -64,26 +70,31 @@ module GamesDice
 
     # Result of most-recent roll, or nil if no roll made yet.
     # @return [Integer,nil]
-    attr_reader :result
+    def result
+      refresh_recipe
+      @result
+    end
 
     # Simulates rolling dice
     # @return [Integer] Sum of all rolled dice
     def roll
-      @result = @offset + bunches_weighted_sum(:roll)
+      with_recipe { @result = @offset + bunches_weighted_sum(:roll) }
     end
 
     # @!attribute [r] min
-    # Minimum possible result from a call to #roll
+    # Lower bound on results; fallback bounds may include unreachable outcomes.
     # @return [Integer]
     def min
-      @min ||= @offset + bunches_weighted_sum(:min)
+      refresh_recipe
+      @min ||= with_recipe { @offset + weighted_bound(:min, :max) }
     end
 
     # @!attribute [r] max
-    # Maximum possible result from a call to #roll
+    # Upper bound on results; fallback bounds may include unreachable outcomes.
     # @return [Integer]
     def max
-      @max ||= @offset + bunches_weighted_sum(:max)
+      refresh_recipe
+      @max ||= with_recipe { @offset + weighted_bound(:max, :min) }
     end
 
     # @!attribute [r] minmax
@@ -94,21 +105,20 @@ module GamesDice
     end
 
     # Calculates the probability distribution for the dice. When the dice include components with
-    # open-ended re-roll rules, there are some arbitrary limits imposed to prevent large amounts of
-    # recursion.
+    # open-ended re-roll rules, aggregate truncation error is at most 1e-10 before floating-point roundoff.
+    # Raises ProbabilityLimitError when calculation limits prevent meeting that bound.
     # @return [GamesDice::Probabilities] Probability distribution of dice.
     def probabilities
-      return @probabilities if @probabilities
+      refresh_recipe
+      return @probabilities if valid_probability_cache?(ProbabilityBudget::LIMIT)
 
-      @bunch_multipliers.zip(@bunches).inject(GamesDice::Probabilities.new([1.0], @offset)) do |probs, mb|
-        m, b = mb
-        GamesDice::Probabilities.add_distributions_mult(1, probs, m, b.probabilities)
-      end
+      @probabilities = with_recipe { combined_probabilities }
     end
 
     # @!attribute [r] explain_result
     # @return [String,nil] Explanation of result, or nil if no call to #roll yet.
     def explain_result
+      refresh_recipe
       return nil unless @result
 
       explanations = @bunches.map { |bunch| "#{bunch.label}: #{bunch.explain_result}" }
@@ -122,10 +132,34 @@ module GamesDice
 
     private
 
-    def simple_explanation(explanation)
-      return explanation if @offset.zero?
+    def recipe_sources
+      [[@bunches, Bunch], [@bunch_multipliers, Numeric]]
+    end
 
-      "#{explanation}. #{array_to_sum([@bunches[0].result, @offset])}"
+    def recipe_labels
+      [@name]
+    end
+
+    def validate_recipe
+      return if @bunches.length == @bunch_multipliers.length
+
+      raise ArgumentError, 'bunches and bunch_multipliers must have the same length'
+    end
+
+    def weighted_bound(positive, negative)
+      @bunches.zip(@bunch_multipliers).sum do |bunch, multiplier|
+        next 0 if multiplier.zero?
+
+        multiplier * bunch.public_send(multiplier.negative? ? negative : positive)
+      end
+    end
+
+    def simple_explanation(explanation)
+      return explanation if @offset.zero? && @bunch_multipliers[0] == 1
+
+      values = [@bunch_multipliers[0] * @bunches[0].result]
+      values << @offset unless @offset.zero?
+      "#{explanation}. #{array_to_sum(values)}"
     end
 
     def multi_explanations(explanations)

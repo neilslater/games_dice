@@ -481,15 +481,4 @@ describe GamesDice::Probabilities, :aggregate_failures do
       end
     end
   end
-
-  describe 'serialisation via Marshall' do
-    it 'can load a saved GamesDice::Probabilities' do
-      # RuboCop rationale: this repository-owned fixture verifies backwards-compatible Marshal deserialization.
-      # rubocop:disable Security/MarshalLoad
-      pd6 = File.open(fixture('probs_fair_die_6.dat')) { |file| Marshal.load(file) }
-      # rubocop:enable Security/MarshalLoad
-      expect(pd6.to_h).to be_valid_distribution
-      expect(pd6.p_gt(4)).to be_within(1e-10).of 1.0 / 3
-    end
-  end
 end

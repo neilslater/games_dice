@@ -10,22 +10,12 @@
 void init_probabilities_class(void);
 
 typedef struct _pd {
+    struct _pd *next;
+    struct _pd **owner_link;
     int offset;
     int slots;
     double *probs;
     double *cumulative;
   } ProbabilityList;
-
-ProbabilityList *pl_add_distributions( ProbabilityList *pl_a, ProbabilityList *pl_b );
-
-ProbabilityList *pl_add_distributions_mult( int mul_a, ProbabilityList *pl_a, int mul_b, ProbabilityList *pl_b );
-
-ProbabilityList *pl_given_ge( ProbabilityList *pl, int target );
-
-ProbabilityList *pl_given_le( ProbabilityList *pl, int target );
-
-ProbabilityList *pl_repeat_sum( ProbabilityList *pl, int n );
-
-ProbabilityList *pl_repeat_n_sum_k( ProbabilityList *pl, int n, int k, int kbest );
 
 #endif
