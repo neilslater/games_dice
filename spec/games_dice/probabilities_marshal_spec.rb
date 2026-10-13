@@ -15,6 +15,16 @@ describe GamesDice::Probabilities, :aggregate_failures do
     marshal_round_trip(original).tap { |restored| expect(restored.probabilities.to_h).to eq(expected) }
   end
 
+  def reload_during_iteration(distribution)
+    values = []
+    distribution.each do |pair|
+      values << pair
+      distribution.marshal_load({ 9 => 1.0 })
+      GC.start
+    end
+    values.to_h
+  end
+
   describe 'current Marshal protocol'  do
     [{ -3 => 0.25, 4 => 0.75 }, { 0 => 1.0 }, (1..6).to_h { |face| [face, 1.0 / 6] }].each do |values|
       it "round trips #{values.inspect} into usable independent native storage" do
@@ -37,6 +47,12 @@ describe GamesDice::Probabilities, :aggregate_failures do
         expect { distribution.marshal_load(invalid) }.to raise_error(error)
       end
       expect(distribution.to_h).to eq({ -2 => 1.0 })
+    end
+
+    it 'keeps iteration storage alive when a callback replaces the distribution' do
+      distribution = described_class.new([0.25, 0.75], 1)
+      expect(reload_during_iteration(distribution)).to eq({ 1 => 0.25, 2 => 0.75 })
+      expect(distribution.to_h).to eq({ 9 => 1.0 })
     end
 
     it 'does not expose the obsolete legacy decoder' do

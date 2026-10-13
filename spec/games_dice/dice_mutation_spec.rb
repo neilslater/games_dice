@@ -156,4 +156,10 @@ describe GamesDice::Dice, :aggregate_failures do
     dice.instance_variable_set(:@recipe_cache, nil)
     expect(marshal_round_trip(dice).result).to be_nil
   end
+
+  it 'invalidates a restored parent when a child snapshot is missing' do
+    populate(dice)
+    dice.bunches.first.single_die.instance_variable_set(:@recipe_cache, nil)
+    expect(marshal_round_trip(dice).result).to be_nil
+  end
 end

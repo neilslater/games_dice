@@ -902,7 +902,9 @@ VALUE probabilities_repeat_n_sum_k( int argc, VALUE* argv, VALUE self ) {
  * @return [GamesDice::Probabilities] this object
  */
 VALUE probabilities_each( VALUE self ) {
-  ProbabilityList *pl = get_probability_list( self );
+  /* Ruby callbacks may replace self's storage through marshal_load/initialize. */
+  VALUE snapshot = operate( OP_COPY, get_probability_list(self), NULL, 0, 0, 0 );
+  ProbabilityList *pl = get_probability_list( snapshot );
   int i;
   double *pr = pl->probs;
   int o = pl->offset;
@@ -914,6 +916,7 @@ VALUE probabilities_each( VALUE self ) {
       rb_yield( a );
     }
   }
+  RB_GC_GUARD(snapshot);
   return self;
 }
 

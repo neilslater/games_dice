@@ -114,7 +114,9 @@ module GamesDice
     end
 
     def restore_recipe_cache
+      previous_version = @recipe_version || 0
       initialize_recipe
+      @recipe_version = previous_version + 1
       clear_derived_state
     end
 
