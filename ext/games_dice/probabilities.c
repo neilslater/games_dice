@@ -895,16 +895,10 @@ VALUE probabilities_repeat_n_sum_k( int argc, VALUE* argv, VALUE self ) {
   return result;
 }
 
-/*  
- * Iterates through value, probability pairs
- * @yieldparam [Integer] result A result that may be possible in the dice scheme
- * @yieldparam [Float] probability Probability of result, in range 0.0..1.0
- * @return [GamesDice::Probabilities] this object
- */
-VALUE probabilities_each( VALUE self ) {
-  /* Ruby callbacks may replace self's storage through marshal_load/initialize. */
-  VALUE snapshot = operate( OP_COPY, get_probability_list(self), NULL, 0, 0, 0 );
-  ProbabilityList *pl = get_probability_list( snapshot );
+static VALUE yield_probability_pairs( VALUE data ) {
+  ProbabilityOperation *op = (ProbabilityOperation *)data;
+  /* Keep the snapshot native-owned until every callback has finished. */
+  ProbabilityList *pl = copy_probability_list( op, op->a );
   int i;
   double *pr = pl->probs;
   int o = pl->offset;
@@ -916,7 +910,19 @@ VALUE probabilities_each( VALUE self ) {
       rb_yield( a );
     }
   }
-  RB_GC_GUARD(snapshot);
+  return Qnil;
+}
+
+/*
+ * Iterates through value, probability pairs
+ * @yieldparam [Integer] result A result that may be possible in the dice scheme
+ * @yieldparam [Float] probability Probability of result, in range 0.0..1.0
+ * @return [GamesDice::Probabilities] this object
+ */
+VALUE probabilities_each( VALUE self ) {
+  /* Ruby callbacks may replace self's storage through marshal_load/initialize. */
+  ProbabilityOperation op = { .owned = NULL, .a = get_probability_list(self) };
+  rb_ensure( yield_probability_pairs, (VALUE)&op, cleanup_operation, (VALUE)&op );
   return self;
 }
 
