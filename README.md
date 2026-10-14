@@ -167,19 +167,19 @@ Returns the probability of a result equal to the integer n.
     probabilities.p_eql( 3 )  # => 0.004629629629
     probabilities.p_eql( 2 )  # => 0.0
 
-Open-ended calculations may omit unfinished branches and normalize the completed outcomes.
-The absolute truncation error is at most `1e-10` for the entire public probability query,
-including multiple bunches and keepers, before floating-point roundoff. This differs from the
-`1e-8` input-mass tolerance for user-created `Probabilities` objects.
+Very unlikely sequences of rerolls may be left out to keep calculation time reasonable.
+This changes the probability of any result, or range of results, by at most `1e-10`
+(one in ten billion), in addition to normal floating-point rounding. This limit applies
+to all the dice together, including when keeping only the highest or lowest rolls.
 
-Each component calculation evaluates at most 100,000 faces, 1,000,000 rule predicates, and
-64 rolls per branch. The error budget is shared across the entire recipe.
-Cheap exact formulas handle a deterministic additive d1 and a single ordinary replacement rule.
-If a calculation cannot meet the error bound within these limits, it raises
-`GamesDice::ProbabilityLimitError`. Rolling still follows the recipe's full limits. Dice bounds
-use cheaply provable enclosing intervals when exact probabilities are unavailable; bounds also
-raise `ProbabilityLimitError` when no such interval can be established, for example with a
-custom numeric mapping. These enclosing intervals may include unreachable results.
+GamesDice limits the amount of work spent calculating probabilities. If it cannot achieve
+the accuracy described above within those limits, it raises `GamesDice::ProbabilityLimitError`.
+These calculation limits do not change how the dice are rolled.
+
+For complex dice, `dice.min` and `dice.max` may describe a wider range than can actually
+be rolled. Every roll will fall within that range, but its endpoints may not be possible
+results. These methods also raise `GamesDice::ProbabilityLimitError` if they cannot find
+suitable bounds within the calculation limits.
 
 #### probabilities.p_gt( n )
 
@@ -215,16 +215,26 @@ Returns the mean result, weighted by the probability of each value.
 
     probabilities.expected  # => 10.5 (mean of the returned distribution)
 
-For a truncated distribution, an omitted-mass bound `e` and an enclosing result span `w`
-give an absolute error bound of `e * w` for this mean, before floating-point roundoff.
+If very unlikely reroll sequences were left out, this mean is also an approximation.
+Rare but unusually high or low results can affect the mean more than their small
+probabilities might suggest, so the `1e-10` accuracy limit for probabilities does
+not apply to the mean.
 
-## Mutable recipes and serialization
+## Changing dice rules
 
-The exposed bunch, multiplier, reroll, and mapping arrays remain mutable. Changes invalidate
-probability and bounds caches and clear previous results and explanations until the next roll.
-Edit the bunch and multiplier arrays together so their lengths match before querying. Custom
-trigger objects must remain stable; replace a rule to change its behavior. Mutating a recipe
-from a callback during a calculation raises `RuntimeError` and discards that calculation.
+You can change existing dice by editing their bunches, multipliers, reroll rules or mapping
+rules. GamesDice recalculates affected probabilities and minimum/maximum values when next
+needed. Previous results and explanations are cleared until you roll again.
+
+Each entry in `dice.bunches` has a matching entry in `dice.bunch_multipliers`. If you add,
+remove or reorder bunches, make the corresponding change to their multipliers before
+using the dice.
+
+If you supply custom rule callbacks, keep their behavior unchanged while the rules are
+in use. Replace the rule object when changing its behavior, and do not change dice rules
+from inside a callback.
+
+## Saving and loading dice
 
 Breaking change in 0.6.0: legacy serialized `GamesDice::Probabilities` objects requiring the old
 `_load` protocol are no longer supported. This also affects serialized dice containing such

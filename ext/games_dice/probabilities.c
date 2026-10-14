@@ -24,12 +24,38 @@ VALUE Probabilities = Qnil;
 //  General utils
 //
 
-/* Every temporary belongs to its operation until ownership passes to Ruby. */
+/*
+ * Owns the temporary distributions created during one native calculation.
+ *
+ * A local C pointer does not automatically free its allocation when the
+ * function returns. Ruby exceptions can also leave a calculation before
+ * ordinary cleanup code runs, including when a later allocation fails.
+ *
+ * Run the calculation through rb_ensure with cleanup_operation as its
+ * cleanup callback. create_probability_list adds each new distribution
+ * to owned before allocating its buffers. Its fields start at zero, so
+ * cleanup can safely free a partially constructed distribution.
+ *
+ * owned is the head of a linked list. Each ProbabilityList stores next
+ * and owner_link, which points to the pointer that currently refers to
+ * that entry. This lets destroy_probability_list unlink an entry when
+ * it is freed early, preventing cleanup from freeing it again.
+ *
+ * When returning a distribution to Ruby, perform_operation wraps it in
+ * a Ruby object before detaching it from owned. Ruby then handles its
+ * lifetime. If wrapping fails, the operation still owns the distribution
+ * and cleanup frees it.
+ *
+ * Iteration uses the same owner for its snapshot, keeping that storage
+ * alive even if a Ruby callback replaces the original distribution.
+ * Cleanup frees the snapshot after iteration, including exceptions and
+ * early block exits.
+ */
 typedef struct {
-  ProbabilityList *owned;
-  ProbabilityList *a, *b;
-  int x, y, z;
-  int operation;
+  ProbabilityList *owned; /* Temporary distributions requiring cleanup. */
+  ProbabilityList *a, *b; /* Borrowed inputs, not owned by these pointers. */
+  int x, y, z;            /* Arguments such as counts, weights and thresholds. */
+  int operation;          /* Selects the calculation in perform_operation. */
 } ProbabilityOperation;
 
 static int checked_result( int64_t value ) {

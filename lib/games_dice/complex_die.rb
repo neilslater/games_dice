@@ -73,12 +73,16 @@ module GamesDice
       @result
     end
 
-    # Whether or not #probabilities includes all possible outcomes.
-    # True if all possible results are represented and assigned a probability. Dice with open-ended re-rolls
-    # may have calculations cut short, and will result in a false value of this attribute. Even when this
-    # attribute is false, the aggregate truncation error is at most 1e-10 before floating-point roundoff.
-    # The initial true value precedes calculation and is not an accuracy certificate.
-    # @return [Boolean, nil] Depending on completeness when generating #probabilities
+    # Whether the probability calculation included all possible sequences of rerolls.
+    # After calling #probabilities, true means none were left out. False means
+    # very unlikely sequences were skipped to keep calculation time reasonable.
+    # Even when false, this changes the probability of any result by at most
+    # 1e-10 (one in ten billion), in addition to normal floating-point rounding.
+    #
+    # Call #probabilities before checking this value. A new die starts with true,
+    # even though no calculation has run yet.
+    # @return [Boolean, nil] Whether the calculation is complete, or nil if its
+    #   result was cleared after a recipe change or a failed calculation.
     def probabilities_complete
       refresh_recipe
       @probabilities_complete
@@ -97,8 +101,13 @@ module GamesDice
       @result&.explain_value
     end
 
-    # Lower bound on results under the recipe's reroll limits. Fallback bounds may be unattainable;
-    # raises ProbabilityLimitError if no finite bound can be established within calculation limits.
+    # Lower bound on the numeric value of a roll (#roll.value).
+    # No roll will have a value below this bound.
+    # For some complex dice, this may be lower than any value that can actually
+    # be rolled, because calculating the exact minimum would take too much work.
+    #
+    # Raises ProbabilityLimitError if a lower bound cannot be found within
+    # the calculation's work limits.
     # @!attribute [r] min
     # @return [Integer]
     def min
@@ -109,8 +118,15 @@ module GamesDice
       @min_result
     end
 
+    # Upper bound on the numeric value of a roll (#roll.value).
+    # No roll will have a value above this bound.
+    # For some complex dice, this may be higher than any value that can actually
+    # be rolled, because calculating the exact maximum would take too much work.
+    #
+    # Raises ProbabilityLimitError if an upper bound cannot be found within
+    # the calculation's work limits.
     # @!attribute [r] max
-    # @return [Integer] Upper bound on results; fallback bounds may be unattainable.
+    # @return [Integer]
     def max
       refresh_recipe
       return @max_result if @max_result
@@ -119,10 +135,15 @@ module GamesDice
       @max_result
     end
 
-    # Calculates the probability distribution for the die. For open-ended re-roll rules, there are some
-    # limits on work and aggregate omitted mass. Raises ProbabilityLimitError when the calculation cannot
-    # meet the absolute truncation bound of 1e-10 before floating-point roundoff.
-    # @return [GamesDice::Probabilities] Probability distribution of die.
+    # Calculates the probability distribution for the die.
+    #
+    # Very unlikely sequences of rerolls may be left out to keep calculation
+    # time reasonable. This changes the probability of any result by at most
+    # 1e-10 (one in ten billion), in addition to normal floating-point rounding.
+    #
+    # Raises ProbabilityLimitError if this accuracy cannot be achieved within
+    # the calculation's work limits.
+    # @return [GamesDice::Probabilities] Probability distribution of the die.
     def probabilities
       probabilities_for_budget(ProbabilityBudget::LIMIT)
     end

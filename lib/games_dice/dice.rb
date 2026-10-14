@@ -82,7 +82,9 @@ module GamesDice
     end
 
     # @!attribute [r] min
-    # Lower bound on results; fallback bounds may include unreachable outcomes.
+    # Lower bound on the value returned by #roll. No roll will be below this value.
+    # For some complex dice, this may be lower than any value that can actually
+    # be rolled, because calculating the exact minimum would take too much work.
     # @return [Integer]
     def min
       refresh_recipe
@@ -90,7 +92,9 @@ module GamesDice
     end
 
     # @!attribute [r] max
-    # Upper bound on results; fallback bounds may include unreachable outcomes.
+    # Upper bound on the value returned by #roll. No roll will exceed this value.
+    # For some complex dice, this may be higher than any value that can actually
+    # be rolled, because calculating the exact maximum would take too much work.
     # @return [Integer]
     def max
       refresh_recipe
@@ -104,10 +108,16 @@ module GamesDice
       [min, max]
     end
 
-    # Calculates the probability distribution for the dice. When the dice include components with
-    # open-ended re-roll rules, aggregate truncation error is at most 1e-10 before floating-point roundoff.
-    # Raises ProbabilityLimitError when calculation limits prevent meeting that bound.
-    # @return [GamesDice::Probabilities] Probability distribution of dice.
+    # Calculates the probability distribution for the combined dice result.
+    #
+    # Very unlikely sequences of rerolls may be left out to keep calculation
+    # time reasonable. This changes the probability of any combined result by
+    # at most 1e-10 (one in ten billion), in addition to normal floating-point
+    # rounding. This limit covers all the bunches together.
+    #
+    # Raises ProbabilityLimitError if this accuracy cannot be achieved within
+    # the calculation's work limits.
+    # @return [GamesDice::Probabilities] Probability distribution of the dice.
     def probabilities
       refresh_recipe
       return @probabilities if valid_probability_cache?(ProbabilityBudget::LIMIT)
