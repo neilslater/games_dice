@@ -3,125 +3,32 @@
 module GamesDice
   class ComplexDie
     # @!visibility private
-    # Private extension methods for GamesDice::ComplexDie probability calculations
+    # Private cache handling for bounded probability calculations.
     module ProbabilityHelpers
       private
 
-      def calculate_probabilities
-        if @rerolls && @maps
-          GamesDice::Probabilities.from_h(prob_hash_with_rerolls_and_maps)
-        elsif @rerolls
-          GamesDice::Probabilities.from_h(recursive_probabilities)
-        elsif @maps
-          GamesDice::Probabilities.from_h(prob_hash_with_just_maps)
-        else
-          @basic_die.probabilities
+      def probabilities_for_budget(limit)
+        refresh_recipe
+        return cached_probabilities if valid_probability_cache?(limit)
+
+        with_recipe do
+          cache_calculation(ProbabilityCalculation.new(self, limit))
         end
+      rescue StandardError
+        @probabilities_complete = nil
+        raise
       end
 
-      def prob_hash_with_rerolls_and_maps
-        prob_hash = {}
-        reroll_probs = recursive_probabilities
-        reroll_probs.each do |v, p|
-          add_mapped_to_prob_hash(prob_hash, v, p)
-        end
-        prob_hash
+      def cached_probabilities
+        @probabilities_complete = @probability_error.zero?
+        @probabilities
       end
 
-      def prob_hash_with_just_maps
-        prob_hash = {}
-        @basic_die.probabilities.each do |v, p|
-          add_mapped_to_prob_hash(prob_hash, v, p)
-        end
-        prob_hash
-      end
-
-      def add_mapped_to_prob_hash(prob_hash, orig_val, prob)
-        mapped_val, = calc_maps(orig_val)
-        prob_hash[mapped_val] ||= 0.0
-        prob_hash[mapped_val] += prob
-      end
-
-      RecurseStack = Struct.new(:depth, :roll_reason, :subtracting, :probabilities, :prior_probability, :prior_result,
-                                :rerolls_left) do
-        def initialize
-          self.depth = 0
-          self.roll_reason = :basic
-          self.subtracting = false
-          self.probabilities = {}
-          self.prior_probability = 1.0
-        end
-      end
-      private_constant :RecurseStack
-
-      def recursive_probabilities(stack = RecurseStack.new)
-        stack.prior_probability = stack.prior_probability / @basic_die.sides
-        stack.depth += 1
-
-        @basic_die.each_value do |die_val|
-          recurse_probs_for_value(die_val, stack)
-        end
-        stack.probabilities
-      end
-
-      def recurse_probs_for_value(die_val, stack)
-        result_so_far, rerolls_remaining = calc_result_so_far(die_val, stack)
-        rule_idx = find_matching_reroll_rule(die_val, result_so_far.rolls.length, rerolls_remaining)
-
-        if conintue_recursing?(stack, rule_idx)
-          continue_recursion(stack, result_so_far, rerolls_remaining, rule_idx)
-        else
-          end_recursion_store_probs(stack, result_so_far)
-        end
-      end
-
-      def conintue_recursing?(stack, rule_idx)
-        if stack.depth >= 20 || stack.prior_probability < 1.0e-16
-          @probabilities_complete = false
-          return false
-        end
-
-        !rule_idx.nil?
-      end
-
-      def continue_recursion(stack, result_so_far, rerolls_remaining, rule_idx)
-        rule = @rerolls[rule_idx]
-        rerolls_remaining[rule_idx] -= 1
-        recurse_probs_with_rule(stack, result_so_far, rerolls_remaining, rule)
-      end
-
-      def end_recursion_store_probs(stack, result_so_far)
-        t = result_so_far.total
-        stack.probabilities[t] ||= 0.0
-        stack.probabilities[t] += stack.prior_probability
-      end
-
-      def recurse_probs_with_rule(stack, result_so_far, rerolls_remaining, rule)
-        next_stack = stack.clone
-        next_stack.prior_result = result_so_far
-        next_stack.rerolls_left = rerolls_remaining
-        next_stack.subtracting = true if stack.subtracting || rule.type == :reroll_subtract
-
-        # Apply the rule (note reversal for additions, after a subtract)
-        next_stack.roll_reason = if stack.subtracting && rule.type == :reroll_add
-                                   :reroll_subtract
-                                 else
-                                   rule.type
-                                 end
-
-        recursive_probabilities next_stack
-      end
-
-      def calc_result_so_far(die_val, stack)
-        if stack.prior_result
-          result_so_far = stack.prior_result.clone
-          rerolls_remaining = stack.rerolls_left.clone
-          result_so_far.add_roll(die_val, stack.roll_reason)
-        else
-          rerolls_remaining = @rerolls.map(&:limit)
-          result_so_far = GamesDice::DieResult.new(die_val, stack.roll_reason)
-        end
-        [result_so_far, rerolls_remaining]
+      def cache_calculation(calculation)
+        distribution = calculation.calculate
+        @probability_error = calculation.error
+        @probabilities_complete = @probability_error.zero?
+        @probabilities = distribution
       end
     end
 
@@ -130,21 +37,21 @@ module GamesDice
     module RollHelpers
       private
 
-      def roll_apply_rerolls
-        return unless @rerolls
+      def roll_apply_rerolls(rules)
+        return unless rules
 
         subtracting = false
-        rerolls_remaining = @rerolls.map(&:limit)
+        rerolls_remaining = rules.map(&:limit)
 
-        rerolls_loop(subtracting, rerolls_remaining)
+        rerolls_loop(subtracting, rerolls_remaining, rules)
       end
 
-      def rerolls_loop(subtracting, rerolls_remaining)
+      def rerolls_loop(subtracting, rerolls_remaining, rules)
         loop do
-          rule_idx = find_matching_reroll_rule(@basic_die.result, @result.rolls.length, rerolls_remaining)
+          rule_idx = find_matching_reroll_rule(@basic_die.result, @result.rolls.length, rerolls_remaining, nil, rules)
           break unless rule_idx
 
-          rule = @rerolls[rule_idx]
+          rule = rules[rule_idx]
           rerolls_remaining[rule_idx] -= 1
           subtracting = true if rule.type == :reroll_subtract
           roll_apply_reroll_rule rule, subtracting
@@ -161,32 +68,36 @@ module GamesDice
       end
 
       # Find which rule, if any, is being triggered
-      def find_matching_reroll_rule(check_value, num_rolls, rerolls_remaining)
-        @rerolls.zip(rerolls_remaining).find_index do |rule, remaining|
-          next if rule.type == :reroll_subtract && num_rolls > 1
+      def find_matching_reroll_rule(check_value, num_rolls, rerolls_remaining, budget = nil, rules = @rerolls)
+        return unless rules
 
-          remaining.positive? && rule.applies?(check_value)
+        rules.each_with_index do |rule, index|
+          next unless available_reroll?(rule, num_rolls, rerolls_remaining[index])
+
+          budget&.predicate
+          return index if rule.applies?(check_value)
         end
+        nil
       end
 
-      def roll_apply_maps
-        return unless @maps
-
-        m, n = calc_maps(@result.value)
-        @result.apply_map(m, n)
+      def available_reroll?(rule, num_rolls, remaining)
+        remaining.positive? && !(rule.type == :reroll_subtract && num_rolls > 1)
       end
 
-      def calc_maps(original_value)
-        y = 0
-        n = ''
-        @maps.find do |rule|
-          if (maybe_y = rule.map_from(original_value))
-            y = maybe_y
-            n = rule.mapped_name
-          end
-          maybe_y
+      def roll_apply_maps(maps)
+        return unless maps
+
+        m, n = calc_maps(@result.value, nil, maps)
+        @result.apply_map(m, n.dup)
+      end
+
+      def calc_maps(original_value, budget = nil, maps = @maps)
+        maps.each do |rule|
+          budget&.predicate
+          mapped = rule.map_from(original_value)
+          return [mapped, rule.mapped_name] if mapped
         end
-        [y, n]
+        [0, '']
       end
     end
 
@@ -196,12 +107,66 @@ module GamesDice
       private
 
       def calc_minmax
-        @min_result = probabilities.min
-        @max_result = probabilities.max
-        return if @probabilities_complete
+        cheap = cheap_minmax
+        if cheap
+          @min_result, @max_result = cheap
+        else
+          calculate_minmax
+        end
+      end
 
-        logical_min, logical_max = logical_minmax
-        @min_result, @max_result = [@min_result, @max_result, logical_min, logical_max].minmax
+      def calculate_minmax
+        distribution = probabilities
+        if @probabilities_complete
+          @min_result = distribution.min
+          @max_result = distribution.max
+        else
+          @min_result, @max_result = logical_minmax
+        end
+      rescue ProbabilityLimitError
+        @min_result, @max_result = safe_minmax
+      end
+
+      def cheap_minmax
+        return if @maps
+        return [1, sides] if !@rerolls || @rerolls.empty?
+        return unless @rerolls.one?
+
+        rule = @rerolls.first
+        return unless rule.instance_of?(RerollRule) && ProbabilityShortcuts.boolean_rule?(rule)
+
+        cheap_rule_minmax(rule)
+      end
+
+      def cheap_rule_minmax(rule)
+        return [1, sides] if rule.type == :reroll_replace
+        return unless sides == 1 && rule.type == :reroll_add
+
+        value = 1 + (rule.applies?(1) ? [rule.limit, 0].max : 0)
+        [value, value]
+      end
+
+      def safe_minmax
+        return safe_mapped_minmax if @maps
+
+        adds = positive_rule_limits(:reroll_add)
+        subtracts = positive_rule_limits(:reroll_subtract)
+        return [1, sides * (1 + adds)] if subtracts.zero?
+
+        maximum = sides * (1 + adds + subtracts)
+        [-maximum, maximum]
+      end
+
+      def safe_mapped_minmax
+        unless @maps.all? { |rule| rule.instance_of?(MapRule) && ProbabilityShortcuts.boolean_rule?(rule) }
+          raise ProbabilityLimitError, 'Cannot establish finite dice bounds within calculation limits'
+        end
+
+        [0, *@maps.map(&:mapped_value)].minmax
+      end
+
+      def positive_rule_limits(type)
+        (@rerolls || []).sum { |rule| rule.type == type ? [rule.limit, 0].max : 0 }
       end
 
       def minmax_mappings(possible_values)
@@ -216,13 +181,26 @@ module GamesDice
       # cannot actually occur. In practice it is likely a non-issue unless someone went out of their way to invent a
       # dice schem that broke it.
       def logical_minmax
-        return @basic_die.minmax unless @rerolls || @maps
-        return minmax_mappings(@basic_die.all_values) unless @rerolls
+        return safe_minmax unless inexpensive_bounds?
 
         min_result, max_result = logical_rerolls_minmax
-        return minmax_mappings(min_result..max_result) if @maps
+        if @maps
+          return safe_minmax if (max_result - min_result + 1) * @maps.length > ProbabilityBudget::MAX_PREDICATES
+
+          return minmax_mappings(min_result..max_result)
+        end
 
         [min_result, max_result]
+      end
+
+      def inexpensive_bounds?
+        rules = [*(@rerolls || []), *(@maps || [])]
+        rules.all? { |rule| ordinary_boolean_rule?(rule) } &&
+          sides * rules.length <= ProbabilityBudget::MAX_FACES
+      end
+
+      def ordinary_boolean_rule?(rule)
+        (rule.instance_of?(RerollRule) || rule.instance_of?(MapRule)) && ProbabilityShortcuts.boolean_rule?(rule)
       end
 
       def logical_rerolls_minmax
@@ -251,7 +229,7 @@ module GamesDice
           max_reroll = @basic_die.all_values.select { |v| rule.applies?(v) }.max
           next unless max_reroll
 
-          total_add += max_reroll * rule.limit
+          total_add += max_reroll * [rule.limit, 0].max
         end
         total_add
       end

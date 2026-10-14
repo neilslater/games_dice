@@ -24,7 +24,7 @@ gem as-is, and add them as features within your project code.
 
 ## Supported Ruby Versions
 
-GamesDice 0.5.0 supports MRI Ruby 3.3, 3.4, and 4.0. It uses a native extension and does not support JRuby.
+GamesDice 0.6.0 supports MRI Ruby 3.3, 3.4, and 4.0. It uses a native extension and does not support JRuby.
 
 GamesDice 0.4.0 and 0.4.1 support MRI Ruby 2.6 and later. Versions before 0.4.0 also provide a
 pure-Ruby implementation of the probability calculations and can be used with JRuby.
@@ -132,7 +132,8 @@ Returns a GamesDice::Probabilities object that describes the probability distrib
 Note that some distributions, involving keeping a number best or worst results, can take
 significant time to calculate. If the theoretical distribution would contain a large number
 of very low probabilities due to a possibility of large numbers re-rolls, then the
-calculations cut short, typically approximating to the nearest 1.0e-10.
+calculation may omit unfinished branches within the aggregate `1e-10` truncation bound described below,
+or raise `GamesDice::ProbabilityLimitError` when its limits prevent that guarantee.
 
 ### GamesDice::Probabilities instance methods
 
@@ -166,7 +167,19 @@ Returns the probability of a result equal to the integer n.
     probabilities.p_eql( 3 )  # => 0.004629629629
     probabilities.p_eql( 2 )  # => 0.0
 
-Probabilities below 1e-10 due to requiring long sequences of re-rolls will calculate as 0.0
+Very unlikely sequences of rerolls may be left out to keep calculation time reasonable.
+This changes the probability of any result, or range of results, by at most `1e-10`
+(one in ten billion), in addition to normal floating-point rounding. This limit applies
+to all the dice together, including when keeping only the highest or lowest rolls.
+
+GamesDice limits the amount of work spent calculating probabilities. If it cannot achieve
+the accuracy described above within those limits, it raises `GamesDice::ProbabilityLimitError`.
+These calculation limits do not change how the dice are rolled.
+
+For complex dice, `dice.min` and `dice.max` may describe a wider range than can actually
+be rolled. Every roll will fall within that range, but its endpoints may not be possible
+results. These methods also raise `GamesDice::ProbabilityLimitError` if they cannot find
+suitable bounds within the calculation limits.
 
 #### probabilities.p_gt( n )
 
@@ -200,7 +213,34 @@ Returns the probability of a result less than the integer n.
 
 Returns the mean result, weighted by the probability of each value.
 
-    probabilities.expected  # => 10.5 (rounded to nearest 1e-9)
+    probabilities.expected  # => 10.5 (mean of the returned distribution)
+
+If very unlikely reroll sequences were left out, this mean is also an approximation.
+Rare but unusually high or low results can affect the mean more than their small
+probabilities might suggest, so the `1e-10` accuracy limit for probabilities does
+not apply to the mean.
+
+## Changing dice rules
+
+You can change existing dice by editing their bunches, multipliers, reroll rules or mapping
+rules. GamesDice recalculates affected probabilities and minimum/maximum values when next
+needed. Previous results and explanations are cleared until you roll again.
+
+Each entry in `dice.bunches` has a matching entry in `dice.bunch_multipliers`. If you add,
+remove or reorder bunches, make the corresponding change to their multipliers before
+using the dice.
+
+If you supply custom rule callbacks, keep their behavior unchanged while the rules are
+in use. Replace the rule object when changing its behavior, and do not change dice rules
+from inside a callback.
+
+## Saving and loading dice
+
+Breaking change in 0.6.0: legacy serialized `GamesDice::Probabilities` objects requiring the old
+`_load` protocol are no longer supported. This also affects serialized dice containing such
+cached probabilities. New objects support Marshal dump/load round trips. Recompute persisted
+distributions from their recipes, or export hashes using the previous version and reconstruct
+with `Probabilities.from_h`. Only deserialize trusted data.
 
 ## String Dice Descriptions
 
@@ -257,7 +297,8 @@ The simple form specifies a low value that will automatically trigger a re-roll 
     1d6r1
 
 When rolled, this die will score from 1 to 6. If it rolls a 1, it will roll again automatically
-and use that result instead.
+and use that result instead, repeating while it rolls 1, up to the default limit of 1000 rerolls.
+Use `1d6r:1,replace,1.` for exactly one replacement attempt.
 
 The full version of this modifier, allows you to specify from 1 to 3 parameters:
 

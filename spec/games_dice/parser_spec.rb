@@ -30,7 +30,7 @@ describe GamesDice::Parser, :aggregate_failures do
       end
     end
 
-    it "parse 'NdXrY' as 'roll N times X-sided dice, re-roll and replace a Y or less (once)'" do
+    it "parse 'NdXrY' as 'roll N times X-sided dice, re-roll and replace a Y or less (default limit)'" do
       variations = {
         '1d6r1' => { bunches: [{ ndice: 1, sides: 6, multiplier: 1, rerolls: [[1, :>=, :reroll_replace]] }],
                      offset: 0 },

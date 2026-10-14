@@ -29,12 +29,8 @@ module GamesDice
     end
 
     # @!visibility private
-    def self._load(buf)
-      # RuboCop rationale: persisted Probabilities require Marshal compatibility; callers must load only trusted data.
-      # rubocop:disable Security/MarshalLoad
-      h = Marshal.load buf
-      # rubocop:enable Security/MarshalLoad
-      from_h h
+    def marshal_load(distribution)
+      initialize_copy(self.class.from_h(distribution))
     end
   end
 end

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'games_dice/complex_die_helpers'
+require 'games_dice/probability_calculation'
 
 module GamesDice
   # This class models a die that is built up from a simpler unit by adding rules to re-roll
@@ -25,6 +26,7 @@ module GamesDice
   #
   class ComplexDie
     include RollHelpers
+    include RecipeQueries
     include ProbabilityHelpers
     include MinMaxHelpers
 
@@ -51,6 +53,7 @@ module GamesDice
       @total = nil
       @result = nil
 
+      initialize_recipe
       @probabilities_complete = true
     end
 
@@ -65,14 +68,25 @@ module GamesDice
     attr_reader :maps
 
     # @return [GamesDice::DieResult, nil] Result of last call to #roll, nil if no call made yet
-    attr_reader :result
+    def result
+      refresh_recipe
+      @result
+    end
 
-    # Whether or not #probabilities includes all possible outcomes.
-    # True if all possible results are represented and assigned a probability. Dice with open-ended re-rolls
-    # may have calculations cut short, and will result in a false value of this attribute. Even when this
-    # attribute is false, probabilities should still be accurate to nearest 1e-9.
-    # @return [Boolean, nil] Depending on completeness when generating #probabilities
-    attr_reader :probabilities_complete
+    # Whether the probability calculation included all possible sequences of rerolls.
+    # After calling #probabilities, true means none were left out. False means
+    # very unlikely sequences were skipped to keep calculation time reasonable.
+    # Even when false, this changes the probability of any result by at most
+    # 1e-10 (one in ten billion), in addition to normal floating-point rounding.
+    #
+    # Call #probabilities before checking this value. A new die starts with true,
+    # even though no calculation has run yet.
+    # @return [Boolean, nil] Whether the calculation is complete, or nil if its
+    #   result was cleared after a recipe change or a failed calculation.
+    def probabilities_complete
+      refresh_recipe
+      @probabilities_complete
+    end
 
     # @!attribute [r] sides
     # @return [Integer] Number of sides.
@@ -83,48 +97,76 @@ module GamesDice
     # @!attribute [r] explain_result
     # @return [String,nil] Explanation of result, or nil if no call to #roll yet.
     def explain_result
-      @result.explain_value
+      refresh_recipe
+      @result&.explain_value
     end
 
-    # The minimum possible result from a call to #roll. This is not always the same as the theoretical
-    # minimum, due to limits on the maximum number of rerolls.
+    # Lower bound on the numeric value of a roll (#roll.value).
+    # No roll will have a value below this bound.
+    # For some complex dice, this may be lower than any value that can actually
+    # be rolled, because calculating the exact minimum would take too much work.
+    #
+    # Raises ProbabilityLimitError if a lower bound cannot be found within
+    # the calculation's work limits.
     # @!attribute [r] min
     # @return [Integer]
     def min
+      refresh_recipe
       return @min_result if @min_result
 
-      calc_minmax
+      with_recipe { calc_minmax }
       @min_result
     end
 
+    # Upper bound on the numeric value of a roll (#roll.value).
+    # No roll will have a value above this bound.
+    # For some complex dice, this may be higher than any value that can actually
+    # be rolled, because calculating the exact maximum would take too much work.
+    #
+    # Raises ProbabilityLimitError if an upper bound cannot be found within
+    # the calculation's work limits.
     # @!attribute [r] max
-    # @return [Integer] Maximum possible result from a call to #roll
+    # @return [Integer]
     def max
+      refresh_recipe
       return @max_result if @max_result
 
-      calc_minmax
+      with_recipe { calc_minmax }
       @max_result
     end
 
-    # Calculates the probability distribution for the die. For open-ended re-roll rules, there are some
-    # arbitrary limits imposed to prevent large amounts of recursion. Probabilities should be to nearest
-    # 1e-9 at worst.
-    # @return [GamesDice::Probabilities] Probability distribution of die.
+    # Calculates the probability distribution for the die.
+    #
+    # Very unlikely sequences of rerolls may be left out to keep calculation
+    # time reasonable. This changes the probability of any result by at most
+    # 1e-10 (one in ten billion), in addition to normal floating-point rounding.
+    #
+    # Raises ProbabilityLimitError if this accuracy cannot be achieved within
+    # the calculation's work limits.
+    # @return [GamesDice::Probabilities] Probability distribution of the die.
     def probabilities
-      @probabilities ||= calculate_probabilities
+      probabilities_for_budget(ProbabilityBudget::LIMIT)
     end
 
     # Simulates rolling the die
     # @param [Symbol] reason Assign a reason for rolling the first die.
     # @return [GamesDice::DieResult] Detailed results from rolling the die, including resolution of rules.
     def roll(reason = :basic)
-      @result = GamesDice::DieResult.new(@basic_die.roll, reason)
-      roll_apply_rerolls
-      roll_apply_maps
-      @result
+      with_recipe do
+        rerolls = @rerolls&.dup
+        maps = @maps&.dup
+        @result = GamesDice::DieResult.new(@basic_die.roll, reason)
+        roll_apply_rerolls(rerolls)
+        roll_apply_maps(maps)
+        @result
+      end
     end
 
     private
+
+    def recipe_sources
+      [[@rerolls, RerollRule], [@maps, MapRule]]
+    end
 
     def construct_rerolls(rerolls_input)
       check_and_construct rerolls_input, GamesDice::RerollRule, 'rerolls'

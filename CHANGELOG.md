@@ -5,6 +5,23 @@
  * Standardise development linting on `ncs_rubocop_conf` v0.2.0 with its base, Rake, RSpec, and native-extension profiles.
  * Refactor the test suite to meet the shared policy without reducing its assertions or coverage.
 
+## 0.6.0 (unreleased)
+
+* Fix native repetition termination, keeper allocation leaks, and exception cleanup. Validate
+  finite probabilities and check integer endpoints and distribution spans before allocation.
+* Fix bounds with negative multipliers, reject nonpositive keeper counts, and make explanations
+  reflect weighted results and the actual mapped keepers.
+* Bound aggregate probability truncation error by `1e-10` before floating-point roundoff, use
+  cheap exact shortcuts, and raise `GamesDice::ProbabilityLimitError` for unsupported work.
+  Bounds return safe enclosing intervals when cheaply provable, otherwise they also raise.
+* Cache combined probabilities and invalidate derived state when exposed recipe arrays or
+  mapping labels change. Previous results and explanations clear until the next roll.
+* Clarify that shorthand replacement rerolls use the existing default limit of 1000.
+* **Breaking serialization change:** remove the legacy `Probabilities._load` protocol and support
+  paired Marshal dump/load round trips. Previously serialized probabilities, including those
+  cached in dice, may no longer load. Recompute from recipes, or export hashes with the previous
+  version and reconstruct using `Probabilities.from_h`.
+
 ## 0.5.0 ( 22 July 2026 )
 
  * Add support and CI coverage for Ruby 4.0.
