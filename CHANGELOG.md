@@ -1,11 +1,6 @@
 # GamesDice Changelog
 
-## Unreleased
-
- * Standardise development linting on `ncs_rubocop_conf` v0.2.0 with its base, Rake, RSpec, and native-extension profiles.
- * Refactor the test suite to meet the shared policy without reducing its assertions or coverage.
-
-## 0.6.0 (unreleased)
+## 0.6.0 ( 14 October 2026 )
 
 * Fix native repetition termination, keeper allocation leaks, and exception cleanup. Validate
   finite probabilities and check integer endpoints and distribution spans before allocation.
@@ -21,6 +16,8 @@
   paired Marshal dump/load round trips. Previously serialized probabilities, including those
   cached in dice, may no longer load. Recompute from recipes, or export hashes with the previous
   version and reconstruct using `Probabilities.from_h`.
+* Standardise development linting on `ncs_rubocop_conf` v0.2.0 with its base, Rake, RSpec, and native-extension profiles.
+* Refactor the test suite to meet the shared policy without reducing its assertions or coverage.
 
 ## 0.5.0 ( 22 July 2026 )
 
