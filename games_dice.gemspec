@@ -24,7 +24,9 @@ Gem::Specification.new do |gem|
 
   gem.add_dependency 'parslet', '~> 2.0'
 
-  gem.files         = `git ls-files -z`.split("\0").select { |file| File.file?(file) && file != 'Gemfile.lock' }
+  gem.files = `git ls-files -z`.split("\0").select do |file|
+    File.file?(file) && file != 'Gemfile.lock' && !file.start_with?('spec/', 'research/')
+  end
   gem.executables   = gem.files.grep(%r{^bin/}).map { |f| File.basename(f) }
   gem.extensions    = gem.files.grep(%r{/extconf\.rb$})
   gem.require_paths = ['lib']

@@ -98,6 +98,7 @@ DEPENDENCIES
   bundler-audit (~> 0.9)
   games_dice!
   ncs_rubocop_conf!
+  parslet (~> 2.0)
   rake (~> 13.2)
   rake-compiler (~> 1.2)
   redcarpet (~> 3.6)
