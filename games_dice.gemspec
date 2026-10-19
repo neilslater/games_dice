@@ -22,8 +22,6 @@ Gem::Specification.new do |gem|
 
   gem.required_ruby_version = '>= 3.3.0'
 
-  gem.add_dependency 'parslet', '~> 2.0'
-
   gem.files = `git ls-files -z`.split("\0").select do |file|
     File.file?(file) && file != 'Gemfile.lock' && !file.start_with?('spec/', 'research/')
   end

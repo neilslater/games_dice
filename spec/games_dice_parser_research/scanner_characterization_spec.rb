@@ -2,6 +2,7 @@
 
 require 'helpers'
 require_relative '../../research/parser/scanner'
+require_relative '../../research/parser/reference_parser'
 require_relative '../../research/parser/corpus'
 
 RSpec.describe GamesDiceParserResearch::Scanner, :aggregate_failures do
@@ -60,7 +61,7 @@ RSpec.describe GamesDiceParserResearch::Scanner, :aggregate_failures do
     end
   end
 
-  describe GamesDice::Parser do
+  describe GamesDiceParserResearch::ReferenceParser do
     it 'exposes Parslet failure causes and normalized-input positions in the reference behavior' do
       expect { described_class.new.parse('1d6junk') }.to raise_error(Parslet::ParseFailed) { |error|
         expect(error.message).to include('line 1 char 5')

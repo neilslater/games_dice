@@ -1,5 +1,16 @@
 # GamesDice Changelog
 
+## Unreleased
+
+* Replace the runtime Parslet parser with a direct Ruby scanner, reducing parsing overhead
+  for one-shot text rolls without caching definitions or changing accepted notation.
+* **Breaking parser error API change:** raise `GamesDice::ParseError < GamesDice::Error`
+  for invalid notation and input encoding. Report zero-based byte offsets in the original
+  input; preserve encoding exceptions as causes and propagate custom coercion/constructor errors.
+  Parslet exception classes, failure trees and inherited grammar/combinator methods are removed.
+* Retain Parslet and the old parser in development-only comparison infrastructure. Exclude
+  research and tests from the gem; keep the production gem free of a Parslet dependency.
+
 ## 0.6.0 ( 14 October 2026 )
 
 * Fix native repetition termination, keeper allocation leaks, and exception cleanup. Validate

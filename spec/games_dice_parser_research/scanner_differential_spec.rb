@@ -26,7 +26,7 @@ RSpec.describe GamesDiceParserResearch::Scanner do
     expect(Digest::SHA256.hexdigest(snapshot)).to eq('f719768638bfaeed62be29f2d2f91bc423f3689535e0120f9c75c75b038640ef')
   end
 
-  it 'does not add prototype error classes to the production namespace' do
-    expect(GamesDice.const_defined?(:Error, false)).to be(false)
+  it 'keeps prototype errors independent of the production hierarchy' do
+    expect(GamesDiceParserResearch::Error).not_to be < GamesDice::Error
   end
 end

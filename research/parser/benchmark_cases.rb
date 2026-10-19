@@ -22,8 +22,12 @@ module GamesDiceParserResearch
     end
 
     def factory_operations(parser, text)
-      factory = Factory.new(parser)
+      factory = factory_for(parser)
       { create: -> { factory.create(text) }, create_roll: -> { factory.create(text).roll } }
+    end
+
+    def factory_for(parser)
+      parser.is_a?(GamesDice::Parser) ? GamesDice : Factory.new(parser)
     end
 
     def construct(parsed)
@@ -32,7 +36,7 @@ module GamesDiceParserResearch
 
     def varied_operations(parser, text)
       texts = (0...16).map { |offset| "#{text}+#{offset}" }
-      factory = Factory.new(parser)
+      factory = factory_for(parser)
       dice = texts.map { |input| factory.create(input) }
       { parse: rotating(texts) { |input| parser.parse(input) },
         roll: rotating(dice, &:roll), create_roll: rotating(texts) { |input| factory.create(input).roll } }
@@ -55,13 +59,13 @@ module GamesDiceParserResearch
     def failure_operation(parser, text, render: false)
       lambda do
         parser.parse(text)
-      rescue Parslet::ParseFailed, Error, ArgumentError, RuntimeError => e
+      rescue Parslet::ParseFailed, Error, GamesDice::ParseError, ArgumentError, RuntimeError => e
         render ? diagnostic(e) : nil
       end
     end
 
     def constructor_failures(parser, text)
-      factory = Factory.new(parser)
+      factory = factory_for(parser)
       parsed = parser.parse(text)
       { create_reject: -> { reject_constructor { factory.create(text) } },
         construct_reject: -> { reject_constructor { construct(parsed) } } }

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'json'
+require 'games_dice/parser'
 require_relative 'reference_parser'
 require_relative 'scanner'
 require_relative 'corpus'
@@ -9,18 +10,20 @@ require_relative 'comparison'
 module GamesDiceParserResearch
   # Larger reproducible differential sweep outside the routine spec corpus.
   class Compare
-    def initialize(seed:, count:)
+    def initialize(seed:, count:, implementation: 'production')
       @seed = seed
       @count = count
       @reference = ReferenceParser.new
-      @scanner = Scanner.new
+      @implementation = implementation
+      @scanner = { 'production' => GamesDice::Parser, 'scanner' => Scanner }.fetch(implementation).new
     end
 
     def run
       valid = Corpus.generated(seed: @seed, count: @count)
       inputs = valid + Corpus.mutations(valid, seed: @seed + 1)
       mismatches = inputs.filter_map { |text| mismatch(text) }
-      { seed: @seed, generated: @count, comparisons: inputs.length, mismatches: mismatches }
+      { implementation: @implementation, seed: @seed, generated: @count, comparisons: inputs.length,
+        mismatches: mismatches }
     end
 
     private
@@ -35,7 +38,8 @@ end
 
 if $PROGRAM_NAME == __FILE__
   result = GamesDiceParserResearch::Compare.new(seed: Integer(ENV.fetch('SEED', '20261021')),
-                                                count: Integer(ENV.fetch('COUNT', '2000'))).run
+                                                count: Integer(ENV.fetch('COUNT', '2000')),
+                                                implementation: ENV.fetch('IMPLEMENTATION', 'production')).run
   puts JSON.generate(result)
   exit 1 unless result[:mismatches].empty?
 end

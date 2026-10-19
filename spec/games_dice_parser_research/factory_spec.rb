@@ -2,14 +2,14 @@
 
 require 'helpers'
 require_relative '../../research/parser/factory'
-require_relative '../../research/parser/scanner'
+require_relative '../../research/parser/reference_parser'
 require_relative '../../research/parser/corpus'
 
 RSpec.describe GamesDiceParserResearch::Factory, :aggregate_failures do
-  let(:factory) { described_class.new(GamesDiceParserResearch::Scanner.new) }
+  let(:factory) { described_class.new(GamesDiceParserResearch::ReferenceParser.new) }
 
   GamesDiceParserResearch::Corpus::ORDINARY.each do |input|
-    it "matches production seeded roll sequences and explanations for #{input}" do
+    it "matches production seeded roll sequences against the retained parser and explanations for #{input}" do
       expected = GamesDice.create(input, Random.new(10))
       actual = factory.create(input, Random.new(10))
       30.times do

@@ -16,7 +16,7 @@ module GamesDiceParserResearch
       @iterations = Integer(ENV.fetch('ITERATIONS', '1000'))
       @warmup = Integer(ENV.fetch('WARMUP', '100'))
       @random = Random.new(@seed)
-      @parsers = { reference: ReferenceParser.new, scanner: Scanner.new }
+      @parsers = { reference: ReferenceParser.new, scanner: Scanner.new, production: GamesDice.parser }
     end
 
     def run
@@ -36,12 +36,20 @@ module GamesDiceParserResearch
         jit: defined?(RubyVM::YJIT) ? RubyVM::YJIT.enabled? : false, gc: 'enabled',
         seed: @seed, warmup: @warmup, iterations: @iterations, corpus_version: 1,
         source_commit: `git rev-parse HEAD`.strip, process: Process.pid,
-        reference_commit: '610b670524410c91fe2daac6c1199f1f61d1b4df', research_sha256: research_checksums }
+        reference_commit: '610b670524410c91fe2daac6c1199f1f61d1b4df',
+        research_sha256: research_checksums, production_sha256: production_checksums }
     end
 
     def research_checksums
       Dir.glob(File.join(__dir__, '*.rb')).to_h do |path|
         [File.basename(path), Digest::SHA256.file(path).hexdigest]
+      end
+    end
+
+    def production_checksums
+      root = File.expand_path('../..', __dir__)
+      Dir.glob(File.join(root, 'lib/**/*.rb')).to_h do |path|
+        [path.delete_prefix("#{root}/"), Digest::SHA256.file(path).hexdigest]
       end
     end
 

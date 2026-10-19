@@ -12,7 +12,6 @@ PATH
   remote: .
   specs:
     games_dice (0.6.0)
-      parslet (~> 2.0)
 
 GEM
   remote: https://rubygems.org/

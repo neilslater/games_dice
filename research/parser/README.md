@@ -1,19 +1,20 @@
 # Parser preparation research
 
 This directory is development-only and excluded from the built gem, as are
-`spec/`. Nothing here is required by `lib/games_dice.rb`; the production parser
-and runtime Parslet dependency are unchanged.
+`spec/`. Nothing here is required by `lib/games_dice.rb`. Production now uses the direct
+scanner under `lib/games_dice/`; Parslet is a development dependency only.
 
 ## Implementations
 
 - `reference_parser.rb`: snapshot of `lib/games_dice/parser.rb` at
   `610b670524410c91fe2daac6c1199f1f61d1b4df`. Only module/class names and a
   provenance comment differ. A source checksum test guards this reference.
-- `scanner.rb` and `scanner_modifiers.rb`: disposable StringScanner candidate,
+- `scanner.rb` and `scanner_modifiers.rb`: retained StringScanner prototype at
+  preparation commit `5c41efe`,
   emitting constructor hashes directly. Each parse owns its scanning state;
   the reusable entry point caches no definitions or mutable parse results.
-- `factory.rb`: same construction and optional PRNG injection path as
-  `GamesDice.create`, with an explicitly selected parser.
+- `factory.rb`: equivalent construction and optional PRNG injection for the
+  historical parsers. Production benchmarks call `GamesDice.create` itself.
 
 Keep reference semantics stable. If a future Ruby or Parslet version requires
 adaptation, preserve the original revision and document the adapted runnable
@@ -57,6 +58,10 @@ full text-to-roll <=3 times cached rolling for each ordinary expression;
 parse <=1 times cached rolling is a stretch target. Allocations are supporting
 evidence with no threshold.
 
+The runner compares the retained Parslet reference, the preparation prototype,
+and the production parser. Production timings use the actual public factory;
+metadata also records all production Ruby source checksums.
+
 The runner reuses parsers, enables GC, warms each operation, starts GC before
 measurement, and uses monotonic elapsed time. It prepares all data before timing
 and randomizes job order with a recorded seed. The built-in PRNG is seeded for
@@ -74,10 +79,10 @@ are separate operations. Constructor-validation failures are also measured
 separately from syntax failures, both with and without parsing. Rendering differs in detail between parsers and is
 not an equal-feature throughput comparison.
 
-## Error-interface proposal
+## Error interface and history
 
 The prototype uses `GamesDiceParserResearch::Error` and `ParseError` to keep
-research isolated. A production migration would instead introduce
+research isolated. Production exposes
 `GamesDice::Error < StandardError` and `GamesDice::ParseError < GamesDice::Error`.
 Exact Parslet exception identity is explicitly not required. Prototype failures
 report zero-based original-input byte offsets without an inserted leading `+`;
@@ -91,15 +96,19 @@ Parslet failure tree is promised. Exceptions raised by custom `to_s` methods
 and subsequent constructors propagate unchanged.
 The old parser exposes grammar methods and Parslet failure trees; repository
 search found no runtime callers of these outside the parser, but cannot establish
-that external users never depend on them. No runtime dependency removal or
-production parser replacement is authorized by this preparation work.
+that external users never depend on them. The user accepted the migration on 2026-10-19, including removal of the
+undocumented inherited Parslet grammar/combinator surface. The historical
+prototype/reference remain isolated; production behavior has its own specs.
 
 For a larger reproducible sweep, after the same runtime prerequisite:
 
 ```sh
-SEED=20261021 COUNT=2000 bundle exec ruby research/parser/compare.rb
+SEED=20261021 COUNT=2000 bundle exec ruby -Ilib research/parser/compare.rb
 ```
 
 This generates 2,000 valid expressions and four mutations of each, compares
 10,000 outcomes, reports every mismatch, and exits nonzero if any differ.
-It does not execute the resulting dice recipes.
+It compares production against the reference by default. Set
+`IMPLEMENTATION=scanner` to rerun the retained prototype comparison. It does not
+execute the resulting dice recipes. Earlier result files remain tied to their
+recorded commits; use those revisions to reproduce the historical harness.
