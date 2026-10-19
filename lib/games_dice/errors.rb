@@ -6,7 +6,6 @@ module GamesDice
   class Error < StandardError; end
 
   # Invalid dice notation or an invalid/unsupported input encoding.
-  # Messages are readable diagnostics, not a stable text interface.
   class ParseError < Error
     # Zero-based byte offset into the original input, before whitespace stripping.
     # Encoding failures use zero to identify the input as a whole.
