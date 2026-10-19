@@ -12,7 +12,6 @@ PATH
   remote: .
   specs:
     games_dice (0.6.0)
-      parslet (~> 2.0)
 
 GEM
   remote: https://rubygems.org/
@@ -98,6 +97,7 @@ DEPENDENCIES
   bundler-audit (~> 0.9)
   games_dice!
   ncs_rubocop_conf!
+  parslet (~> 2.0)
   rake (~> 13.2)
   rake-compiler (~> 1.2)
   redcarpet (~> 3.6)

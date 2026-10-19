@@ -21,6 +21,8 @@ module GamesDice
   # @param [String] dice_description Uses a variation of common game notation, examples: '1d6', '3d8+1d4+7', '5d10k2'
   # @param [#rand] prng Optional random number generator, default is to use Ruby's built-in #rand()
   # @return [GamesDice::Dice] A new dice object.
+  # @raise [GamesDice::ParseError] For invalid notation or input encoding.
+  #   Constructor validation and custom coercion exceptions propagate unchanged.
   #
   def self.create(dice_description, prng = nil)
     parsed = parser.parse(dice_description)

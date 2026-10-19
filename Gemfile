@@ -10,6 +10,8 @@ gem 'ncs_rubocop_conf',
     github: 'neilslater/ncs_rubocop_conf',
     tag: 'v0.2.1',
     require: false
+# Retained reference parser and historical comparisons also need Parslet after migration.
+gem 'parslet', '~> 2.0', require: false
 gem 'rake', '~> 13.2'
 gem 'rake-compiler', '~> 1.2'
 gem 'redcarpet', '~> 3.6'

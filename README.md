@@ -69,7 +69,41 @@ Parameters:
  * `dice_description` is a string such as `3d6` or `2d4-1`. See String Dice Descriptions below for possibilities.
  * `prng` is optional. If provided, it must respond to `rand(integer)` in the same way as Ruby's built-in `rand` method.
 
-Returns a GamesDice::Dice object.
+Returns a GamesDice::Dice object. For a one-shot roll you can work directly with the text:
+
+```ruby
+result = GamesDice.create('2d20k1+5').roll
+```
+
+Each call creates an independent dice set. Reusing a dice set still avoids parsing and construction
+for repeated rolls, and preserves cached probability calculations.
+
+#### Parsing errors and migration from Parslet
+
+Invalid notation raises `GamesDice::ParseError`, a subclass of `GamesDice::Error < StandardError`:
+
+```ruby
+begin
+  GamesDice.create('  1d6junk')
+rescue GamesDice::ParseError => error
+  puts error.message
+  puts error.byte_offset # => 5
+end
+```
+
+`byte_offset` is zero-based and refers to the original input, including leading whitespace.
+Malformed modifiers point to their start; repeated keepers point to the end of the duplicate
+modifier. Invalid or unsupported input encodings report offset zero for the whole input and retain
+the underlying exception as `cause`. Error messages are readable diagnostics; their exact wording
+is not a compatibility guarantee.
+
+Replace rescues of `Parslet::ParseFailed` with `GamesDice::ParseError`. The parser no longer inherits
+from Parslet, exposes its grammar/combinator methods, or supplies `parse_failure_cause`/`ascii_tree`.
+`GamesDice.parser.parse(text)` still returns constructor data with `:bunches` and `:offset`.
+
+Constructor validation remains separate: for example, `0d6` parses but `GamesDice.create('0d6')`
+raises `ArgumentError`. Exceptions from custom `to_s` methods also propagate unchanged.
+Existing probability and constructor errors have not been moved under `GamesDice::Error`.
 
 ### GamesDice::Dice instance methods
 
